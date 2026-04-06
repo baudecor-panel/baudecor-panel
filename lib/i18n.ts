@@ -1,0 +1,31 @@
+export const translations = {
+  tr: {
+    dashboard: "Panel",
+    todaySales: "Bugün Satış",
+    todayProfit: "Bugün Kâr",
+    totalSales: "Toplam Satış",
+    totalProfit: "Toplam Kâr",
+    recentSales: "Son Satışlar",
+    lowStock: "Kritik Stok",
+    topProducts: "En Çok Satan Ürünler",
+    quantity: "Adet",
+    total: "Toplam",
+    date: "Tarih",
+    noIssue: "Sorun yok",
+  },
+
+  en: {
+    dashboard: "Dashboard",
+    todaySales: "Today's Sales",
+    todayProfit: "Today's Profit",
+    totalSales: "Total Revenue",
+    totalProfit: "Total Profit",
+    recentSales: "Recent Sales",
+    lowStock: "Low Stock",
+    topProducts: "Top Products",
+    quantity: "Qty",
+    total: "Total",
+    date: "Date",
+    noIssue: "No issues",
+  },
+};

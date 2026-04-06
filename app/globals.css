@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Dashboard scroll */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+/* ===== BAUDECOR DATEPICKER DARK THEME ===== */
+
+.baudecor-datepicker {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+}
+
+.baudecor-datepicker .react-datepicker__header {
+  background: #0f172a !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+.baudecor-datepicker .react-datepicker__current-month,
+.baudecor-datepicker .react-datepicker-time__header,
+.baudecor-datepicker .react-datepicker-year-header {
+  color: #ffffff !important;
+}
+
+.baudecor-datepicker .react-datepicker__day-name {
+  color: #cbd5e1 !important;
+}
+
+.baudecor-datepicker .react-datepicker__day,
+.baudecor-datepicker .react-datepicker__time-name {
+  color: #e2e8f0 !important;
+}
+
+.baudecor-datepicker .react-datepicker__day:hover,
+.baudecor-datepicker .react-datepicker__month-text:hover,
+.baudecor-datepicker .react-datepicker__quarter-text:hover,
+.baudecor-datepicker .react-datepicker__year-text:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border-radius: 0.5rem !important;
+}
+
+.baudecor-datepicker .react-datepicker__day--selected,
+.baudecor-datepicker .react-datepicker__day--keyboard-selected {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-radius: 0.5rem !important;
+}
+
+.baudecor-datepicker .react-datepicker__day--outside-month {
+  color: #64748b !important;
+}
+
+.baudecor-datepicker .react-datepicker__navigation-icon::before {
+  border-color: #cbd5e1 !important;
+}
+
+.baudecor-datepicker .react-datepicker__triangle {
+  display: none !important;
+}
+
+.baudecor-datepicker-popper {
+  z-index: 9999 !important;
+}
