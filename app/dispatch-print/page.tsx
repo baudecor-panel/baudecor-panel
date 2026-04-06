@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
@@ -27,6 +27,27 @@ type DispatchRow = {
 };
 
 export default function DispatchPrintPage() {
+  return (
+    <Suspense fallback={<DispatchPrintLoading />}>
+      <DispatchPrintContent />
+    </Suspense>
+  );
+}
+
+function DispatchPrintLoading() {
+  return (
+    <main className="min-h-screen bg-white p-8 text-black">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-8 border-b border-black pb-4">
+          <h1 className="text-3xl font-bold">Sevkiyat Listesi / Dispatch List</h1>
+          <p className="mt-2 text-sm">Yükleniyor / Loading...</p>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function DispatchPrintContent() {
   const [rows, setRows] = useState<DispatchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
