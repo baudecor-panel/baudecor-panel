@@ -1,13 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: {},
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /lightningcss/,
-      use: "null-loader",
-    });
-    return config;
-  },
-};
+const nextConfig = {};
 
 module.exports = nextConfig;
