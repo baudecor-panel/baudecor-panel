@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   LineChart,
@@ -59,10 +60,12 @@ type InsightItem = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [range, setRange] = useState<RangeType>("month");
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -90,6 +93,20 @@ export default function DashboardPage() {
     setSales((salesData || []) as Sale[]);
     setProducts((productData || []) as Product[]);
     setLoading(false);
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      setLoggingOut(false);
+      alert("Çıkış yapılamadı: " + error.message);
+      return;
+    }
+
+    router.push("/login");
   }
 
   function filterByDate(data: Sale[]) {
@@ -561,6 +578,16 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}
+        </button>
+      </div>
+
       <section className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-2xl shadow-black/40 md:p-8">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
         <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
@@ -618,7 +645,13 @@ export default function DashboardPage() {
                 label="Stok Sağlığı"
                 value={`%${stockHealthRate}`}
                 helper="Minimum stok üstü ürün oranı"
-                tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
+                tone={
+                  stockHealthRate >= 75
+                    ? "green"
+                    : stockHealthRate >= 50
+                    ? "amber"
+                    : "red"
+                }
               />
             </div>
           </div>
@@ -825,7 +858,13 @@ export default function DashboardPage() {
               title="Stok Sağlığı"
               value={`%${stockHealthRate}`}
               helper="Genel ürün sağlığı"
-              tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
+              tone={
+                stockHealthRate >= 75
+                  ? "green"
+                  : stockHealthRate >= 50
+                  ? "amber"
+                  : "red"
+              }
             />
           </div>
 
