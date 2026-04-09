@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // 🔥 SABİT EMAIL (DEĞİŞTİRME)
-  const email = "info@baudecor.com";
+  const email = "info@baudecor.me";
 
   async function handleLogin() {
     setLoading(true);
