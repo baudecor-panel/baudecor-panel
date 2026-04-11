@@ -8,12 +8,22 @@ type ProductGroup = {
   name: string;
 };
 
+type Supplier = {
+  id: number;
+  name: string;
+  is_active?: boolean | null;
+};
+
 export default function NewProductPage() {
   const [groups, setGroups] = useState<ProductGroup[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
   const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
   const [name, setName] = useState("");
   const [groupId, setGroupId] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const [price, setPrice] = useState(0);
   const [cost, setCost] = useState(0);
   const [stock, setStock] = useState(0);
@@ -22,6 +32,7 @@ export default function NewProductPage() {
 
   useEffect(() => {
     fetchGroups();
+    fetchSuppliers();
   }, []);
 
   async function fetchGroups() {
@@ -40,6 +51,25 @@ export default function NewProductPage() {
 
     setGroups((data || []) as ProductGroup[]);
     setLoadingGroups(false);
+  }
+
+  async function fetchSuppliers() {
+    setLoadingSuppliers(true);
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("id, name, is_active")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error) {
+      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
+      setLoadingSuppliers(false);
+      return;
+    }
+
+    setSuppliers((data || []) as Supplier[]);
+    setLoadingSuppliers(false);
   }
 
   async function checkDuplicateName(productName: string) {
@@ -68,7 +98,9 @@ export default function NewProductPage() {
     }
 
     if (price < 0 || cost < 0 || stock < 0 || minimumStock < 0) {
-      alert("Fiyat, stok veya minimum stok geçersiz / Invalid price, stock, or minimum stock");
+      alert(
+        "Fiyat, stok veya minimum stok geçersiz / Invalid price, stock, or minimum stock"
+      );
       return;
     }
 
@@ -90,6 +122,7 @@ export default function NewProductPage() {
       {
         name: name.trim(),
         group_id: groupId,
+        default_supplier_id: supplierId ? Number(supplierId) : null,
         price: Number(price),
         cost: Number(cost),
         stock: initialStock,
@@ -110,6 +143,7 @@ export default function NewProductPage() {
 
     setName("");
     setGroupId("");
+    setSupplierId("");
     setPrice(0);
     setCost(0);
     setStock(0);
@@ -119,6 +153,12 @@ export default function NewProductPage() {
   const selectedGroupName = useMemo(() => {
     return groups.find((group) => group.id === groupId)?.name || "-";
   }, [groups, groupId]);
+
+  const selectedSupplierName = useMemo(() => {
+    return (
+      suppliers.find((supplier) => String(supplier.id) === supplierId)?.name || "-"
+    );
+  }, [suppliers, supplierId]);
 
   const margin = Number(price) - Number(cost);
   const initialStockValue = Number(stock || 0);
@@ -135,8 +175,10 @@ export default function NewProductPage() {
           Yeni Ürün / New Product
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          Sisteme yeni ürün ekle. Açılış stoku opening stock olarak kaydedilir. /
-          Add a new product to the system. Initial stock is saved as opening stock.
+          Sisteme yeni ürün ekle. Açılış stoku opening stock olarak kaydedilir.
+          Varsayılan tedarikçi seçimi gelecekte stok girişlerinde hız sağlar. /
+          Add a new product to the system. Initial stock is saved as opening
+          stock. Default supplier selection will help future stock entry flows.
         </p>
       </div>
 
@@ -178,9 +220,49 @@ export default function NewProductPage() {
 
               {!loadingGroups && groups.length === 0 && (
                 <p className="mt-2 text-xs text-amber-300">
-                  Henüz grup yok. Önce veritabanına grup eklemelisin. / No groups found yet. Add groups in the database first.
+                  Henüz grup yok. Önce veritabanına grup eklemelisin. / No
+                  groups found yet. Add groups in the database first.
                 </p>
               )}
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-400">
+                Varsayılan Tedarikçi / Default Supplier
+              </label>
+              <select
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                disabled={loadingSuppliers}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4 text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">
+                  {loadingSuppliers
+                    ? "Tedarikçiler yükleniyor... / Loading suppliers..."
+                    : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
+                </option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={String(supplier.id)}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+
+              {!loadingSuppliers && suppliers.length === 0 && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Henüz aktif tedarikçi yok. Önce Tedarikçiler ekranından firma
+                  ekleyebilirsin. / No active suppliers found yet. You can add a
+                  supplier first from the Suppliers screen.
+                </p>
+              )}
+
+              <p className="mt-2 text-xs text-slate-500">
+                Bu alan zorunlu değil. Ürünün ana tedarikçisini tanımlamak için
+                kullanılır. Gerçek alım yapılan firma stok girişinde ayrıca
+                seçilecek. / This field is optional. It defines the product's
+                default supplier. The actual supplier used for purchasing will
+                also be selected separately during stock entry.
+              </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -223,10 +305,13 @@ export default function NewProductPage() {
                 className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
               />
               <p className="mt-2 text-xs text-slate-500">
-                Bu değer opening_stock olarak kaydedilir. Sistem uyumu için products.stock alanına da aynı değer yazılır. /
-                This value is saved as opening_stock. For compatibility, the same value is also written to products.stock.
+                Bu değer opening_stock olarak kaydedilir. Sistem uyumu için
+                products.stock alanına da aynı değer yazılır. / This value is
+                saved as opening_stock. For compatibility, the same value is
+                also written to products.stock.
               </p>
             </div>
+
             <div>
               <label className="text-sm text-slate-400">
                 Minimum Stok / Minimum Stock
@@ -239,18 +324,24 @@ export default function NewProductPage() {
                 className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
               />
               <p className="mt-2 text-xs text-slate-500">
-                Bu değer kritik stok sınırıdır. Dashboard ve ürünler ekranı bu limite göre uyarı verir. /
-                This value is the critical stock threshold. Dashboard and products screens will use this limit for alerts.
+                Bu değer kritik stok sınırıdır. Dashboard ve ürünler ekranı bu
+                limite göre uyarı verir. / This value is the critical stock
+                threshold. Dashboard and products screens will use this limit
+                for alerts.
               </p>
             </div>
 
-
             <button
               onClick={handleSave}
-              disabled={saving || loadingGroups || groups.length === 0}
+              disabled={
+                saving ||
+                loadingGroups ||
+                groups.length === 0 ||
+                loadingSuppliers
+              }
               className="mt-4 rounded-2xl bg-blue-600 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Kaydediliyor..." : "Kaydet / Save"}
+              {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
             </button>
           </div>
         </section>
@@ -259,18 +350,28 @@ export default function NewProductPage() {
           <h2 className="text-lg font-semibold">Özet / Summary</h2>
 
           <div className="mt-6 space-y-4">
-            <InfoCard title="Ürün" value={name || "-"} />
-            <InfoCard title="Grup" value={selectedGroupName} />
-            <InfoCard title="Fiyat" value={`€${Number(price).toFixed(2)}`} />
-            <InfoCard title="Maliyet" value={`€${Number(cost).toFixed(2)}`} />
+            <InfoCard title="Ürün / Product" value={name || "-"} />
+            <InfoCard title="Grup / Group" value={selectedGroupName} />
             <InfoCard
-              title="Marj"
+              title="Tedarikçi / Supplier"
+              value={selectedSupplierName}
+            />
+            <InfoCard title="Fiyat / Price" value={`€${Number(price).toFixed(2)}`} />
+            <InfoCard title="Maliyet / Cost" value={`€${Number(cost).toFixed(2)}`} />
+            <InfoCard
+              title="Marj / Margin"
               value={`€${Number(margin).toFixed(2)}`}
               green={margin >= 0}
               red={margin < 0}
             />
-            <InfoCard title="Başlangıç Stok" value={String(initialStockValue)} />
-            <InfoCard title="Minimum Stok" value={String(Number(minimumStock || 0))} />
+            <InfoCard
+              title="Başlangıç Stok / Initial Stock"
+              value={String(initialStockValue)}
+            />
+            <InfoCard
+              title="Minimum Stok / Minimum Stock"
+              value={String(Number(minimumStock || 0))}
+            />
             <InfoCard
               title="Açılış Maliyeti / Opening Cost"
               value={`€${initialInventoryCost.toFixed(2)}`}
