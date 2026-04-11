@@ -24,11 +24,18 @@ type Product = {
   group_name?: string;
   is_active?: boolean;
   product_groups?: ProductGroupRelation;
+  default_supplier_id?: number | null;
 };
 
 type ProductGroup = {
   id: string;
   name: string;
+};
+
+type Supplier = {
+  id: number;
+  name: string;
+  is_active?: boolean | null;
 };
 
 type StockMovement = {
@@ -37,31 +44,43 @@ type StockMovement = {
   product_name: string;
   movement_type: string;
   quantity: number;
-  note?: string;
+  note?: string | null;
   created_at: string;
+  supplier_id?: number | null;
+  unit_purchase_cost?: number | null;
+  document_no?: string | null;
+  document_date?: string | null;
 };
 
 export default function StockEntryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
 
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [purchaseCost, setPurchaseCost] = useState(0);
+  const [documentNo, setDocumentNo] = useState("");
+  const [documentDate, setDocumentDate] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingMovements, setLoadingMovements] = useState(true);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
   useEffect(() => {
     initializePage();
   }, []);
 
   async function initializePage() {
-    await fetchGroups();
-    await fetchProducts();
-    await fetchMovements();
+    await Promise.all([
+      fetchGroups(),
+      fetchSuppliers(),
+      fetchProducts(),
+      fetchMovements(),
+    ]);
   }
 
   function getGroupNameFromRelation(relation?: ProductGroupRelation) {
@@ -70,6 +89,11 @@ export default function StockEntryPage() {
       return relation[0]?.name || "-";
     }
     return relation.name || "-";
+  }
+
+  function getSupplierNameById(supplierId?: number | null) {
+    if (!supplierId) return "-";
+    return suppliers.find((supplier) => supplier.id === supplierId)?.name || "-";
   }
 
   async function fetchGroups() {
@@ -86,10 +110,31 @@ export default function StockEntryPage() {
     setGroups((data || []) as ProductGroup[]);
   }
 
+  async function fetchSuppliers() {
+    setLoadingSuppliers(true);
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("id, name, is_active")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error) {
+      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
+      setLoadingSuppliers(false);
+      return;
+    }
+
+    setSuppliers((data || []) as Supplier[]);
+    setLoadingSuppliers(false);
+  }
+
   async function fetchProducts() {
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, stock, price, cost, opening_stock, is_active, group_id, product_groups(name)")
+      .select(
+        "id, name, stock, price, cost, opening_stock, is_active, group_id, default_supplier_id, product_groups(name)"
+      )
       .eq("is_active", true)
       .order("name", { ascending: true });
 
@@ -111,7 +156,9 @@ export default function StockEntryPage() {
 
     const { data, error } = await supabase
       .from("stock_movements")
-      .select("*")
+      .select(
+        "id, product_id, product_name, movement_type, quantity, note, created_at, supplier_id, unit_purchase_cost, document_no, document_date"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -127,6 +174,7 @@ export default function StockEntryPage() {
   function handleGroupChange(groupId: string) {
     setSelectedGroupId(groupId);
     setSelectedProductId("");
+    setSelectedSupplierId("");
     setPurchaseCost(0);
   }
 
@@ -136,8 +184,12 @@ export default function StockEntryPage() {
     const product = products.find((p) => p.id === productId);
     if (product) {
       setPurchaseCost(Number(product.cost || 0));
+      setSelectedSupplierId(
+        product.default_supplier_id ? String(product.default_supplier_id) : ""
+      );
     } else {
       setPurchaseCost(0);
+      setSelectedSupplierId("");
     }
   }
 
@@ -154,6 +206,9 @@ export default function StockEntryPage() {
   const selectedProduct =
     products.find((p) => p.id === selectedProductId) || null;
 
+  const selectedSupplier =
+    suppliers.find((supplier) => String(supplier.id) === selectedSupplierId) || null;
+
   const currentStock = Number(selectedProduct?.stock || 0);
   const currentCost = Number(selectedProduct?.cost || 0);
   const currentOpeningStock = Number(selectedProduct?.opening_stock || 0);
@@ -169,6 +224,13 @@ export default function StockEntryPage() {
         )
       : 0;
 
+  const recentPurchaseHistory = useMemo(() => {
+    if (!selectedProductId) return [];
+    return movements
+      .filter((movement) => movement.product_id === selectedProductId)
+      .slice(0, 8);
+  }, [movements, selectedProductId]);
+
   async function handleSave() {
     if (!selectedGroupId) {
       alert("Lütfen ürün grubu seç / Please select a product group");
@@ -177,6 +239,11 @@ export default function StockEntryPage() {
 
     if (!selectedProductId) {
       alert("Lütfen ürün seç / Please select a product");
+      return;
+    }
+
+    if (!selectedSupplierId) {
+      alert("Lütfen tedarikçi seç / Please select a supplier");
       return;
     }
 
@@ -196,7 +263,9 @@ export default function StockEntryPage() {
     }
 
     if (selectedProduct.group_id !== selectedGroupId) {
-      alert("Seçilen ürün grup ile eşleşmiyor / Selected product does not match the selected group");
+      alert(
+        "Seçilen ürün grup ile eşleşmiyor / Selected product does not match the selected group"
+      );
       return;
     }
 
@@ -242,8 +311,11 @@ export default function StockEntryPage() {
 
     const movementNoteParts = [
       note?.trim() || "",
+      `Tedarikçi / Supplier: ${selectedSupplier?.name || "-"}`,
       `Alış fiyatı / Purchase cost: €${addedCostValue.toFixed(2)}`,
       `Yeni ortalama maliyet / New average cost: €${roundedWeightedCost.toFixed(2)}`,
+      documentNo.trim() ? `Belge no / Document no: ${documentNo.trim()}` : "",
+      documentDate ? `Belge tarihi / Document date: ${documentDate}` : "",
     ].filter(Boolean);
 
     const { error: movementError } = await supabase
@@ -255,6 +327,10 @@ export default function StockEntryPage() {
           movement_type: "Stock Entry / Stok Girişi",
           quantity: addedQuantityValue,
           note: movementNoteParts.join(" | "),
+          supplier_id: Number(selectedSupplierId),
+          unit_purchase_cost: addedCostValue,
+          document_no: documentNo.trim() || null,
+          document_date: documentDate || null,
         },
       ]);
 
@@ -268,12 +344,17 @@ export default function StockEntryPage() {
       return;
     }
 
-    alert("Stok eklendi ve maliyet güncellendi / Stock added and cost updated ✅");
+    alert(
+      "Stok eklendi, tedarikçi kaydedildi ve maliyet güncellendi / Stock added, supplier logged and cost updated ✅"
+    );
 
     setSelectedGroupId("");
     setSelectedProductId("");
+    setSelectedSupplierId("");
     setQuantity(1);
     setPurchaseCost(0);
+    setDocumentNo("");
+    setDocumentDate("");
     setNote("");
 
     await fetchProducts();
@@ -290,8 +371,9 @@ export default function StockEntryPage() {
           Stok Girişi / Stock Entry
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Mevcut aktif ürünlere yeni stok ekle ve hareket geçmişini takip et. / Add
-          new stock to active products and track movement history.
+          Mevcut aktif ürünlere yeni stok ekle, tedarikçiyi zorunlu kaydet ve maliyet
+          geçmişini takip et. / Add new stock to active products, require supplier
+          logging and track purchase cost history.
         </p>
       </div>
 
@@ -302,8 +384,8 @@ export default function StockEntryPage() {
               Yeni Stok Girişi / New Stock Entry
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Önce grup, sonra ürün seç; ardından stoğu artır. / Select group
-              first, then product, then increase stock.
+              Önce grup, sonra ürün seç; ardından tedarikçi ve alış bilgileriyle stoğu artır. /
+              Select group first, then product, then increase stock with supplier and purchase details.
             </p>
           </div>
 
@@ -351,6 +433,35 @@ export default function StockEntryPage() {
               </div>
             </div>
 
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Tedarikçi / Supplier
+              </label>
+              <select
+                value={selectedSupplierId}
+                onChange={(e) => setSelectedSupplierId(e.target.value)}
+                disabled={!selectedProductId || loadingSuppliers}
+                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">
+                  {!selectedProductId
+                    ? "Önce ürün seç / Select product first"
+                    : loadingSuppliers
+                    ? "Tedarikçiler yükleniyor... / Loading suppliers..."
+                    : "Tedarikçi seç / Select supplier"}
+                </option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={String(supplier.id)}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">
+                Bu alan zorunludur. Geçmiş alım takibi için her stok girişinde firma kaydedilir. /
+                This field is required. Supplier is logged on every stock entry for historical purchase tracking.
+              </p>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -375,6 +486,32 @@ export default function StockEntryPage() {
                   step="0.01"
                   value={purchaseCost}
                   onChange={(e) => setPurchaseCost(Number(e.target.value))}
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Belge No / Document No
+                </label>
+                <input
+                  value={documentNo}
+                  onChange={(e) => setDocumentNo(e.target.value)}
+                  placeholder="Fatura / İrsaliye no"
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Belge Tarihi / Document Date
+                </label>
+                <input
+                  type="date"
+                  value={documentDate}
+                  onChange={(e) => setDocumentDate(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 />
               </div>
@@ -408,19 +545,14 @@ export default function StockEntryPage() {
             Stok Özeti / Stock Summary
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Seçilen ürünün mevcut durumu. / Current status of the selected
-            product.
+            Seçilen ürünün ve alım girişinin mevcut durumu. / Current status of the selected
+            product and purchase entry.
           </p>
 
           <div className="mt-6 space-y-4">
-            <InfoCard
-              title="Grup / Group"
-              value={selectedGroupData?.name || "-"}
-            />
-            <InfoCard
-              title="Ürün / Product"
-              value={selectedProduct?.name || "-"}
-            />
+            <InfoCard title="Grup / Group" value={selectedGroupData?.name || "-"} />
+            <InfoCard title="Ürün / Product" value={selectedProduct?.name || "-"} />
+            <InfoCard title="Tedarikçi / Supplier" value={selectedSupplier?.name || "-"} />
             <InfoCard
               title="Mevcut Stok / Current Stock"
               value={selectedProduct ? String(selectedProduct.stock) : "-"}
@@ -463,6 +595,14 @@ export default function StockEntryPage() {
               }
               green
             />
+            <InfoCard
+              title="Belge No / Document No"
+              value={documentNo || "-"}
+            />
+            <InfoCard
+              title="Belge Tarihi / Document Date"
+              value={documentDate || "-"}
+            />
           </div>
         </aside>
       </div>
@@ -470,11 +610,11 @@ export default function StockEntryPage() {
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Stok Hareketleri / Stock Movements
+            Maliyet Geçmişi / Cost History
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Son stok giriş ve hareket kayıtları. / Recent stock entry and
-            movement records.
+            Son stok girişleri, tedarikçi ve alış maliyetleriyle birlikte gösterilir. /
+            Recent stock entries are shown together with supplier and purchase cost.
           </p>
         </div>
 
@@ -484,28 +624,41 @@ export default function StockEntryPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-sm">
+            <table className="w-full min-w-[1400px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
                   <th className="py-3 text-left">Ürün / Product</th>
                   <th className="py-3 text-left">İşlem / Movement</th>
+                  <th className="py-3 text-left">Tedarikçi / Supplier</th>
                   <th className="py-3 text-center">Adet / Quantity</th>
+                  <th className="py-3 text-center">Alış / Purchase</th>
+                  <th className="py-3 text-left">Belge No / Doc No</th>
+                  <th className="py-3 text-center">Belge Tarihi / Doc Date</th>
                   <th className="py-3 text-left">Not / Note</th>
-                  <th className="py-3 text-center">Tarih / Date</th>
+                  <th className="py-3 text-center">Kayıt Tarihi / Created</th>
                 </tr>
               </thead>
 
               <tbody>
-                {movements.slice(0, 20).map((movement) => (
+                {movements.slice(0, 30).map((movement) => (
                   <tr
                     key={movement.id}
                     className="border-t border-slate-800 transition hover:bg-slate-800/30"
                   >
                     <td className="py-3">{movement.product_name || "-"}</td>
                     <td className="py-3">{movement.movement_type}</td>
+                    <td className="py-3">{getSupplierNameById(movement.supplier_id) || "-"}</td>
                     <td className="py-3 text-center font-medium text-emerald-300">
                       {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
                     </td>
+                    <td className="py-3 text-center">
+                      {movement.unit_purchase_cost !== null &&
+                      movement.unit_purchase_cost !== undefined
+                        ? `€${Number(movement.unit_purchase_cost).toFixed(2)}`
+                        : "-"}
+                    </td>
+                    <td className="py-3">{movement.document_no || "-"}</td>
+                    <td className="py-3 text-center">{movement.document_date || "-"}</td>
                     <td className="py-3">{movement.note || "-"}</td>
                     <td className="py-3 text-center text-slate-400">
                       {movement.created_at?.slice(0, 10)}
@@ -515,7 +668,7 @@ export default function StockEntryPage() {
 
                 {movements.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-400">
+                    <td colSpan={9} className="py-8 text-center text-slate-400">
                       Kayıt yok / No stock movements found
                     </td>
                   </tr>
@@ -525,6 +678,53 @@ export default function StockEntryPage() {
           </div>
         )}
       </section>
+
+      {selectedProduct && recentPurchaseHistory.length > 0 && (
+        <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">
+              Seçili Ürün Son Alımlar / Selected Product Recent Purchases
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Seçili ürüne ait son girişler. / Recent entries for the selected product.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1000px] text-sm">
+              <thead className="text-slate-400">
+                <tr className="border-b border-slate-800">
+                  <th className="py-3 text-left">Tedarikçi / Supplier</th>
+                  <th className="py-3 text-center">Adet / Quantity</th>
+                  <th className="py-3 text-center">Alış / Purchase</th>
+                  <th className="py-3 text-left">Belge No / Doc No</th>
+                  <th className="py-3 text-center">Belge Tarihi / Doc Date</th>
+                  <th className="py-3 text-center">Kayıt Tarihi / Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPurchaseHistory.map((movement) => (
+                  <tr key={movement.id} className="border-t border-slate-800">
+                    <td className="py-3">{getSupplierNameById(movement.supplier_id)}</td>
+                    <td className="py-3 text-center">{movement.quantity}</td>
+                    <td className="py-3 text-center">
+                      {movement.unit_purchase_cost !== null &&
+                      movement.unit_purchase_cost !== undefined
+                        ? `€${Number(movement.unit_purchase_cost).toFixed(2)}`
+                        : "-"}
+                    </td>
+                    <td className="py-3">{movement.document_no || "-"}</td>
+                    <td className="py-3 text-center">{movement.document_date || "-"}</td>
+                    <td className="py-3 text-center text-slate-400">
+                      {movement.created_at?.slice(0, 10)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
