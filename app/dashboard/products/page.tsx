@@ -26,19 +26,11 @@ type Product = {
   group_name?: string;
   is_active?: boolean;
   product_groups?: ProductGroupRelation;
-  default_supplier_id?: number | null;
-  supplier_name?: string;
 };
 
 type ProductGroup = {
   id: string;
   name: string;
-};
-
-type Supplier = {
-  id: number;
-  name: string;
-  is_active?: boolean | null;
 };
 
 type StockMovement = {
@@ -70,18 +62,15 @@ const EMPTY_STOCK_META: ProductStockMeta = {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [stockMetaMap, setStockMetaMap] = useState<Record<string, ProductStockMeta>>({});
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(true);
-  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
   const [search, setSearch] = useState("");
   const [viewFilter, setViewFilter] = useState<ViewFilter>("active");
   const [groupFilter, setGroupFilter] = useState("all");
-  const [supplierFilter, setSupplierFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [marginFilter, setMarginFilter] = useState<MarginFilter>("all");
 
@@ -90,7 +79,6 @@ export default function ProductsPage() {
   const [editPrice, setEditPrice] = useState(0);
   const [editCost, setEditCost] = useState(0);
   const [editGroupId, setEditGroupId] = useState("");
-  const [editSupplierId, setEditSupplierId] = useState("");
   const [editMinimumStock, setEditMinimumStock] = useState(5);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -113,20 +101,15 @@ export default function ProductsPage() {
     return relation.name || "-";
   }
 
-  function getSupplierNameById(supplierId?: number | null) {
-    if (!supplierId) return "-";
-    return suppliers.find((supplier) => supplier.id === supplierId)?.name || "-";
-  }
-
   async function initializePage() {
     setLoading(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchProductsWithMeta()]);
     setLoading(false);
   }
 
   async function refreshAll() {
     setRefreshing(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchProductsWithMeta()]);
     setRefreshing(false);
   }
 
@@ -148,24 +131,6 @@ export default function ProductsPage() {
     setLoadingGroups(false);
   }
 
-  async function fetchSuppliers() {
-    setLoadingSuppliers(true);
-
-    const { data, error } = await supabase
-      .from("suppliers")
-      .select("id, name, is_active")
-      .order("name", { ascending: true });
-
-    if (error) {
-      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
-      setLoadingSuppliers(false);
-      return;
-    }
-
-    setSuppliers((data || []) as Supplier[]);
-    setLoadingSuppliers(false);
-  }
-
   async function fetchProductsWithMeta() {
     const [
       { data: productData, error: productError },
@@ -174,7 +139,7 @@ export default function ProductsPage() {
       supabase
         .from("products")
         .select(
-          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, product_groups(name)"
+          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, product_groups(name)"
         )
         .order("name", { ascending: true }),
       supabase.from("stock_movements").select("product_id, quantity, created_at"),
@@ -193,7 +158,6 @@ export default function ProductsPage() {
     const normalizedProducts = ((productData || []) as Product[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
-      supplier_name: getSupplierNameById(product.default_supplier_id),
       is_active: product.is_active ?? true,
       opening_stock: Number(product.opening_stock ?? 0),
       minimum_stock: Number(product.minimum_stock ?? 5),
@@ -212,8 +176,8 @@ export default function ProductsPage() {
       const nextLastMovementAt = !current.lastMovementAt
         ? createdAt
         : createdAt && createdAt > current.lastMovementAt
-        ? createdAt
-        : current.lastMovementAt;
+          ? createdAt
+          : current.lastMovementAt;
 
       nextStockMetaMap[productId] = {
         movementCount: current.movementCount + 1,
@@ -232,7 +196,6 @@ export default function ProductsPage() {
     setEditPrice(Number(product.price || 0));
     setEditCost(Number(product.cost || 0));
     setEditGroupId(product.group_id || "");
-    setEditSupplierId(product.default_supplier_id ? String(product.default_supplier_id) : "");
     setEditMinimumStock(Number(product.minimum_stock || 5));
   }
 
@@ -242,7 +205,6 @@ export default function ProductsPage() {
     setEditPrice(0);
     setEditCost(0);
     setEditGroupId("");
-    setEditSupplierId("");
     setEditMinimumStock(5);
   }
 
@@ -283,7 +245,6 @@ export default function ProductsPage() {
         price: Number(editPrice),
         cost: Number(editCost),
         group_id: editGroupId,
-        default_supplier_id: editSupplierId ? Number(editSupplierId) : null,
         minimum_stock: Number(editMinimumStock),
       })
       .eq("id", editingProductId);
@@ -500,16 +461,11 @@ export default function ProductsPage() {
         return product.group_id === groupFilter;
       })
       .filter((product) => {
-        if (supplierFilter === "all") return true;
-        if (supplierFilter === "none") return !product.default_supplier_id;
-        return String(product.default_supplier_id || "") === supplierFilter;
-      })
-      .filter((product) => {
         if (stockFilter === "all") return true;
-        return (
-          getStockStatus(getCalculatedStock(product), Number(product.minimum_stock || 5)) ===
-          stockFilter
-        );
+        return getStockStatus(
+          getCalculatedStock(product),
+          Number(product.minimum_stock || 5)
+        ) === stockFilter;
       })
       .filter((product) => {
         const margin = Number(product.price || 0) - Number(product.cost || 0);
@@ -520,157 +476,149 @@ export default function ProductsPage() {
       .filter((product) => {
         const productName = (product.name || "").toLowerCase();
         const groupName = (product.group_name || "").toLowerCase();
-        const supplierName = (product.supplier_name || "").toLowerCase();
-        return productName.includes(q) || groupName.includes(q) || supplierName.includes(q);
+        return productName.includes(q) || groupName.includes(q);
       });
-  }, [products, search, viewFilter, groupFilter, supplierFilter, stockFilter, marginFilter, stockMetaMap]);
+  }, [products, search, viewFilter, groupFilter, stockFilter, marginFilter, stockMetaMap]);
 
-  function exportFilteredStock() {
-    const rows = filteredProducts.map((p) => {
-      const recordedStock = Number(p.stock || 0);
-      const calculatedStock = getCalculatedStock(p);
-      const openingStock = Number(p.opening_stock ?? 0);
-      const cost = Number(p.cost || 0);
-      const price = Number(p.price || 0);
-      const margin = price - cost;
-      const diff = recordedStock - calculatedStock;
-      const stockMeta = getProductStockMeta(p.id);
+function exportFilteredStock() {
+  const rows = filteredProducts.map((p) => {
+    const recordedStock = Number(p.stock || 0);
+    const calculatedStock = getCalculatedStock(p);
+    const openingStock = Number(p.opening_stock ?? 0);
+    const cost = Number(p.cost || 0);
+    const price = Number(p.price || 0);
+    const margin = price - cost;
+    const diff = recordedStock - calculatedStock;
+    const stockMeta = getProductStockMeta(p.id);
 
-      return {
-        "Grup / Group": p.group_name || "-",
-        "Ürün / Product": p.name,
-        "Tedarikçi / Supplier": p.supplier_name || "-",
-        "Açılış Stok / Opening Stock": openingStock,
-        "Kayıtlı Stok / Recorded Stock": recordedStock,
-        "Hesaplanan Stok / Calculated Stock": calculatedStock,
-        "Minimum Stok / Minimum Stock": Number(p.minimum_stock || 5),
-        "Fark / Diff": diff,
-        "Durum / Status":
-          calculatedStock <= 0
-            ? "Stok Yok / Out of Stock"
-            : calculatedStock <= Number(p.minimum_stock || 5)
-            ? "Kritik / Critical"
-            : "Normal / Normal",
-        "Satış Fiyatı (€) / Sale Price": price,
-        "Maliyet (€) / Cost": cost,
-        "Marj (€) / Margin": margin,
-        "Stok Maliyeti (€) / Stock Cost": calculatedStock * cost,
-        "Satış Değeri (€) / Sale Value": calculatedStock * price,
-        "Potansiyel Kâr (€) / Potential Profit": calculatedStock * margin,
-        "Hareket Sayısı / Movement Count": stockMeta.movementCount,
-        "Hareket Bakiyesi / Movement Balance": stockMeta.movementBalance,
-        "Son Hareket / Last Movement": formatDateTime(stockMeta.lastMovementAt),
-        "Aktiflik / Activity": (p.is_active ?? true) ? "Aktif / Active" : "Pasif / Inactive",
-      };
-    });
-
-    const totalOpening = rows.reduce(
-      (sum, row) => sum + Number(row["Açılış Stok / Opening Stock"] || 0),
-      0
-    );
-    const totalRecorded = rows.reduce(
-      (sum, row) => sum + Number(row["Kayıtlı Stok / Recorded Stock"] || 0),
-      0
-    );
-    const totalCalculated = rows.reduce(
-      (sum, row) => sum + Number(row["Hesaplanan Stok / Calculated Stock"] || 0),
-      0
-    );
-    const totalMinimum = rows.reduce(
-      (sum, row) => sum + Number(row["Minimum Stok / Minimum Stock"] || 0),
-      0
-    );
-    const totalDiff = rows.reduce((sum, row) => sum + Number(row["Fark / Diff"] || 0), 0);
-    const totalStockCost = rows.reduce(
-      (sum, row) => sum + Number(row["Stok Maliyeti (€) / Stock Cost"] || 0),
-      0
-    );
-    const totalSaleValue = rows.reduce(
-      (sum, row) => sum + Number(row["Satış Değeri (€) / Sale Value"] || 0),
-      0
-    );
-    const totalProfit = rows.reduce(
-      (sum, row) => sum + Number(row["Potansiyel Kâr (€) / Potential Profit"] || 0),
-      0
-    );
-    const totalMovements = rows.reduce(
-      (sum, row) => sum + Number(row["Hareket Sayısı / Movement Count"] || 0),
-      0
-    );
-    const totalMovementBalance = rows.reduce(
-      (sum, row) => sum + Number(row["Hareket Bakiyesi / Movement Balance"] || 0),
-      0
-    );
-
-    rows.push({
-      "Grup / Group": "",
-      "Ürün / Product": "TOPLAM / TOTAL",
-      "Tedarikçi / Supplier": "",
-      "Açılış Stok / Opening Stock": totalOpening,
-      "Kayıtlı Stok / Recorded Stock": totalRecorded,
-      "Hesaplanan Stok / Calculated Stock": totalCalculated,
-      "Minimum Stok / Minimum Stock": totalMinimum,
-      "Fark / Diff": totalDiff,
-      "Durum / Status": "-",
-      "Satış Fiyatı (€) / Sale Price": "",
-      "Maliyet (€) / Cost": "",
-      "Marj (€) / Margin": "",
-      "Stok Maliyeti (€) / Stock Cost": totalStockCost,
-      "Satış Değeri (€) / Sale Value": totalSaleValue,
-      "Potansiyel Kâr (€) / Potential Profit": totalProfit,
-      "Hareket Sayısı / Movement Count": totalMovements,
-      "Hareket Bakiyesi / Movement Balance": totalMovementBalance,
-      "Son Hareket / Last Movement": "",
-      "Aktiflik / Activity": "",
-    } as any);
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(rows);
-
-    ws["!cols"] = [
-      { wch: 18 },
-      { wch: 28 },
-      { wch: 22 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 12 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 24 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 22 },
-      { wch: 16 },
-    ];
-
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-
-    ws["!autofilter"] = {
-      ref: ws["!ref"] || "A1",
+    return {
+      "Grup": p.group_name || "-",
+      "Ürün": p.name,
+      "Açılış Stok": openingStock,
+      "Kayıtlı Stok": recordedStock,
+      "Hesaplanan Stok": calculatedStock,
+      "Minimum Stok": Number(p.minimum_stock || 5),
+      "Fark": diff,
+      "Durum":
+        calculatedStock <= 0
+          ? "Stok Yok"
+          : calculatedStock <= Number(p.minimum_stock || 5)
+          ? "Kritik"
+          : "Normal",
+      "Satış Fiyatı (€)": price,
+      "Maliyet (€)": cost,
+      "Marj (€)": margin,
+      "Stok Maliyeti (€)": calculatedStock * cost,
+      "Satış Değeri (€)": calculatedStock * price,
+      "Potansiyel Kâr (€)": calculatedStock * margin,
+      "Hareket Sayısı": stockMeta.movementCount,
+      "Hareket Bakiyesi": stockMeta.movementBalance,
+      "Son Hareket": formatDateTime(stockMeta.lastMovementAt),
+      "Aktiflik": (p.is_active ?? true) ? "Aktif" : "Pasif",
     };
+  });
 
-    ws["!freeze"] = { xSplit: 0, ySplit: 1 };
+  const totalOpening = rows.reduce((sum, row) => sum + Number(row["Açılış Stok"] || 0), 0);
+  const totalRecorded = rows.reduce((sum, row) => sum + Number(row["Kayıtlı Stok"] || 0), 0);
+  const totalCalculated = rows.reduce((sum, row) => sum + Number(row["Hesaplanan Stok"] || 0), 0);
+  const totalMinimum = rows.reduce((sum, row) => sum + Number(row["Minimum Stok"] || 0), 0);
+  const totalDiff = rows.reduce((sum, row) => sum + Number(row["Fark"] || 0), 0);
+  const totalStockCost = rows.reduce((sum, row) => sum + Number(row["Stok Maliyeti (€)"] || 0), 0);
+  const totalSaleValue = rows.reduce((sum, row) => sum + Number(row["Satış Değeri (€)"] || 0), 0);
+  const totalProfit = rows.reduce((sum, row) => sum + Number(row["Potansiyel Kâr (€)"] || 0), 0);
+  const totalMovements = rows.reduce((sum, row) => sum + Number(row["Hareket Sayısı"] || 0), 0);
+  const totalMovementBalance = rows.reduce((sum, row) => sum + Number(row["Hareket Bakiyesi"] || 0), 0);
 
-    const headerFill = "1E293B";
-    const headerFont = "FFFFFF";
-    const totalFill = "D9EAF7";
-    const totalFont = "111827";
-    const borderColor = "94A3B8";
+  rows.push({
+    "Grup": "",
+    "Ürün": "TOPLAM",
+    "Açılış Stok": totalOpening,
+    "Kayıtlı Stok": totalRecorded,
+    "Hesaplanan Stok": totalCalculated,
+    "Minimum Stok": totalMinimum,
+    "Fark": totalDiff,
+    "Durum": "-",
+    "Satış Fiyatı (€)": "",
+    "Maliyet (€)": "",
+    "Marj (€)": "",
+    "Stok Maliyeti (€)": totalStockCost,
+    "Satış Değeri (€)": totalSaleValue,
+    "Potansiyel Kâr (€)": totalProfit,
+    "Hareket Sayısı": totalMovements,
+    "Hareket Bakiyesi": totalMovementBalance,
+    "Son Hareket": "",
+    "Aktiflik": "",
+  } as any);
 
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  ws["!cols"] = [
+    { wch: 18 }, // Grup
+    { wch: 28 }, // Ürün
+    { wch: 14 }, // Açılış
+    { wch: 14 }, // Kayıtlı
+    { wch: 16 }, // Hesaplanan
+    { wch: 14 }, // Minimum
+    { wch: 10 }, // Fark
+    { wch: 12 }, // Durum
+    { wch: 15 }, // Satış
+    { wch: 15 }, // Maliyet
+    { wch: 12 }, // Marj
+    { wch: 18 }, // Stok Maliyeti
+    { wch: 18 }, // Satış Değeri
+    { wch: 18 }, // Potansiyel Kâr
+    { wch: 14 }, // Hareket Sayısı
+    { wch: 16 }, // Hareket Bakiyesi
+    { wch: 22 }, // Son Hareket
+    { wch: 12 }, // Aktiflik
+  ];
+
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+
+  ws["!autofilter"] = {
+    ref: ws["!ref"] || "A1",
+  };
+
+  ws["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+  const headerFill = "1E293B";
+  const headerFont = "FFFFFF";
+  const totalFill = "D9EAF7";
+  const totalFont = "111827";
+  const borderColor = "94A3B8";
+
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!ws[cellAddress]) continue;
+
+    ws[cellAddress].s = {
+      font: { bold: true, color: { rgb: headerFont } },
+      fill: { fgColor: { rgb: headerFill } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin", color: { rgb: borderColor } },
+        bottom: { style: "thin", color: { rgb: borderColor } },
+        left: { style: "thin", color: { rgb: borderColor } },
+        right: { style: "thin", color: { rgb: borderColor } },
+      },
+    };
+  }
+
+  for (let row = 1; row <= range.e.r; row++) {
     for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
       if (!ws[cellAddress]) continue;
 
+      const isTotalRow = row === range.e.r;
+
       ws[cellAddress].s = {
-        font: { bold: true, color: { rgb: headerFont } },
-        fill: { fgColor: { rgb: headerFill } },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        font: isTotalRow ? { bold: true, color: { rgb: totalFont } } : {},
+        fill: isTotalRow ? { fgColor: { rgb: totalFill } } : undefined,
+        alignment: {
+          horizontal: col <= 1 ? "left" : "center",
+          vertical: "center",
+        },
         border: {
           top: { style: "thin", color: { rgb: borderColor } },
           bottom: { style: "thin", color: { rgb: borderColor } },
@@ -679,57 +627,22 @@ export default function ProductsPage() {
         },
       };
     }
-
-    for (let row = 1; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        if (!ws[cellAddress]) continue;
-
-        const isTotalRow = row === range.e.r;
-
-        ws[cellAddress].s = {
-          font: isTotalRow ? { bold: true, color: { rgb: totalFont } } : {},
-          fill: isTotalRow ? { fgColor: { rgb: totalFill } } : undefined,
-          alignment: {
-            horizontal: col <= 2 ? "left" : "center",
-            vertical: "center",
-          },
-          border: {
-            top: { style: "thin", color: { rgb: borderColor } },
-            bottom: { style: "thin", color: { rgb: borderColor } },
-            left: { style: "thin", color: { rgb: borderColor } },
-            right: { style: "thin", color: { rgb: borderColor } },
-          },
-        };
-      }
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, "Gerçek Stok / Real Stock");
-
-    const viewSuffix =
-      viewFilter === "active" ? "aktif" : viewFilter === "inactive" ? "pasif" : "tum";
-
-    const groupSuffix =
-      groupFilter === "all"
-        ? "tum-gruplar"
-        : (groups.find((group) => group.id === groupFilter)?.name || "grup")
-            .toLowerCase()
-            .replaceAll(" ", "-");
-
-    const supplierSuffix =
-      supplierFilter === "all"
-        ? "tum-tedarikciler"
-        : supplierFilter === "none"
-        ? "tedarikcisiz"
-        : (suppliers.find((supplier) => String(supplier.id) === supplierFilter)?.name || "supplier")
-            .toLowerCase()
-            .replaceAll(" ", "-");
-
-    XLSX.writeFile(
-      wb,
-      `gercek-stok-${viewSuffix}-${groupSuffix}-${supplierSuffix}.xlsx`
-    );
   }
+
+  XLSX.utils.book_append_sheet(wb, ws, "Gerçek Stok");
+
+  const viewSuffix =
+    viewFilter === "active" ? "aktif" : viewFilter === "inactive" ? "pasif" : "tum";
+
+  const groupSuffix =
+    groupFilter === "all"
+      ? "tum-gruplar"
+      : (groups.find((group) => group.id === groupFilter)?.name || "grup")
+          .toLowerCase()
+          .replaceAll(" ", "-");
+
+  XLSX.writeFile(wb, `gercek-stok-${viewSuffix}-${groupSuffix}.xlsx`);
+}
 
   const totalProducts = products.length;
 
@@ -739,10 +652,6 @@ export default function ProductsPage() {
 
   const inactiveProductsCount = useMemo(() => {
     return products.filter((product) => (product.is_active ?? true) === false).length;
-  }, [products]);
-
-  const productsWithSupplierCount = useMemo(() => {
-    return products.filter((product) => !!product.default_supplier_id).length;
   }, [products]);
 
   const totalCalculatedStock = useMemo(() => {
@@ -833,8 +742,6 @@ export default function ProductsPage() {
 
   const editingMargin = Number(editPrice || 0) - Number(editCost || 0);
   const selectedGroupName = groups.find((group) => group.id === editGroupId)?.name || "-";
-  const selectedSupplierName =
-    suppliers.find((supplier) => String(supplier.id) === editSupplierId)?.name || "-";
 
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
@@ -845,10 +752,8 @@ export default function ProductsPage() {
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Ürünler / Products</h1>
           <p className="mt-3 max-w-3xl text-sm text-slate-400">
-            Ürünleri, gerçek stok görünümünü, marj yapısını, grup yapısını, tedarikçi
-            ilişkisini ve aktif/pasif durumunu yönet. / Manage products, real stock
-            visibility, margin structure, group structure, supplier relation, and
-            active/inactive status.
+            Ürünleri, gerçek stok görünümünü, marj yapısını, grup yapısını ve aktif/pasif durumunu yönet. /
+            Manage products, real stock visibility, margin structure, group structure, and active/inactive status.
           </p>
         </div>
 
@@ -931,7 +836,6 @@ export default function ProductsPage() {
         <SummaryCard title="Toplam Ürün / Total Products" value={String(totalProducts)} />
         <SummaryCard title="Aktif Ürün / Active Products" value={String(activeProductsCount)} />
         <SummaryCard title="Pasif Ürün / Inactive Products" value={String(inactiveProductsCount)} />
-        <SummaryCard title="Tedarikçili Ürün / With Supplier" value={String(productsWithSupplierCount)} />
         <SummaryCard title="Gerçek Stok / Real Stock" value={String(totalCalculatedStock)} />
         <SummaryCard title="Kritik Stok / Critical Stock" value={String(criticalStockCount)} amber />
         <SummaryCard title="Stoksuz / Out of Stock" value={String(outOfStockCount)} red />
@@ -940,167 +844,155 @@ export default function ProductsPage() {
           value={`€${totalInventoryCost.toFixed(2)}`}
         />
         <SummaryCard
-          title="Satış Değeri / Sale Value"
-          value={`€${totalInventorySaleValue.toFixed(2)}`}
-        />
-        <SummaryCard
-          title="Hareketsiz / No Movements"
-          value={String(noMovementHistoryCount)}
-          amber={noMovementHistoryCount > 0}
-        />
-        <SummaryCard
           title="Uyumsuz Kayıt / Mismatch"
           value={String(mismatchCount)}
           amber={mismatchCount > 0}
         />
       </div>
 
-<section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-  <div className="grid gap-6 2xl:grid-cols-[1.65fr_0.95fr]">
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Arama / Search
-        </label>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Ürün, grup veya tedarikçi ara / Search product, group or supplier"
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
-        />
-      </div>
+      <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
+        <div className="grid gap-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Arama / Search
+              </label>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Ürün, grup veya tedarikçi ara / Search product, group or supplier"
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+              />
+            </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Durum / Status
-        </label>
-        <select
-          value={viewFilter}
-          onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-        >
-          <option value="active">Aktif / Active</option>
-          <option value="inactive">Pasif / Inactive</option>
-          <option value="all">Tümü / All</option>
-        </select>
-      </div>
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Durum / Status
+              </label>
+              <select
+                value={viewFilter}
+                onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+              >
+                <option value="active">Aktif / Active</option>
+                <option value="inactive">Pasif / Inactive</option>
+                <option value="all">Tümü / All</option>
+              </select>
+            </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Grup Filtresi / Group Filter
-        </label>
-        <select
-          value={groupFilter}
-          onChange={(e) => setGroupFilter(e.target.value)}
-          disabled={loadingGroups}
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <option value="all">
-            {loadingGroups ? "Gruplar yükleniyor..." : "Tüm gruplar / All groups"}
-          </option>
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
-      </div>
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Grup Filtresi / Group Filter
+              </label>
+              <select
+                value={groupFilter}
+                onChange={(e) => setGroupFilter(e.target.value)}
+                disabled={loadingGroups}
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="all">
+                  {loadingGroups ? "Gruplar yükleniyor..." : "Tüm gruplar / All groups"}
+                </option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Tedarikçi Filtresi / Supplier Filter
-        </label>
-        <select
-          value={supplierFilter}
-          onChange={(e) => setSupplierFilter(e.target.value)}
-          disabled={loadingSuppliers}
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <option value="all">
-            {loadingSuppliers
-              ? "Tedarikçiler yükleniyor..."
-              : "Tüm tedarikçiler / All suppliers"}
-          </option>
-          <option value="none">Tedarikçisiz / No supplier</option>
-          {suppliers.map((supplier) => (
-            <option key={supplier.id} value={String(supplier.id)}>
-              {supplier.name}
-            </option>
-          ))}
-        </select>
-      </div>
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Tedarikçi Filtresi / Supplier Filter
+              </label>
+              <select
+                value={supplierFilter}
+                onChange={(e) => setSupplierFilter(e.target.value)}
+                disabled={loadingSuppliers}
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="all">
+                  {loadingSuppliers
+                    ? "Tedarikçiler yükleniyor..."
+                    : "Tüm tedarikçiler / All suppliers"}
+                </option>
+                <option value="none">Tedarikçisiz / No supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={String(supplier.id)}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Stok Filtresi / Stock Filter
-        </label>
-        <select
-          value={stockFilter}
-          onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-        >
-          <option value="all">Tümü / All</option>
-          <option value="normal">Normal</option>
-          <option value="critical">Kritik / Critical</option>
-          <option value="out">Stok Yok / Out of Stock</option>
-        </select>
-      </div>
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Stok Filtresi / Stock Filter
+              </label>
+              <select
+                value={stockFilter}
+                onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+              >
+                <option value="all">Tümü / All</option>
+                <option value="normal">Normal</option>
+                <option value="critical">Kritik / Critical</option>
+                <option value="out">Stok Yok / Out of Stock</option>
+              </select>
+            </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
-          Marj Filtresi / Margin Filter
-        </label>
-        <select
-          value={marginFilter}
-          onChange={(e) => setMarginFilter(e.target.value as MarginFilter)}
-          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-        >
-          <option value="all">Tümü / All</option>
-          <option value="profit">Kârda / Profitable</option>
-          <option value="loss">Ekside / Negative Margin</option>
-        </select>
-      </div>
-    </div>
+            <div className="min-w-0">
+              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
+                Marj Filtresi / Margin Filter
+              </label>
+              <select
+                value={marginFilter}
+                onChange={(e) => setMarginFilter(e.target.value as MarginFilter)}
+                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+              >
+                <option value="all">Tümü / All</option>
+                <option value="profit">Kârda / Profitable</option>
+                <option value="loss">Ekside / Negative Margin</option>
+              </select>
+            </div>
+          </div>
 
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <InfoCard
-        title="Filtreli Ürün / Filtered Products"
-        value={String(filteredProducts.length)}
-      />
-      <InfoCard
-        title="Filtreli Gerçek Stok / Filtered Real Stock"
-        value={String(filteredStockTotal)}
-      />
-      <InfoCard
-        title="Filtreli Satış Değeri / Filtered Sale Value"
-        value={`€${filteredInventoryValue.toFixed(2)}`}
-      />
-      <InfoCard
-        title="Potansiyel Kâr / Potential Profit"
-        value={`€${filteredPotentialProfit.toFixed(2)}`}
-        green={filteredPotentialProfit >= 0}
-        red={filteredPotentialProfit < 0}
-      />
-      <InfoCard
-        title="Toplam Satış Değeri / Total Sale Value"
-        value={`€${totalInventorySaleValue.toFixed(2)}`}
-      />
-      <InfoCard
-        title="Not / Note"
-        value="Gerçek stok = opening_stock + stock_movements"
-      />
-    </div>
-  </div>
-</section>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <InfoCard
+              title="Filtreli Ürün / Filtered Products"
+              value={String(filteredProducts.length)}
+            />
+            <InfoCard
+              title="Filtreli Gerçek Stok / Filtered Real Stock"
+              value={String(filteredStockTotal)}
+            />
+            <InfoCard
+              title="Filtreli Satış Değeri / Filtered Sale Value"
+              value={`€${filteredInventoryValue.toFixed(2)}`}
+            />
+            <InfoCard
+              title="Potansiyel Kâr / Potential Profit"
+              value={`€${filteredPotentialProfit.toFixed(2)}`}
+              green={filteredPotentialProfit >= 0}
+              red={filteredPotentialProfit < 0}
+            />
+            <InfoCard
+              title="Toplam Satış Değeri / Total Sale Value"
+              value={`€${totalInventorySaleValue.toFixed(2)}`}
+            />
+            <InfoCard
+              title="Not / Note"
+              value="Gerçek stok = opening_stock + stock_movements"
+            />
+          </div>
+        </div>
+      </section>
 
-      {editingProductId && (
+{editingProductId && (
         <section className="mb-8 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">Ürün Düzenle / Edit Product</h2>
-            <p className="mt-1 text-sm text-slate-400">
-              Seçili ürünü güncelle. Varsayılan tedarikçi burada değiştirilebilir. /
-              Update the selected product. Default supplier can be changed here.
-            </p>
+            <p className="mt-1 text-sm text-slate-400">Seçili ürünü güncelle. / Update the selected product.</p>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -1135,29 +1027,6 @@ export default function ProductsPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Varsayılan Tedarikçi / Default Supplier
-                </label>
-                <select
-                  value={editSupplierId}
-                  onChange={(e) => setEditSupplierId(e.target.value)}
-                  disabled={loadingSuppliers}
-                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <option value="">
-                    {loadingSuppliers
-                      ? "Tedarikçiler yükleniyor..."
-                      : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
-                  </option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={String(supplier.id)}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -1184,9 +1053,7 @@ export default function ProductsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Minimum Stok / Minimum Stock
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">Minimum Stok / Minimum Stock</label>
                   <input
                     type="number"
                     min={0}
@@ -1218,7 +1085,6 @@ export default function ProductsPage() {
             <div className="space-y-4">
               <InfoCard title="Yeni Ürün Adı / New Product Name" value={editName || "-"} />
               <InfoCard title="Yeni Grup / New Group" value={selectedGroupName} />
-              <InfoCard title="Yeni Tedarikçi / New Supplier" value={selectedSupplierName} />
               <InfoCard
                 title="Yeni Satış Fiyatı / New Sale Price"
                 value={`€${Number(editPrice || 0).toFixed(2)}`}
@@ -1247,10 +1113,8 @@ export default function ProductsPage() {
           <div>
             <h2 className="text-lg font-semibold">Ürün Listesi / Product List</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Açılış stok + hareket toplamına göre gerçek stok görünümü. Tedarikçi
-              bilgisi ürün kartıyla birlikte gösterilir. /
-              Real stock view based on opening stock + movement balance. Supplier
-              info is shown together with the product card.
+              Açılış stok + hareket toplamına göre gerçek stok görünümü. /
+              Real stock view based on opening stock + movement balance.
             </p>
           </div>
           <div className="text-xs text-slate-500">
@@ -1262,150 +1126,147 @@ export default function ProductsPage() {
           <div className="text-sm text-slate-400">Yükleniyor / Loading...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[3300px] text-sm">
-              <thead className="text-slate-400">
-                <tr className="border-b border-slate-800">
-                  <th className="px-4 py-4 text-left">
-                    <div className="min-w-[120px]">
-                      <div className="text-sm font-semibold text-slate-300">Grup</div>
-                      <div className="text-xs text-slate-500">Group</div>
-                    </div>
-                  </th>
+            <table className="w-full min-w-[2900px] text-sm">
+<thead className="text-slate-400">
+  <tr className="border-b border-slate-800">
 
-                  <th className="px-4 py-4 text-left">
-                    <div className="min-w-[180px]">
-                      <div className="text-sm font-semibold text-slate-300">Ürün</div>
-                      <div className="text-xs text-slate-500">Product</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-left">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Grup</div>
+        <div className="text-xs text-slate-500">Group</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-left">
-                    <div className="min-w-[180px]">
-                      <div className="text-sm font-semibold text-slate-300">Tedarikçi</div>
-                      <div className="text-xs text-slate-500">Supplier</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-left">
+      <div className="min-w-[180px]">
+        <div className="text-sm font-semibold text-slate-300">Ürün</div>
+        <div className="text-xs text-slate-500">Product</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[110px]">
-                      <div className="text-sm font-semibold text-slate-300">Hesaplanan</div>
-                      <div className="text-xs text-slate-500">Calculated</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[110px]">
+        <div className="text-sm font-semibold text-slate-300">Hesaplanan</div>
+        <div className="text-xs text-slate-500">Calculated</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[90px]">
-                      <div className="text-sm font-semibold text-slate-300">Min</div>
-                      <div className="text-xs text-slate-500">Minimum</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[90px]">
+        <div className="text-sm font-semibold text-slate-300">Min</div>
+        <div className="text-xs text-slate-500">Minimum</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[100px]">
-                      <div className="text-sm font-semibold text-slate-300">Satış</div>
-                      <div className="text-xs text-slate-500">Sale</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[100px]">
+        <div className="text-sm font-semibold text-slate-300">Satış</div>
+        <div className="text-xs text-slate-500">Sale</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[100px]">
-                      <div className="text-sm font-semibold text-slate-300">Maliyet</div>
-                      <div className="text-xs text-slate-500">Cost</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[100px]">
+        <div className="text-sm font-semibold text-slate-300">Maliyet</div>
+        <div className="text-xs text-slate-500">Cost</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[90px]">
-                      <div className="text-sm font-semibold text-slate-300">Marj</div>
-                      <div className="text-xs text-slate-500">Margin</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[90px]">
+        <div className="text-sm font-semibold text-slate-300">Marj</div>
+        <div className="text-xs text-slate-500">Margin</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[90px]">
-                      <div className="text-sm font-semibold text-slate-300">Açılış</div>
-                      <div className="text-xs text-slate-500">Opening</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[90px]">
+        <div className="text-sm font-semibold text-slate-300">Açılış</div>
+        <div className="text-xs text-slate-500">Opening</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[90px]">
-                      <div className="text-sm font-semibold text-slate-300">Kayıtlı</div>
-                      <div className="text-xs text-slate-500">Recorded</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[90px]">
+        <div className="text-sm font-semibold text-slate-300">Kayıtlı</div>
+        <div className="text-xs text-slate-500">Recorded</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[90px]">
-                      <div className="text-sm font-semibold text-slate-300">Fark</div>
-                      <div className="text-xs text-slate-500">Diff</div>
-                    </div>
-                  </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[120px]">
-                      <div className="text-sm font-semibold text-slate-300">Durum</div>
-                      <div className="text-xs text-slate-500">Status</div>
-                    </div>
-                  </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[120px]">
-                      <div className="text-sm font-semibold text-slate-300">Stok Maliyeti</div>
-                      <div className="text-xs text-slate-500">Stock Cost</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[90px]">
+        <div className="text-sm font-semibold text-slate-300">Fark</div>
+        <div className="text-xs text-slate-500">Diff</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[120px]">
-                      <div className="text-sm font-semibold text-slate-300">Satış Değeri</div>
-                      <div className="text-xs text-slate-500">Sale Value</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Durum</div>
+        <div className="text-xs text-slate-500">Status</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[110px]">
-                      <div className="text-sm font-semibold text-slate-300">Hareket</div>
-                      <div className="text-xs text-slate-500">Movements</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Stok Maliyeti</div>
+        <div className="text-xs text-slate-500">Stock Cost</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[130px]">
-                      <div className="text-sm font-semibold text-slate-300">Bakiye</div>
-                      <div className="text-xs text-slate-500">Balance</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Satış Değeri</div>
+        <div className="text-xs text-slate-500">Sale Value</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[130px]">
-                      <div className="text-sm font-semibold text-slate-300">Son Hareket</div>
-                      <div className="text-xs text-slate-500">Last</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[110px]">
+        <div className="text-sm font-semibold text-slate-300">Hareket</div>
+        <div className="text-xs text-slate-500">Movements</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[120px]">
-                      <div className="text-sm font-semibold text-slate-300">Geçmiş</div>
-                      <div className="text-xs text-slate-500">History</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[130px]">
+        <div className="text-sm font-semibold text-slate-300">Bakiye</div>
+        <div className="text-xs text-slate-500">Balance</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[100px]">
-                      <div className="text-sm font-semibold text-slate-300">Durum</div>
-                      <div className="text-xs text-slate-500">Active</div>
-                    </div>
-                  </th>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[130px]">
+        <div className="text-sm font-semibold text-slate-300">Son Hareket</div>
+        <div className="text-xs text-slate-500">Last</div>
+      </div>
+    </th>
 
-                  <th className="px-4 py-4 text-center">
-                    <div className="min-w-[150px]">
-                      <div className="text-sm font-semibold text-slate-300">İşlemler</div>
-                      <div className="text-xs text-slate-500">Actions</div>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Geçmiş</div>
+        <div className="text-xs text-slate-500">History</div>
+      </div>
+    </th>
+
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[100px]">
+        <div className="text-sm font-semibold text-slate-300">Durum</div>
+        <div className="text-xs text-slate-500">Active</div>
+      </div>
+    </th>
+
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[150px]">
+        <div className="text-sm font-semibold text-slate-300">İşlemler</div>
+        <div className="text-xs text-slate-500">Actions</div>
+      </div>
+    </th>
+
+  </tr>
+</thead>
 
               <tbody>
                 {filteredProducts.map((product) => {
@@ -1434,15 +1295,10 @@ export default function ProductsPage() {
                     >
                       <td className="py-3 text-base text-white">{product.group_name || "-"}</td>
                       <td className="py-3 text-base font-semibold text-white">{product.name}</td>
-                      <td className="py-3 text-base text-slate-300">{product.supplier_name || "-"}</td>
-                      <td
-                        className={`py-3 text-center text-base font-semibold ${
-                          isOut ? "text-red-300" : isCritical ? "text-amber-300" : "text-white"
-                        }`}
-                      >
+                      <td className={`py-3 text-center text-base font-semibold ${isOut ? "text-red-300" : isCritical ? "text-amber-300" : "text-white"}`}>
                         {calculatedStock}
                       </td>
-                      <td className="py-3 text-center text-base font-semibold text-blue-300">
+                      <td className="py-3 text-center text-base text-blue-300 font-semibold">
                         {minimumStock}
                       </td>
                       <td className="py-3 text-center text-base">€{price.toFixed(2)}</td>
@@ -1456,11 +1312,7 @@ export default function ProductsPage() {
                       </td>
                       <td className="py-3 text-center text-base">{openingStock}</td>
                       <td className="py-3 text-center text-base text-slate-300">{recordedStock}</td>
-                      <td
-                        className={`py-3 text-center text-base font-semibold ${
-                          diff === 0 ? "text-emerald-300" : "text-red-300"
-                        }`}
-                      >
+                      <td className={`py-3 text-center text-base font-semibold ${diff === 0 ? "text-emerald-300" : "text-red-300"}`}>
                         {diff}
                       </td>
                       <td className="py-3 text-center">
@@ -1505,8 +1357,8 @@ export default function ProductsPage() {
                             {busy
                               ? "Bekle... / Wait..."
                               : isActive
-                              ? "Pasife Al / Archive"
-                              : "Aktif Yap / Activate"}
+                                ? "Pasife Al / Archive"
+                                : "Aktif Yap / Activate"}
                           </button>
 
                           <button
@@ -1524,7 +1376,7 @@ export default function ProductsPage() {
 
                 {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={20} className="py-8 text-center text-slate-400">
+                    <td colSpan={19} className="py-8 text-center text-slate-400">
                       Kayıt yok / No products found
                     </td>
                   </tr>
@@ -1540,17 +1392,12 @@ export default function ProductsPage() {
           <div className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40">
             <div className="flex flex-col gap-4 border-b border-slate-800 px-6 py-5 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Stock Movements
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Stock Movements</p>
                 <h3 className="mt-2 text-2xl font-bold text-white">
                   {selectedMovementProduct?.name || "-"}
                 </h3>
                 <p className="mt-2 text-sm text-slate-400">
                   Grup / Group: {selectedMovementProduct?.group_name || "-"}
-                </p>
-                <p className="mt-1 text-sm text-slate-400">
-                  Tedarikçi / Supplier: {selectedMovementProduct?.supplier_name || "-"}
                 </p>
               </div>
 
@@ -1563,7 +1410,10 @@ export default function ProductsPage() {
                   title="Kayıtlı / Recorded"
                   value={String(Number(selectedMovementProduct?.stock || 0))}
                 />
-                <InfoCard title="Hareket / Movement" value={String(movementModalBalance)} />
+                <InfoCard
+                  title="Hareket / Movement"
+                  value={String(movementModalBalance)}
+                />
                 <InfoCard
                   title="Hesaplanan / Calculated"
                   value={String(
@@ -1600,17 +1450,10 @@ export default function ProductsPage() {
                         const quantity = Number(movement.quantity || 0);
                         const positive = quantity > 0;
                         return (
-                          <tr
-                            key={movement.id || `${movement.created_at}-${movement.note}`}
-                            className="border-t border-slate-800"
-                          >
+                          <tr key={movement.id || `${movement.created_at}-${movement.note}`} className="border-t border-slate-800">
                             <td className="py-3 text-slate-300">{formatDateTime(movement.created_at)}</td>
                             <td className="py-3 text-white">{movement.movement_type || "-"}</td>
-                            <td
-                              className={`py-3 text-center font-semibold ${
-                                positive ? "text-emerald-300" : "text-red-300"
-                              }`}
-                            >
+                            <td className={`py-3 text-center font-semibold ${positive ? "text-emerald-300" : "text-red-300"}`}>
                               {positive ? `+${quantity}` : quantity}
                             </td>
                             <td className="py-3 text-slate-300">{movement.note || "-"}</td>
@@ -1730,8 +1573,8 @@ function AlertPill({
   const classes = red
     ? "border-red-500/20 bg-red-500/10 text-red-300"
     : amber
-    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-    : "border-slate-700 bg-slate-900 text-white";
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+      : "border-slate-700 bg-slate-900 text-white";
 
   return (
     <div className={`rounded-2xl border px-4 py-3 ${classes}`}>
