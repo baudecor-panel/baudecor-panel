@@ -886,7 +886,7 @@ function exportFilteredStock() {
         </section>
       )}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
+      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-10">
         <SummaryCard title="Toplam Ürün / Total Products" value={String(totalProducts)} />
         <SummaryCard title="Aktif Ürün / Active Products" value={String(activeProductsCount)} />
         <SummaryCard title="Pasif Ürün / Inactive Products" value={String(inactiveProductsCount)} />
@@ -897,6 +897,11 @@ function exportFilteredStock() {
         <SummaryCard
           title="Envanter Maliyeti / Inventory Cost"
           value={`€${totalInventoryCost.toFixed(2)}`}
+        />
+        <SummaryCard
+          title="Potansiyel Kâr / Potential Profit"
+          value={`€${filteredPotentialProfit.toFixed(2)}`}
+          amber={filteredPotentialProfit < 0}
         />
         <SummaryCard
           title="Uyumsuz Kayıt / Mismatch"
@@ -1204,7 +1209,7 @@ function exportFilteredStock() {
           <div className="text-sm text-slate-400">Yükleniyor / Loading...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[3300px] text-sm">
+            <table className="w-full min-w-[3550px] text-sm">
 <thead className="text-slate-400">
   <tr className="border-b border-slate-800">
 
@@ -1261,6 +1266,20 @@ function exportFilteredStock() {
       <div className="min-w-[90px]">
         <div className="text-sm font-semibold text-slate-300">Marj</div>
         <div className="text-xs text-slate-500">Margin</div>
+      </div>
+    </th>
+
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[100px]">
+        <div className="text-sm font-semibold text-slate-300">Marj %</div>
+        <div className="text-xs text-slate-500">Margin %</div>
+      </div>
+    </th>
+
+    <th className="px-4 py-4 text-center">
+      <div className="min-w-[120px]">
+        <div className="text-sm font-semibold text-slate-300">Stok Kârı</div>
+        <div className="text-xs text-slate-500">Stock Profit</div>
       </div>
     </th>
 
@@ -1362,6 +1381,8 @@ function exportFilteredStock() {
                   const calculatedStock = getCalculatedStock(product);
                   const diff = getStockDiff(product);
                   const margin = price - cost;
+                  const marginPercent = price > 0 ? (margin / price) * 100 : 0;
+                  const stockProfit = calculatedStock * margin;
                   const isActive = product.is_active ?? true;
                   const busy = actionLoadingId === product.id;
                   const stockMeta = getProductStockMeta(product.id);
@@ -1395,6 +1416,20 @@ function exportFilteredStock() {
                         }`}
                       >
                         €{margin.toFixed(2)}
+                      </td>
+                      <td
+                        className={`py-3 text-center text-base font-semibold ${
+                          marginPercent >= 0 ? "text-emerald-300" : "text-red-300"
+                        }`}
+                      >
+                        %{marginPercent.toFixed(1)}
+                      </td>
+                      <td
+                        className={`py-3 text-center text-base font-semibold ${
+                          stockProfit >= 0 ? "text-emerald-300" : "text-red-300"
+                        }`}
+                      >
+                        €{stockProfit.toFixed(2)}
                       </td>
                       <td className="py-3 text-center text-base">{openingStock}</td>
                       <td className="py-3 text-center text-base text-slate-300">{recordedStock}</td>
@@ -1462,7 +1497,7 @@ function exportFilteredStock() {
 
                 {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={20} className="py-8 text-center text-slate-400">
+                    <td colSpan={22} className="py-8 text-center text-slate-400">
                       Kayıt yok / No products found
                     </td>
                   </tr>
