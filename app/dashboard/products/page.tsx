@@ -852,7 +852,7 @@ function exportFilteredStock() {
 
       <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="grid gap-6">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
                 Arama / Search
@@ -900,32 +900,7 @@ function exportFilteredStock() {
                 ))}
               </select>
             </div>
-
-            <div className="min-w-0">
-              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Tedarikçi Filtresi / Supplier Filter
-              </label>
-              <select
-                value={supplierFilter}
-                onChange={(e) => setSupplierFilter(e.target.value)}
-                disabled={loadingSuppliers}
-                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="all">
-                  {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor..."
-                    : "Tüm tedarikçiler / All suppliers"}
-                </option>
-                <option value="none">Tedarikçisiz / No supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={String(supplier.id)}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="min-w-0">
+<div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
                 Stok Filtresi / Stock Filter
               </label>
