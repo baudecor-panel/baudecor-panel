@@ -955,133 +955,143 @@ export default function ProductsPage() {
         />
       </div>
 
-      <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-        <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">Arama / Search</label>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Ürün, grup veya tedarikçi ara / Search product, group or supplier"
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-              />
-            </div>
+<section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
+  <div className="grid gap-6 2xl:grid-cols-[1.65fr_0.95fr]">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Arama / Search
+        </label>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Ürün, grup veya tedarikçi ara / Search product, group or supplier"
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+        />
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">Durum / Status</label>
-              <select
-                value={viewFilter}
-                onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-              >
-                <option value="active">Aktif / Active</option>
-                <option value="inactive">Pasif / Inactive</option>
-                <option value="all">Tümü / All</option>
-              </select>
-            </div>
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Durum / Status
+        </label>
+        <select
+          value={viewFilter}
+          onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+        >
+          <option value="active">Aktif / Active</option>
+          <option value="inactive">Pasif / Inactive</option>
+          <option value="all">Tümü / All</option>
+        </select>
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
-                Grup Filtresi / Group Filter
-              </label>
-              <select
-                value={groupFilter}
-                onChange={(e) => setGroupFilter(e.target.value)}
-                disabled={loadingGroups}
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="all">
-                  {loadingGroups ? "Gruplar yükleniyor..." : "Tüm gruplar / All groups"}
-                </option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Grup Filtresi / Group Filter
+        </label>
+        <select
+          value={groupFilter}
+          onChange={(e) => setGroupFilter(e.target.value)}
+          disabled={loadingGroups}
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <option value="all">
+            {loadingGroups ? "Gruplar yükleniyor..." : "Tüm gruplar / All groups"}
+          </option>
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
-                Tedarikçi Filtresi / Supplier Filter
-              </label>
-              <select
-                value={supplierFilter}
-                onChange={(e) => setSupplierFilter(e.target.value)}
-                disabled={loadingSuppliers}
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="all">
-                  {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor..."
-                    : "Tüm tedarikçiler / All suppliers"}
-                </option>
-                <option value="none">Tedarikçisiz / No supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={String(supplier.id)}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Tedarikçi Filtresi / Supplier Filter
+        </label>
+        <select
+          value={supplierFilter}
+          onChange={(e) => setSupplierFilter(e.target.value)}
+          disabled={loadingSuppliers}
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <option value="all">
+            {loadingSuppliers
+              ? "Tedarikçiler yükleniyor..."
+              : "Tüm tedarikçiler / All suppliers"}
+          </option>
+          <option value="none">Tedarikçisiz / No supplier</option>
+          {suppliers.map((supplier) => (
+            <option key={supplier.id} value={String(supplier.id)}>
+              {supplier.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
-                Stok Filtresi / Stock Filter
-              </label>
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-              >
-                <option value="all">Tümü / All</option>
-                <option value="normal">Normal</option>
-                <option value="critical">Kritik / Critical</option>
-                <option value="out">Stok Yok / Out of Stock</option>
-              </select>
-            </div>
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Stok Filtresi / Stock Filter
+        </label>
+        <select
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+        >
+          <option value="all">Tümü / All</option>
+          <option value="normal">Normal</option>
+          <option value="critical">Kritik / Critical</option>
+          <option value="out">Stok Yok / Out of Stock</option>
+        </select>
+      </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
-                Marj Filtresi / Margin Filter
-              </label>
-              <select
-                value={marginFilter}
-                onChange={(e) => setMarginFilter(e.target.value as MarginFilter)}
-                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-              >
-                <option value="all">Tümü / All</option>
-                <option value="profit">Kârda / Profitable</option>
-                <option value="loss">Ekside / Negative Margin</option>
-              </select>
-            </div>
-          </div>
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-300">
+          Marj Filtresi / Margin Filter
+        </label>
+        <select
+          value={marginFilter}
+          onChange={(e) => setMarginFilter(e.target.value as MarginFilter)}
+          className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+        >
+          <option value="all">Tümü / All</option>
+          <option value="profit">Kârda / Profitable</option>
+          <option value="loss">Ekside / Negative Margin</option>
+        </select>
+      </div>
+    </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <InfoCard title="Filtreli Ürün / Filtered Products" value={String(filteredProducts.length)} />
-            <InfoCard title="Filtreli Gerçek Stok / Filtered Real Stock" value={String(filteredStockTotal)} />
-            <InfoCard
-              title="Filtreli Satış Değeri / Filtered Sale Value"
-              value={`€${filteredInventoryValue.toFixed(2)}`}
-            />
-            <InfoCard
-              title="Potansiyel Kâr / Potential Profit"
-              value={`€${filteredPotentialProfit.toFixed(2)}`}
-              green={filteredPotentialProfit >= 0}
-              red={filteredPotentialProfit < 0}
-            />
-            <InfoCard
-              title="Toplam Satış Değeri / Total Sale Value"
-              value={`€${totalInventorySaleValue.toFixed(2)}`}
-            />
-            <InfoCard
-              title="Not / Note"
-              value="Gerçek stok = opening_stock + stock_movements"
-            />
-          </div>
-        </div>
-      </section>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <InfoCard
+        title="Filtreli Ürün / Filtered Products"
+        value={String(filteredProducts.length)}
+      />
+      <InfoCard
+        title="Filtreli Gerçek Stok / Filtered Real Stock"
+        value={String(filteredStockTotal)}
+      />
+      <InfoCard
+        title="Filtreli Satış Değeri / Filtered Sale Value"
+        value={`€${filteredInventoryValue.toFixed(2)}`}
+      />
+      <InfoCard
+        title="Potansiyel Kâr / Potential Profit"
+        value={`€${filteredPotentialProfit.toFixed(2)}`}
+        green={filteredPotentialProfit >= 0}
+        red={filteredPotentialProfit < 0}
+      />
+      <InfoCard
+        title="Toplam Satış Değeri / Total Sale Value"
+        value={`€${totalInventorySaleValue.toFixed(2)}`}
+      />
+      <InfoCard
+        title="Not / Note"
+        value="Gerçek stok = opening_stock + stock_movements"
+      />
+    </div>
+  </div>
+</section>
 
       {editingProductId && (
         <section className="mb-8 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6 shadow-2xl shadow-black/20">
