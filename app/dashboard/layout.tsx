@@ -54,6 +54,7 @@ const menuGroups: MenuGroup[] = [
         label: "Ürün Grupları / Product Groups",
       },
       { href: "/dashboard/new-product", label: "Yeni Ürün / New Product" },
+      { href: "/dashboard/suppliers", label: "Tedarikçiler / Suppliers" },
     ],
   },
   {
@@ -205,8 +206,8 @@ export default function DashboardLayout({
                 </div>
 
                 <p className="mt-4 text-xs text-slate-500">
-                  Showroom satış, stok ve müşteri yönetimi /
-                  Showroom sales, stock and customer management
+                  Showroom satış, stok, müşteri ve tedarikçi yönetimi /
+                  Showroom sales, stock, customer and supplier management
                 </p>
               </div>
             </div>
