@@ -26,19 +26,11 @@ type Product = {
   group_name?: string;
   is_active?: boolean;
   product_groups?: ProductGroupRelation;
-  default_supplier_id?: number | null;
-  supplier_name?: string;
 };
 
 type ProductGroup = {
   id: string;
   name: string;
-};
-
-type Supplier = {
-  id: number;
-  name: string;
-  is_active?: boolean | null;
 };
 
 type StockMovement = {
@@ -70,18 +62,15 @@ const EMPTY_STOCK_META: ProductStockMeta = {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [stockMetaMap, setStockMetaMap] = useState<Record<string, ProductStockMeta>>({});
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(true);
-  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
   const [search, setSearch] = useState("");
   const [viewFilter, setViewFilter] = useState<ViewFilter>("active");
   const [groupFilter, setGroupFilter] = useState("all");
-  const [supplierFilter, setSupplierFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [marginFilter, setMarginFilter] = useState<MarginFilter>("all");
 
@@ -90,7 +79,6 @@ export default function ProductsPage() {
   const [editPrice, setEditPrice] = useState(0);
   const [editCost, setEditCost] = useState(0);
   const [editGroupId, setEditGroupId] = useState("");
-  const [editSupplierId, setEditSupplierId] = useState("");
   const [editMinimumStock, setEditMinimumStock] = useState(5);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -113,20 +101,15 @@ export default function ProductsPage() {
     return relation.name || "-";
   }
 
-  function getSupplierNameById(supplierId?: number | null) {
-    if (!supplierId) return "-";
-    return suppliers.find((supplier) => supplier.id === supplierId)?.name || "-";
-  }
-
   async function initializePage() {
     setLoading(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchProductsWithMeta()]);
     setLoading(false);
   }
 
   async function refreshAll() {
     setRefreshing(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchProductsWithMeta()]);
     setRefreshing(false);
   }
 
@@ -148,24 +131,6 @@ export default function ProductsPage() {
     setLoadingGroups(false);
   }
 
-  async function fetchSuppliers() {
-    setLoadingSuppliers(true);
-
-    const { data, error } = await supabase
-      .from("suppliers")
-      .select("id, name, is_active")
-      .order("name", { ascending: true });
-
-    if (error) {
-      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
-      setLoadingSuppliers(false);
-      return;
-    }
-
-    setSuppliers((data || []) as Supplier[]);
-    setLoadingSuppliers(false);
-  }
-
   async function fetchProductsWithMeta() {
     const [
       { data: productData, error: productError },
@@ -174,7 +139,7 @@ export default function ProductsPage() {
       supabase
         .from("products")
         .select(
-          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, product_groups(name)"
+          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, product_groups(name)"
         )
         .order("name", { ascending: true }),
       supabase.from("stock_movements").select("product_id, quantity, created_at"),
@@ -193,7 +158,6 @@ export default function ProductsPage() {
     const normalizedProducts = ((productData || []) as Product[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
-      supplier_name: getSupplierNameById(product.default_supplier_id),
       is_active: product.is_active ?? true,
       opening_stock: Number(product.opening_stock ?? 0),
       minimum_stock: Number(product.minimum_stock ?? 5),
@@ -232,7 +196,6 @@ export default function ProductsPage() {
     setEditPrice(Number(product.price || 0));
     setEditCost(Number(product.cost || 0));
     setEditGroupId(product.group_id || "");
-    setEditSupplierId(product.default_supplier_id ? String(product.default_supplier_id) : "");
     setEditMinimumStock(Number(product.minimum_stock || 5));
   }
 
@@ -242,7 +205,6 @@ export default function ProductsPage() {
     setEditPrice(0);
     setEditCost(0);
     setEditGroupId("");
-    setEditSupplierId("");
     setEditMinimumStock(5);
   }
 
@@ -283,7 +245,6 @@ export default function ProductsPage() {
         price: Number(editPrice),
         cost: Number(editCost),
         group_id: editGroupId,
-        default_supplier_id: editSupplierId ? Number(editSupplierId) : null,
         minimum_stock: Number(editMinimumStock),
       })
       .eq("id", editingProductId);
@@ -500,11 +461,6 @@ export default function ProductsPage() {
         return product.group_id === groupFilter;
       })
       .filter((product) => {
-        if (supplierFilter === "all") return true;
-        if (supplierFilter === "none") return !product.default_supplier_id;
-        return String(product.default_supplier_id || "") === supplierFilter;
-      })
-      .filter((product) => {
         if (stockFilter === "all") return true;
         return getStockStatus(
           getCalculatedStock(product),
@@ -520,10 +476,9 @@ export default function ProductsPage() {
       .filter((product) => {
         const productName = (product.name || "").toLowerCase();
         const groupName = (product.group_name || "").toLowerCase();
-        const supplierName = (product.supplier_name || "").toLowerCase();
-        return productName.includes(q) || groupName.includes(q) || supplierName.includes(q);
+        return productName.includes(q) || groupName.includes(q);
       });
-  }, [products, search, viewFilter, groupFilter, supplierFilter, stockFilter, marginFilter, stockMetaMap]);
+  }, [products, search, viewFilter, groupFilter, stockFilter, marginFilter, stockMetaMap]);
 
 function exportFilteredStock() {
   const rows = filteredProducts.map((p) => {
@@ -539,7 +494,6 @@ function exportFilteredStock() {
     return {
       "Grup": p.group_name || "-",
       "Ürün": p.name,
-      "Tedarikçi": p.supplier_name || "-",
       "Açılış Stok": openingStock,
       "Kayıtlı Stok": recordedStock,
       "Hesaplanan Stok": calculatedStock,
@@ -578,7 +532,6 @@ function exportFilteredStock() {
   rows.push({
     "Grup": "",
     "Ürün": "TOPLAM",
-    "Tedarikçi": "",
     "Açılış Stok": totalOpening,
     "Kayıtlı Stok": totalRecorded,
     "Hesaplanan Stok": totalCalculated,
@@ -603,7 +556,6 @@ function exportFilteredStock() {
   ws["!cols"] = [
     { wch: 18 }, // Grup
     { wch: 28 }, // Ürün
-    { wch: 22 }, // Tedarikçi
     { wch: 14 }, // Açılış
     { wch: 14 }, // Kayıtlı
     { wch: 16 }, // Hesaplanan
@@ -664,7 +616,7 @@ function exportFilteredStock() {
         font: isTotalRow ? { bold: true, color: { rgb: totalFont } } : {},
         fill: isTotalRow ? { fgColor: { rgb: totalFill } } : undefined,
         alignment: {
-          horizontal: col <= 2 ? "left" : "center",
+          horizontal: col <= 1 ? "left" : "center",
           vertical: "center",
         },
         border: {
@@ -689,16 +641,7 @@ function exportFilteredStock() {
           .toLowerCase()
           .replaceAll(" ", "-");
 
-  const supplierSuffix =
-    supplierFilter === "all"
-      ? "tum-tedarikciler"
-      : supplierFilter === "none"
-      ? "tedarikcisiz"
-      : (suppliers.find((supplier) => String(supplier.id) === supplierFilter)?.name || "supplier")
-          .toLowerCase()
-          .replaceAll(" ", "-");
-
-  XLSX.writeFile(wb, `gercek-stok-${viewSuffix}-${groupSuffix}-${supplierSuffix}.xlsx`);
+  XLSX.writeFile(wb, `gercek-stok-${viewSuffix}-${groupSuffix}.xlsx`);
 }
 
   const totalProducts = products.length;
@@ -709,10 +652,6 @@ function exportFilteredStock() {
 
   const inactiveProductsCount = useMemo(() => {
     return products.filter((product) => (product.is_active ?? true) === false).length;
-  }, [products]);
-
-  const productsWithSupplierCount = useMemo(() => {
-    return products.filter((product) => !!product.default_supplier_id).length;
   }, [products]);
 
   const totalCalculatedStock = useMemo(() => {
@@ -803,8 +742,6 @@ function exportFilteredStock() {
 
   const editingMargin = Number(editPrice || 0) - Number(editCost || 0);
   const selectedGroupName = groups.find((group) => group.id === editGroupId)?.name || "-";
-  const selectedSupplierName =
-    suppliers.find((supplier) => String(supplier.id) === editSupplierId)?.name || "-";
 
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
@@ -899,7 +836,6 @@ function exportFilteredStock() {
         <SummaryCard title="Toplam Ürün / Total Products" value={String(totalProducts)} />
         <SummaryCard title="Aktif Ürün / Active Products" value={String(activeProductsCount)} />
         <SummaryCard title="Pasif Ürün / Inactive Products" value={String(inactiveProductsCount)} />
-        <SummaryCard title="Tedarikçili Ürün / With Supplier" value={String(productsWithSupplierCount)} />
         <SummaryCard title="Gerçek Stok / Real Stock" value={String(totalCalculatedStock)} />
         <SummaryCard title="Kritik Stok / Critical Stock" value={String(criticalStockCount)} amber />
         <SummaryCard title="Stoksuz / Out of Stock" value={String(outOfStockCount)} red />
@@ -916,7 +852,7 @@ function exportFilteredStock() {
 
       <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="grid gap-6">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
                 Arama / Search
@@ -964,56 +900,7 @@ function exportFilteredStock() {
                 ))}
               </select>
             </div>
-
-            <div className="min-w-0">
-              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Tedarikçi Filtresi / Supplier Filter
-              </label>
-              <select
-                value={supplierFilter}
-                onChange={(e) => setSupplierFilter(e.target.value)}
-                disabled={loadingSuppliers}
-                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="all">
-                  {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor..."
-                    : "Tüm tedarikçiler / All suppliers"}
-                </option>
-                <option value="none">Tedarikçisiz / No supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={String(supplier.id)}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="min-w-0">
-              <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Tedarikçi Filtresi / Supplier Filter
-              </label>
-              <select
-                value={supplierFilter}
-                onChange={(e) => setSupplierFilter(e.target.value)}
-                disabled={loadingSuppliers}
-                className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="all">
-                  {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor..."
-                    : "Tüm tedarikçiler / All suppliers"}
-                </option>
-                <option value="none">Tedarikçisiz / No supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={String(supplier.id)}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="min-w-0">
+<div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
                 Stok Filtresi / Stock Filter
               </label>
@@ -1115,29 +1002,6 @@ function exportFilteredStock() {
                 </select>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Varsayılan Tedarikçi / Default Supplier
-                </label>
-                <select
-                  value={editSupplierId}
-                  onChange={(e) => setEditSupplierId(e.target.value)}
-                  disabled={loadingSuppliers}
-                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <option value="">
-                    {loadingSuppliers
-                      ? "Tedarikçiler yükleniyor..."
-                      : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
-                  </option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={String(supplier.id)}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -1196,7 +1060,6 @@ function exportFilteredStock() {
             <div className="space-y-4">
               <InfoCard title="Yeni Ürün Adı / New Product Name" value={editName || "-"} />
               <InfoCard title="Yeni Grup / New Group" value={selectedGroupName} />
-              <InfoCard title="Yeni Tedarikçi / New Supplier" value={selectedSupplierName} />
               <InfoCard
                 title="Yeni Satış Fiyatı / New Sale Price"
                 value={`€${Number(editPrice || 0).toFixed(2)}`}
@@ -1253,13 +1116,6 @@ function exportFilteredStock() {
       <div className="min-w-[180px]">
         <div className="text-sm font-semibold text-slate-300">Ürün</div>
         <div className="text-xs text-slate-500">Product</div>
-      </div>
-    </th>
-
-    <th className="px-4 py-4 text-left">
-      <div className="min-w-[180px]">
-        <div className="text-sm font-semibold text-slate-300">Tedarikçi</div>
-        <div className="text-xs text-slate-500">Supplier</div>
       </div>
     </th>
 
@@ -1414,7 +1270,6 @@ function exportFilteredStock() {
                     >
                       <td className="py-3 text-base text-white">{product.group_name || "-"}</td>
                       <td className="py-3 text-base font-semibold text-white">{product.name}</td>
-                      <td className="py-3 text-base text-slate-300">{product.supplier_name || "-"}</td>
                       <td className={`py-3 text-center text-base font-semibold ${isOut ? "text-red-300" : isCritical ? "text-amber-300" : "text-white"}`}>
                         {calculatedStock}
                       </td>
@@ -1496,7 +1351,7 @@ function exportFilteredStock() {
 
                 {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={20} className="py-8 text-center text-slate-400">
+                    <td colSpan={19} className="py-8 text-center text-slate-400">
                       Kayıt yok / No products found
                     </td>
                   </tr>
@@ -1518,9 +1373,6 @@ function exportFilteredStock() {
                 </h3>
                 <p className="mt-2 text-sm text-slate-400">
                   Grup / Group: {selectedMovementProduct?.group_name || "-"}
-                </p>
-                <p className="mt-1 text-sm text-slate-400">
-                  Tedarikçi / Supplier: {selectedMovementProduct?.supplier_name || "-"}
                 </p>
               </div>
 
