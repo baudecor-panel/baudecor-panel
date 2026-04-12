@@ -79,7 +79,7 @@ export default function StockOutPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      alert("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı");
       return;
     }
 
@@ -96,7 +96,7 @@ export default function StockOutPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürünler alınamadı / Products could not be loaded");
+      alert("Proizvodi nijesu učitani / Ürünler alınamadı");
       return;
     }
 
@@ -117,7 +117,7 @@ export default function StockOutPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Stok hareketleri alınamadı / Stock movements could not be loaded");
+      alert("Kretanja zaliha nijesu učitana / Stok hareketleri alınamadı");
       setLoadingMovements(false);
       return;
     }
@@ -153,37 +153,37 @@ export default function StockOutPage() {
 
   async function handleSave() {
     if (!selectedGroupId) {
-      alert("Lütfen ürün grubu seç / Please select a product group");
+      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
       return;
     }
 
     if (!selectedProductId) {
-      alert("Lütfen ürün seç / Please select a product");
+      alert("Odaberi proizvod / Lütfen ürün seç");
       return;
     }
 
     if (!quantity || quantity <= 0) {
-      alert("Lütfen geçerli adet gir / Please enter a valid quantity");
+      alert("Unesi ispravnu količinu / Lütfen geçerli adet gir");
       return;
     }
 
     if (!selectedProduct) {
-      alert("Ürün bulunamadı / Product not found");
+      alert("Proizvod nije pronađen / Ürün bulunamadı");
       return;
     }
 
     if (!selectedProduct.group_id) {
-      alert("Bu ürüne grup atanmadı / This product has no group assigned");
+      alert("Ovom proizvodu nije dodijeljena grupa / Bu ürüne grup atanmadı");
       return;
     }
 
     if (selectedProduct.group_id !== selectedGroupId) {
-      alert("Seçilen ürün grup ile eşleşmiyor / Selected product does not match the selected group");
+      alert("Odabrani proizvod se ne poklapa sa grupom / Seçilen ürün grup ile eşleşmiyor");
       return;
     }
 
     if (Number(selectedProduct.stock || 0) < Number(quantity)) {
-      alert("Yeterli stok yok / Not enough stock");
+      alert("Nema dovoljno zalihe / Yeterli stok yok");
       return;
     }
 
@@ -214,7 +214,7 @@ export default function StockOutPage() {
     if (movementError) {
       setSaving(false);
       alert(
-        "Stok hareket kaydı eklenemedi / Stock movement log failed: " +
+        "Zapis kretanja zaliha nije uspjelo / Stok hareket kaydı eklenemedi: " +
           movementError.message
       );
       return;
@@ -228,7 +228,7 @@ export default function StockOutPage() {
     if (movementTotalError) {
       setSaving(false);
       alert(
-        "Hareket toplamı alınamadı / Movement total could not be loaded: " +
+        "Ukupan iznos kretanja nije učitan / Hareket toplamı alınamadı: " +
           movementTotalError.message
       );
       return;
@@ -250,11 +250,11 @@ export default function StockOutPage() {
     setSaving(false);
 
     if (stockError) {
-      alert("Stok güncellenemedi / Stock update failed: " + stockError.message);
+      alert("Ažuriranje zalihe nije uspjelo / Stok güncellenemedi: " + stockError.message);
       return;
     }
 
-    alert("Stok çıkışı kaydedildi / Stock out saved ✅");
+    alert("Izlaz zaliha zabilježen / Stok çıkışı kaydedildi ✅");
 
     setSelectedGroupId("");
     setSelectedProductId("");
@@ -270,14 +270,13 @@ export default function StockOutPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Stok Çıkışı / Stock Out
+          Izlaz zaliha / Stok Çıkışı
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Satış dışı stok düşüşlerini kaydet. / Record stock decreases outside
-          of sales.
+          Zabilježi smanjenja zaliha van prodaje. / Satış dışı stok düşüşlerini kaydet.
         </p>
       </div>
 
@@ -285,11 +284,10 @@ export default function StockOutPage() {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Yeni Stok Çıkışı / New Stock Out
+              Novi izlaz zaliha / Yeni Stok Çıkışı
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Önce grup seç, sonra ürün seç ve stoktan düş. / Select group first,
-              then select product and deduct from stock.
+              Prvo odaberi grupu, zatim proizvod i smanji zalihu. / Önce grup seç, sonra ürün seç ve stoktan düş.
             </p>
           </div>
 
@@ -297,14 +295,14 @@ export default function StockOutPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün Grubu / Product Group
+                  Grupa proizvoda / Ürün Grubu
                 </label>
                 <select
                   value={selectedGroupId}
                   onChange={(e) => handleGroupChange(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option value="">Grup seç / Select group</option>
+                  <option value="">Odaberi grupu / Grup seç</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -315,7 +313,7 @@ export default function StockOutPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün / Product
+                  Proizvod / Ürün
                 </label>
                 <select
                   value={selectedProductId}
@@ -325,8 +323,8 @@ export default function StockOutPage() {
                 >
                   <option value="">
                     {!selectedGroupId
-                      ? "Önce grup seç / Select group first"
-                      : "Ürün seç / Select product"}
+                      ? "Prvo odaberi grupu / Önce grup seç"
+                      : "Odaberi proizvod / Ürün seç"}
                   </option>
                   {filteredProductsByGroup.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -340,7 +338,7 @@ export default function StockOutPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Düşülecek Adet / Quantity to Deduct
+                  Količina za oduzimanje / Düşülecek Adet
                 </label>
                 <input
                   type="number"
@@ -353,7 +351,7 @@ export default function StockOutPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Sebep / Reason
+                  Razlog / Sebep
                 </label>
                 <select
                   value={reason}
@@ -370,12 +368,12 @@ export default function StockOutPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Not / Note
+                Napomena / Not
               </label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="İsteğe bağlı açıklama / Optional note"
+                placeholder="Opciona napomena / İsteğe bağlı açıklama"
                 rows={4}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
@@ -387,36 +385,35 @@ export default function StockOutPage() {
               className="mt-2 rounded-2xl bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving
-                ? "Kaydediliyor... / Saving..."
-                : "Stoktan Düş / Deduct from Stock"}
+                ? "Čuva se... / Kaydediliyor..."
+                : "Smanji zalihu / Stoktan Düş"}
             </button>
           </div>
         </section>
 
         <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <h2 className="text-lg font-semibold">
-            Stok Özeti / Stock Summary
+            Sažetak zaliha / Stok Özeti
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Seçilen ürünün güncel durumu. / Current status of the selected
-            product.
+            Trenutno stanje odabranog proizvoda. / Seçilen ürünün güncel durumu.
           </p>
 
           <div className="mt-6 space-y-4">
             <InfoCard
-              title="Grup / Group"
+              title="Grupa / Grup"
               value={selectedGroup?.name || "-"}
             />
             <InfoCard
-              title="Ürün / Product"
+              title="Proizvod / Ürün"
               value={selectedProduct?.name || "-"}
             />
             <InfoCard
-              title="Mevcut Stok / Current Stock"
+              title="Trenutna zaliha / Mevcut Stok"
               value={selectedProduct ? String(selectedProduct.stock) : "-"}
             />
             <InfoCard
-              title="Çıkış Sonrası / After Deduction"
+              title="Nakon oduzimanja / Çıkış Sonrası"
               value={
                 selectedProduct
                   ? String(Number(selectedProduct.stock || 0) - Number(quantity || 0))
@@ -424,9 +421,9 @@ export default function StockOutPage() {
               }
               red
             />
-            <InfoCard title="Sebep / Reason" value={reason} />
+            <InfoCard title="Razlog / Sebep" value={reason} />
             <InfoCard
-              title="Satış Fiyatı / Sale Price"
+              title="Prodajna cijena / Satış Fiyatı"
               value={
                 selectedProduct
                   ? `€${Number(selectedProduct.price || 0).toFixed(2)}`
@@ -440,26 +437,25 @@ export default function StockOutPage() {
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Stok Çıkış Geçmişi / Stock Out History
+            Istorija izlaza zaliha / Stok Çıkış Geçmişi
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Satış dışı stok düşüş hareketleri. / Stock decrease movements outside
-            of sales.
+            Kretanja smanjenja zaliha van prodaje. / Satış dışı stok düşüş hareketleri.
           </p>
         </div>
 
         {loadingMovements ? (
-          <div className="text-sm text-slate-400">Yükleniyor / Loading...</div>
+          <div className="text-sm text-slate-400">Učitava se / Yükleniyor...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Ürün / Product</th>
-                  <th className="py-3 text-left">İşlem / Movement</th>
-                  <th className="py-3 text-center">Adet / Quantity</th>
-                  <th className="py-3 text-left">Not / Note</th>
-                  <th className="py-3 text-center">Tarih / Date</th>
+                  <th className="py-3 text-left">Proizvod / Ürün</th>
+                  <th className="py-3 text-left">Kretanje / İşlem</th>
+                  <th className="py-3 text-center">Količina / Adet</th>
+                  <th className="py-3 text-left">Napomena / Not</th>
+                  <th className="py-3 text-center">Datum / Tarih</th>
                 </tr>
               </thead>
 
@@ -484,7 +480,7 @@ export default function StockOutPage() {
                 {movements.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-400">
-                      Kayıt yok / No stock out movements found
+                      Nema zapisa / Kayıt yok
                     </td>
                   </tr>
                 )}
