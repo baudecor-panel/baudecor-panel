@@ -786,7 +786,7 @@ export default function DispatchPage() {
     const value = normalizeGroupName(groupName);
 
     if (!value) {
-      alert("Önce grup seç / Select group first");
+      alert("Prvo izaberi grupu / Önce grup seç");
       return;
     }
 
@@ -795,7 +795,7 @@ export default function DispatchPage() {
     );
 
     if (groupRows.length === 0) {
-      alert("Grup bulunamadı / Group not found");
+      alert("Grupa nije pronađena / Grup bulunamadı");
       return;
     }
 
@@ -857,12 +857,12 @@ export default function DispatchPage() {
         `${index + 1}. ${row.customer_name || "-"}`,
         `Ürün / Product: ${row.product_name || "-"}`,
         `Adet / Quantity: ${row.quantity ?? "-"}`,
-        `Şehir / City: ${row.city || "-"}`,
+        `Grad / Şehir: ${row.city || "-"}`,
         `Adres / Address: ${row.customer_address || "-"}`,
         `Telefon / Phone: ${row.customer_phone || "-"}`,
         `Araç / Vehicle: ${vehicle}`,
         `Kurye / Courier: ${courier}`,
-        `Grup / Group: ${groupName}`,
+        `Grupa / Grup: ${groupName}`,
         `Google Maps: ${navigationUrl || "-"}`,
       ].join("\n");
     });
@@ -876,7 +876,7 @@ export default function DispatchPage() {
         setCopiedGroup((current) => (current === groupName ? null : current));
       }, 2000);
     } catch {
-      alert("Kopyalama başarısız / Failed to copy");
+      alert("Kopiranje neuspješno / Kopyalama başarısız");
     }
   }
 
@@ -889,7 +889,7 @@ export default function DispatchPage() {
     const value = normalizeGroupName(groupName);
 
     if (!value) {
-      alert("Önce grup seç / Select group first");
+      alert("Prvo izaberi grupu / Önce grup seç");
       return;
     }
 
@@ -1059,55 +1059,54 @@ export default function DispatchPage() {
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-              Baudecor Dispatch
+              BAUDECOR SEVKIYAT / BAUDECOR DISPATCH
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Sevkiyat Operasyon Merkezi / Dispatch Control Center
+              Operativni centar isporuke / Sevkiyat Operasyon Merkezi
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-slate-400 sm:text-base">
-              Seç → grupla → optimize et → yazdır akışına göre sevkiyatları yönet.
-              / Manage dispatches with the flow select → group → optimize → print.
+              Upravljaj isporukama kroz tok: izaberi → grupiši → optimizuj → štampaj / Seç → grupla → optimize et → yazdır
             </p>
           </div>
 
           <div className="grid min-w-[280px] gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Toplam / Total
+                Ukupno / Toplam
               </div>
               <div className="mt-2 text-3xl font-semibold text-white">{rows.length}</div>
               <div className="mt-1 text-xs text-slate-400">
-                Aktif sevkiyat kayıtları / Active dispatch rows
+                Aktivni zapisi isporuke / Aktif sevkiyat kayıtları
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Filtre Sonucu / Filtered
+                Filtrirano / Filtre Sonucu
               </div>
               <div className="mt-2 text-3xl font-semibold text-white">
                 {filteredRows.length}
               </div>
               <div className="mt-1 text-xs text-slate-400">
-                Görünen kayıt / Visible rows
+                Vidljivi zapisi / Görünen kayıt
               </div>
             </div>
 
             <div className="rounded-2xl border border-emerald-700/40 bg-emerald-950/30 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-emerald-300/70">
-                Seçili / Selected
+                Odabrano / Seçili
               </div>
               <div className="mt-2 text-3xl font-semibold text-white">
                 {selectedIds.length}
               </div>
               <div className="mt-1 text-xs text-emerald-200/70">
-                İşleme hazır kayıt / Ready to operate
+                Spremno za obradu / İşleme hazır kayıt
               </div>
             </div>
 
             <div className="rounded-2xl border border-blue-700/40 bg-blue-950/30 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-blue-300/70">
-                Aktif Grup / Active Group
+                Aktivna grupa / Aktif Grup
               </div>
               <div className="mt-2 truncate text-lg font-semibold text-white">
                 {activeGroupName || "-"}
@@ -1122,7 +1121,7 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Filtreler / Filters</h2>
+              <h2 className="text-lg font-semibold">Filteri / Filtreler</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Şehir, yöntem, grup ve tarihe göre görünümü daralt. / Narrow the
                 view by city, method, group and date.
@@ -1143,14 +1142,14 @@ export default function DispatchPage() {
                 onClick={resetFilters}
                 className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
               >
-                Filtreleri Temizle / Clear Filters
+                Očisti filtre / Filtreleri Temizle
               </button>
 
               <button
                 onClick={fetchDispatchRows}
                 className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Yenile / Refresh
+                Osvježi / Yenile
               </button>
             </div>
           </div>
@@ -1158,7 +1157,7 @@ export default function DispatchPage() {
           <div className="grid gap-4 lg:grid-cols-4">
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Şehir / City
+                Grad / Şehir
               </label>
               <select
                 value={cityFilter}
@@ -1176,7 +1175,7 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Yöntem / Method
+                Metod / Yöntem
               </label>
               <select
                 value={methodFilter}
@@ -1193,7 +1192,7 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Grup / Group
+                Grupa / Grup
               </label>
               <select
                 value={groupFilter}
@@ -1212,7 +1211,7 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Tarih / Date
+                Datum / Tarih
               </label>
               <EnglishDatePicker value={dateFilter} onChange={setDateFilter} />
             </div>
@@ -1223,7 +1222,7 @@ export default function DispatchPage() {
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                Operasyon Akışı / Operation Flow
+                Tok operacije / Operasyon Akışı
               </h2>
               <p className="mt-1 text-sm text-slate-400">
                 Seç → Grupla → Optimize Et → Yazdır / Select → Group → Optimize →
@@ -1294,7 +1293,7 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Gruplama İşlemleri / Group Operations
+              Operacije grupisanja / Gruplama İşlemleri
             </h2>
             <p className="mt-1 text-sm text-slate-400">
               Grupları gör, seç, üstünde işlem yap, sevkiyat ekle veya çıkar. /
@@ -1305,7 +1304,7 @@ export default function DispatchPage() {
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <label className="mb-2 block text-sm text-slate-300">
-                Grup Adı / Group Name
+                Naziv grupe / Grup Adı
               </label>
               <input
                 value={groupNameInput}
@@ -1321,7 +1320,7 @@ export default function DispatchPage() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-sm text-slate-300">
-                Seçili Kayıtlar / Selected Records
+                Odabrani zapisi / Seçili Kayıtlar
               </p>
               <p className="mt-2 text-3xl font-bold text-white">
                 {selectedIds.length}
@@ -1334,7 +1333,7 @@ export default function DispatchPage() {
 
           <div className="mt-6">
             <p className="mb-3 text-sm font-medium text-slate-300">
-              Mevcut Gruplar / Existing Groups
+              Postojeće grupe / Mevcut Gruplar
             </p>
 
             {existingGroups.length > 0 ? (
@@ -1364,7 +1363,7 @@ export default function DispatchPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-                Henüz grup yok / No groups yet
+                Još nema grupa / Henüz grup yok
               </div>
             )}
           </div>
@@ -1411,7 +1410,7 @@ export default function DispatchPage() {
           <section className="mb-8 rounded-3xl border border-emerald-700/40 bg-emerald-950/30 p-6 shadow-2xl shadow-black/20">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">
-                Seçili Kayıtlar / Selected Records: {selectedIds.length}
+                Odabrani zapisi / Seçili Kayıtlar: {selectedIds.length}
               </h2>
 
               <div className="flex flex-wrap gap-3">
@@ -1452,11 +1451,11 @@ export default function DispatchPage() {
                     </div>
 
                     <div className="mt-4 grid gap-2 text-xs text-slate-400">
-                      <div>Grup / Group: {groupValue || "-"}</div>
+                      <div>Grupa / Grup: {groupValue || "-"}</div>
                       <div>
-                        Yöntem / Method: {getMethodLabel(row)}
+                        Metod / Yöntem: {getMethodLabel(row)}
                       </div>
-                      <div>Tarih / Date: {row.shipment_date || "-"}</div>
+                      <div>Datum / Tarih: {row.shipment_date || "-"}</div>
                       <div>
                         Adres / Address: {row.customer_address || "-"}
                       </div>
@@ -1506,7 +1505,7 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Gruplar / Groups</h2>
+              <h2 className="text-lg font-semibold">Grupe / Gruplar</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Grup bazlı sevkiyat düzeni, rota ve kopyalama araçları. / Group
                 based dispatch sections, route and copy tools.
@@ -1537,14 +1536,14 @@ export default function DispatchPage() {
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div>
                           <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                            Grup / Group
+                            Grupa / Grup
                           </div>
                           <h3 className="mt-2 text-xl font-semibold text-white">
                             {section.groupName}
                           </h3>
                           <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
                             <span className="rounded-full border border-slate-700 px-3 py-1">
-                              Toplam / Total: {totalCount}
+                              Ukupno / Toplam: {totalCount}
                             </span>
                             <span className="rounded-full border border-slate-700 px-3 py-1">
                               Araç / Vehicle: {vehicleCount}
@@ -1647,10 +1646,10 @@ export default function DispatchPage() {
                                         Araç / Vehicle: {row.assigned_vehicle || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Tarih / Date: {row.shipment_date || "-"}
+                                        Datum / Tarih: {row.shipment_date || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Şehir / City: {row.city || "-"}
+                                        Grad / Şehir: {row.city || "-"}
                                       </div>
                                     </div>
                                   </div>
@@ -1687,7 +1686,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Yöntem / Method
+                                        Metod / Yöntem
                                       </div>
                                       <select
                                         value={row.delivery_method || ""}
@@ -1821,10 +1820,10 @@ export default function DispatchPage() {
                                         Kurye / Courier: {row.assigned_courier || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Tarih / Date: {row.shipment_date || "-"}
+                                        Datum / Tarih: {row.shipment_date || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Şehir / City: {row.city || "-"}
+                                        Grad / Şehir: {row.city || "-"}
                                       </div>
                                     </div>
                                   </div>
@@ -1861,7 +1860,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Yöntem / Method
+                                        Metod / Yöntem
                                       </div>
                                       <select
                                         value={row.delivery_method || ""}
@@ -1951,7 +1950,7 @@ export default function DispatchPage() {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Grupsuz Kayıtlar / Ungrouped Rows</h2>
+              <h2 className="text-lg font-semibold">Zapisi bez grupe / Grupsuz Kayıtlar</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Grup dışındaki kayıtlar, araç öncelikli ve showroom mesafesine göre
                 sıralanır. / Rows outside groups are ordered by vehicle priority and
@@ -1972,7 +1971,7 @@ export default function DispatchPage() {
                     <th className="px-4 py-3">Seç / Select</th>
                     <th className="px-4 py-3">Müşteri / Customer</th>
                     <th className="px-4 py-3">Ürün / Product</th>
-                    <th className="px-4 py-3">Yöntem / Method</th>
+                    <th className="px-4 py-3">Metod / Yöntem</th>
                     <th className="px-4 py-3">Sevkiyat Tarihi / Shipment Date</th>
                     <th className="px-4 py-3">Rota Modu / Route Mode</th>
                     <th className="px-4 py-3">Mesafe / Distance</th>
@@ -2134,7 +2133,7 @@ export default function DispatchPage() {
         {loading && (
           <div className="fixed inset-x-0 bottom-4 z-50 mx-auto flex w-fit items-center gap-3 rounded-full border border-slate-700 bg-slate-950/95 px-4 py-2 text-sm text-white shadow-2xl">
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-            Sevkiyat verileri yükleniyor... / Dispatch data is loading...
+            Podaci o isporuci se učitavaju... / Sevkiyat verileri yükleniyor...
           </div>
         )}
       </div>
