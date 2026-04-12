@@ -38,8 +38,8 @@ type Product = {
 export default function CompletedSalesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState("");
+  const [loading, setUčitava se / Yükleniyor] = useState(true);
+  const [actionUčitava se / YükleniyorId, setActionUčitava se / YükleniyorId] = useState("");
 
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -57,7 +57,7 @@ export default function CompletedSalesPage() {
   }
 
   async function fetchRows() {
-    setLoading(true);
+    setUčitava se / Yükleniyor(true);
 
     const { data, error } = await supabase
       .from("sales")
@@ -69,12 +69,12 @@ export default function CompletedSalesPage() {
     if (error) {
       alert("Hata / Error: " + error.message);
       setRows([]);
-      setLoading(false);
+      setUčitava se / Yükleniyor(false);
       return;
     }
 
     setRows((data || []) as Row[]);
-    setLoading(false);
+    setUčitava se / Yükleniyor(false);
   }
 
   async function fetchProducts() {
@@ -112,7 +112,7 @@ export default function CompletedSalesPage() {
     ]);
   }
 
-  async function handleReturn(row: Row) {
+  async function handlePovrat / İade(row: Row) {
     const confirmed = window.confirm(
       `Bu satış iade edilecek ve stok geri eklenecek.\n\nMüşteri: ${
         row.customer_name || "-"
@@ -130,7 +130,7 @@ export default function CompletedSalesPage() {
       return;
     }
 
-    setActionLoadingId(row.id);
+    setActionUčitava se / YükleniyorId(row.id);
 
     const newStock = Number(product.stock || 0) + Number(row.quantity || 0);
 
@@ -140,14 +140,14 @@ export default function CompletedSalesPage() {
       .eq("id", product.id);
 
     if (stockError) {
-      setActionLoadingId("");
+      setActionUčitava se / YükleniyorId("");
       alert("Stok geri eklenemedi / Stock restore failed: " + stockError.message);
       return;
     }
 
     await updateStockMovementLog({
       product,
-      movementType: "Sale Return / Satış İade",
+      movementType: "Sale Povrat / İade / Satış İade",
       quantity: Number(row.quantity || 0),
       note: `${row.customer_name || "-"} completed sales iade işlemi / completed sales return`,
     });
@@ -155,21 +155,21 @@ export default function CompletedSalesPage() {
     const { error: saleError } = await supabase
       .from("sales")
       .update({
-        delivery_status: "İade Edildi / Returned",
-        shipment_status: "İade Edildi / Returned",
+        delivery_status: "İade Edildi / Povrat / İadeed",
+        shipment_status: "İade Edildi / Povrat / İadeed",
         payment_status: "Bekliyor / Pending",
-        note: `${row.note ? row.note + " | " : ""}İade yapıldı / Returned`,
+        note: `${row.note ? row.note + " | " : ""}İade yapıldı / Povrat / İadeed`,
       })
       .eq("id", row.id);
 
-    setActionLoadingId("");
+    setActionUčitava se / YükleniyorId("");
 
     if (saleError) {
       alert("Satış güncellenemedi / Sale update failed: " + saleError.message);
       return;
     }
 
-    alert("İade tamamlandı ve stok geri eklendi / Return completed and stock restored ✅");
+    alert("İade tamamlandı ve stok geri eklendi / Povrat / İade completed and stock restored ✅");
 
     await fetchRows();
     await fetchProducts();
@@ -223,7 +223,7 @@ export default function CompletedSalesPage() {
           BAUDECOR SYSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Tamamlanan Satışlar / Completed Sales
+          Tamamlanan Satışlar / Završene prodaje / Tamamlanan Satışlar
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
           Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme,
@@ -284,7 +284,7 @@ export default function CompletedSalesPage() {
             >
               <option value="all">Tümü / All</option>
               <option value="Teslim Edildi / Delivered">Teslim Edildi / Delivered</option>
-              <option value="İade Edildi / Returned">İade Edildi / Returned</option>
+              <option value="İade Edildi / Povrat / İadeed">İade Edildi / Povrat / İadeed</option>
             </select>
           </div>
 
@@ -316,7 +316,7 @@ export default function CompletedSalesPage() {
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         {loading ? (
-          <div className="text-slate-400">Yükleniyor / Loading...</div>
+          <div className="text-slate-400">Yükleniyor / Učitava se / Yükleniyor...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[2200px] text-sm">
@@ -343,7 +343,7 @@ export default function CompletedSalesPage() {
 
               <tbody>
                 {filteredRows.map((row) => {
-                  const rowBusy = actionLoadingId === row.id;
+                  const rowBusy = actionUčitava se / YükleniyorId === row.id;
 
                   return (
                     <tr
@@ -373,11 +373,11 @@ export default function CompletedSalesPage() {
                       <td className="py-3 text-center">{row.assigned_courier || "-"}</td>
                       <td className="py-3 text-center">
                         <button
-                          onClick={() => handleReturn(row)}
+                          onClick={() => handlePovrat / İade(row)}
                           disabled={rowBusy}
                           className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          {rowBusy ? "Bekle... / Wait..." : "İade / Return"}
+                          {rowBusy ? "Bekle... / Wait..." : "İade / Povrat / İade"}
                         </button>
                       </td>
                     </tr>
