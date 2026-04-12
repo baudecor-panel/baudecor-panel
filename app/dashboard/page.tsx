@@ -347,6 +347,37 @@ export default function DashboardPage() {
       .slice(0, 5);
   }, [filteredSales]);
 
+  const topCustomersByProfit = useMemo(() => {
+    const map = new Map<string, { profit: number; orderSet: Set<string> }>();
+
+    filteredSales.forEach((sale) => {
+      const customer = sale.customer_name || "Bilinmiyor / Unknown";
+      const orderKey = sale.order_id || `fallback_${sale.id}`;
+
+      const productName = sale.product_name || "";
+      const cost = productCostMap.get(productName) || 0;
+      const profit =
+        Number(sale.total || 0) - cost * Number(sale.quantity || 0);
+
+      if (!map.has(customer)) {
+        map.set(customer, { profit: 0, orderSet: new Set<string>() });
+      }
+
+      const current = map.get(customer)!;
+      current.profit += profit;
+      current.orderSet.add(orderKey);
+    });
+
+    return Array.from(map.entries())
+      .map(([customer, values]) => ({
+        customer,
+        profit: values.profit,
+        orderCount: values.orderSet.size,
+      }))
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, 5);
+  }, [filteredSales, productCostMap]);
+
   const productProfitStats = useMemo(() => {
     return activeProducts
       .map((product) => {
@@ -1039,7 +1070,7 @@ export default function DashboardPage() {
         </PanelCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-4">
+      <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
         <PanelCard
           title="En İyi Ürünler / Top Products"
           subtitle="Seçili dönemde en fazla ciro üreten ürünler."
@@ -1100,6 +1131,28 @@ export default function DashboardPage() {
                   subtitle={`${item.orderCount} sipariş / orders`}
                   value={`€${item.total.toFixed(2)}`}
                   valueClassName="text-cyan-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="En Karlı Müşteriler / Most Profitable Customers"
+          subtitle="Toplam kâra göre sıralama / Ranked by total profit."
+        >
+          <div className="space-y-3">
+            {topCustomersByProfit.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topCustomersByProfit.map((item, index) => (
+                <RankRow
+                  key={item.customer}
+                  rank={index + 1}
+                  title={item.customer}
+                  subtitle={`${item.orderCount} sipariş / orders`}
+                  value={`€${item.profit.toFixed(2)}`}
+                  valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-red-300"}
                 />
               ))
             )}
