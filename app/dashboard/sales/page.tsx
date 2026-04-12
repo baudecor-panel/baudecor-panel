@@ -236,7 +236,7 @@ export default function SalesPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      alert("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı");
       return;
     }
 
@@ -253,7 +253,7 @@ export default function SalesPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürünler alınamadı / Products could not be loaded");
+      alert("Proizvodi nijesu učitani / Ürünler alınamadı");
       return;
     }
 
@@ -272,7 +272,7 @@ export default function SalesPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Müşteriler alınamadı / Customers could not be loaded");
+      alert("Kupci nijesu učitani / Müşteriler alınamadı");
       return;
     }
 
@@ -289,7 +289,7 @@ export default function SalesPage() {
 
     if (error) {
       setLoadingSales(false);
-      alert("Satışlar alınamadı / Sales could not be loaded");
+      alert("Prodaje nijesu učitane / Satışlar alınamadı");
       return;
     }
 
@@ -533,13 +533,13 @@ export default function SalesPage() {
   async function handleDeleteSale(sale: Sale) {
     if (!canDeleteSale(sale)) {
       alert(
-        "Bu satış silinemez. Teslim edilmiş veya sevkiyata çıkmış kayıtlar silinemez. / This sale cannot be deleted. Delivered or shipped records cannot be deleted."
+        "Ova prodaja se ne može obrisati. Isporučeni ili poslati zapisi se ne mogu brisati / Bu satış silinemez. Teslim edilmiş veya sevkiyata çıkmış kayıtlar silinemez."
       );
       return;
     }
 
     const confirmed = window.confirm(
-      `Bu satış silinecek ve stok geri eklenecek.\n\nÜrün: ${sale.product_name}\nAdet: ${sale.quantity}\nMüşteri: ${sale.customer_name || "-"}\n\nDevam edilsin mi? / Continue?`
+      `Ova prodaja će biti obrisana i zaliha će biti vraćena.\n\nProizvod: ${sale.product_name}\nKoličina: ${sale.quantity}\nKupac: ${sale.customer_name || "-"}\n\nNastaviti? / Devam edilsin mi?`
     );
 
     if (!confirmed) return;
@@ -570,7 +570,7 @@ export default function SalesPage() {
       }
 
       alert(
-        "Satış silindi ve stok geri eklendi / Sale deleted and stock restored ✅"
+        "Prodaja je obrisana i zaliha je vraćena / Satış silindi ve stok geri eklendi ✅"
       );
 
       await fetchProducts();
@@ -580,7 +580,7 @@ export default function SalesPage() {
       alert(
         error instanceof Error
           ? error.message
-          : "Satış silinemedi / Sale delete failed"
+          : "Prodaja nije obrisana / Satış silinemedi"
       );
     } finally {
       setActionLoadingId("");
@@ -591,7 +591,7 @@ export default function SalesPage() {
     const newQty = Number(rawValue);
 
     if (!newQty || newQty <= 0) {
-      alert("Adet 1 veya daha büyük olmalı / Quantity must be 1 or greater");
+      alert("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı");
       await fetchSales();
       return;
     }
@@ -601,7 +601,7 @@ export default function SalesPage() {
     const product = findProductByName(sale.product_name);
 
     if (!product) {
-      alert("Ürün bulunamadı / Product not found");
+      alert("Proizvod nije pronađen / Ürün bulunamadı");
       await fetchSales();
       return;
     }
@@ -679,7 +679,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Adres güncellenemedi / Address update failed: " + error.message);
+      alert("Adresa nije ažurirana / Adres güncellenemedi: " + error.message);
       return;
     }
 
@@ -696,10 +696,10 @@ export default function SalesPage() {
 
     if (!geocode.found && trimmed && (sale.city || "").trim()) {
       alert(
-        "Adres güncellendi ama koordinat bulunamadı / Address updated but coordinates were not found"
+        "Adresa je ažurirana ali koordinate nijesu pronađene / Adres güncellendi ama koordinat bulunamadı"
       );
     } else {
-      alert("Adres güncellendi / Address updated ✅");
+      alert("Adresa je ažurirana / Adres güncellendi ✅");
     }
 
     await fetchSales();
@@ -727,7 +727,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Şehir güncellenemedi / City update failed: " + error.message);
+      alert("Grad nije ažuriran / Şehir güncellenemedi: " + error.message);
       return;
     }
 
@@ -744,10 +744,10 @@ export default function SalesPage() {
 
     if (!geocode.found && trimmed && (sale.customer_address || "").trim()) {
       alert(
-        "Şehir güncellendi ama koordinat bulunamadı / City updated but coordinates were not found"
+        "Grad je ažuriran ali koordinate nijesu pronađene / Şehir güncellendi ama koordinat bulunamadı"
       );
     } else {
-      alert("Şehir güncellendi / City updated ✅");
+      alert("Grad je ažuriran / Şehir güncellendi ✅");
     }
 
     await fetchSales();
@@ -771,7 +771,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Telefon güncellenemedi / Phone update failed: " + error.message);
+      alert("Telefon nije ažuriran / Telefon güncellenemedi: " + error.message);
       return;
     }
 
@@ -784,7 +784,7 @@ export default function SalesPage() {
         .eq("id", sale.customer_id);
     }
 
-    alert("Telefon güncellendi / Phone updated ✅");
+    alert("Telefon je ažuriran / Telefon güncellendi ✅");
     await fetchSales();
     await fetchCustomers();
   }
@@ -805,11 +805,11 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Durum güncellenemedi / Status update failed: " + error.message);
+      alert("Status nije ažuriran / Durum güncellenemedi: " + error.message);
       return;
     }
 
-    alert("Durum güncellendi / Status updated ✅");
+    alert("Status je ažuriran / Durum güncellendi ✅");
     await fetchSales();
   }  async function handleProductReplace(
     sale: Sale,
@@ -825,7 +825,7 @@ export default function SalesPage() {
       ) || findProductByName(newProductName);
 
     if (!newProduct) {
-      alert("Yeni ürün bulunamadı / New product not found");
+      alert("Novi proizvod nije pronađen / Yeni ürün bulunamadı");
       await fetchSales();
       return;
     }
@@ -844,7 +844,7 @@ export default function SalesPage() {
     try {
       if (Number(newProduct.stock || 0) < qty) {
         throw new Error(
-          "Yeni üründe yeterli stok yok / Not enough stock for new product"
+          "Nema dovoljno zalihe za novi proizvod / Yeni üründe yeterli stok yok"
         );
       }
 
@@ -886,12 +886,12 @@ export default function SalesPage() {
 
       if (saleError) {
         throw new Error(
-          "Satış ürün değişimi başarısız / Sale product replacement failed: " +
+          "Promjena proizvoda u prodaji nije uspjela / Satış ürün değişimi başarısız: " +
             saleError.message
         );
       }
 
-      alert("Ürün değiştirildi / Product replaced ✅");
+      alert("Proizvod je promijenjen / Ürün değiştirildi ✅");
 
       await fetchProducts();
       await fetchSales();
@@ -899,7 +899,7 @@ export default function SalesPage() {
       alert(
         error instanceof Error
           ? error.message
-          : "Ürün değiştirilemedi / Product replacement failed"
+          : "Proizvod nije promijenjen / Ürün değiştirilemedi"
       );
       await fetchProducts();
       await fetchSales();
@@ -910,7 +910,7 @@ export default function SalesPage() {
 
   async function handleSaleGroupUpdate(sale: Sale, newGroupId: string) {
     if (!newGroupId) {
-      alert("Lütfen grup seç / Please select a group");
+      alert("Odaberi grupu / Lütfen grup seç");
       return;
     }
 
@@ -920,7 +920,7 @@ export default function SalesPage() {
 
     if (currentGroupProducts.length === 0) {
       alert(
-        "Bu grupta aktif ürün yok / There are no active products in this group"
+        "U ovoj grupi nema aktivnih proizvoda / Bu grupta aktif ürün yok"
       );
       return;
     }
@@ -942,11 +942,11 @@ export default function SalesPage() {
       setActionLoadingId("");
 
       if (error) {
-        alert("Grup güncellenemedi / Group update failed: " + error.message);
+        alert("Grupa nije ažurirana / Grup güncellenemedi: " + error.message);
         return;
       }
 
-      alert("Grup güncellendi / Group updated ✅");
+      alert("Grupa je ažurirana / Grup güncellendi ✅");
       await fetchSales();
       return;
     }
@@ -954,9 +954,9 @@ export default function SalesPage() {
     const firstProduct = currentGroupProducts[0];
 
     const confirmed = window.confirm(
-      `Seçilen mevcut ürün bu grupta yok.\n\nYeni grup: ${
+      `Odabrani trenutni proizvod ne postoji u ovoj grupi.\n\nNova grupa: ${
         groups.find((g) => g.id === newGroupId)?.name || "-"
-      }\nYeni ürün: ${firstProduct.name}\n\nÜrün otomatik değiştirilsin mi? / Automatically replace product?`
+      }\nNovi proizvod: ${firstProduct.name}\n\nDa li proizvod treba automatski zamijeniti? / Ürün otomatik değiştirilsin mi?`
     );
 
     if (!confirmed) return;
@@ -1049,61 +1049,61 @@ export default function SalesPage() {
 
   async function handleSave() {
     if (!selectedGroupId) {
-      alert("Lütfen ürün grubu seç / Please select a product group");
+      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
       return;
     }
 
     if (!selectedProductId) {
-      alert("Lütfen ürün seç / Please select a product");
+      alert("Odaberi proizvod / Lütfen ürün seç");
       return;
     }
 
     if (!customerName.trim()) {
-      alert("Lütfen müşteri adı gir / Please enter customer name");
+      alert("Unesi ime kupca / Lütfen müşteri adı gir");
       return;
     }
 
     if (!employee.trim()) {
-      alert("Lütfen çalışan adı gir / Please enter employee name");
+      alert("Unesi ime zaposlenog / Lütfen çalışan adı gir");
       return;
     }
 
     if (!city.trim()) {
-      alert("Lütfen şehir seç / Please select a city");
+      alert("Odaberi grad / Lütfen şehir seç");
       return;
     }
 
     if (!shipmentDate) {
-      alert("Lütfen sevkiyat tarihi gir / Please enter shipment date");
+      alert("Unesi datum isporuke / Lütfen sevkiyat tarihi gir");
       return;
     }
 
     const product = products.find((p) => p.id === selectedProductId);
 
     if (!product) {
-      alert("Ürün bulunamadı / Product not found");
+      alert("Proizvod nije pronađen / Ürün bulunamadı");
       return;
     }
 
     if (!product.group_id) {
-      alert("Bu ürüne grup atanmadı / This product has no group assigned");
+      alert("Ovom proizvodu nije dodijeljena grupa / Bu ürüne grup atanmadı");
       return;
     }
 
     if (product.group_id !== selectedGroupId) {
       alert(
-        "Seçilen ürün grup ile eşleşmiyor / Selected product does not match the selected group"
+        "Odabrani proizvod se ne podudara sa grupom / Seçilen ürün grup ile eşleşmiyor"
       );
       return;
     }
 
     if (quantity <= 0) {
-      alert("Adet 1 veya daha büyük olmalı / Quantity must be 1 or greater");
+      alert("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı");
       return;
     }
 
     if (product.stock < quantity) {
-      alert("Yeterli stok yok! / Not enough stock!");
+      alert("Nema dovoljno zalihe / Yeterli stok yok!");
       return;
     }
 
@@ -1129,7 +1129,7 @@ export default function SalesPage() {
 
         if (customerUpdateError) {
           throw new Error(
-            "Müşteri güncellenemedi / Customer update failed: " +
+            "Kupac nije ažuriran / Müşteri güncellenemedi: " +
               customerUpdateError.message
           );
         }
@@ -1152,7 +1152,7 @@ export default function SalesPage() {
 
         if (customerInsertError) {
           throw new Error(
-            "Müşteri kaydedilemedi / Customer insert failed: " +
+            "Kupac nije sačuvan / Müşteri kaydedilemedi: " +
               customerInsertError.message
           );
         }
@@ -1205,7 +1205,7 @@ export default function SalesPage() {
       ]);
 
       if (insertError) {
-        throw new Error("Hata / Error: " + insertError.message);
+        throw new Error("Greška / Hata: " + insertError.message);
       }
 
       await updateStockMovementLog({
@@ -1221,10 +1221,10 @@ export default function SalesPage() {
 
       if (!geocode.found && customerAddress.trim() && city.trim()) {
         alert(
-          "Satış kaydedildi / Sale saved ✅\n\nAdres koordinatı bulunamadı. Daha sonra düzenlenebilir. / Address coordinates could not be found. They can be added later."
+          "Prodaja je sačuvana / Satış kaydedildi ✅\n\nKoordinate adrese nijesu pronađene. Mogu se kasnije urediti / Adres koordinatı bulunamadı. Daha sonra düzenlenebilir."
         );
       } else {
-        alert("Satış kaydedildi / Sale saved ✅");
+        alert("Prodaja je sačuvana / Satış kaydedildi ✅");
       }
 
       clearForm();
@@ -1233,7 +1233,7 @@ export default function SalesPage() {
       await fetchSales();
       await fetchCustomers();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Satış kaydedilemedi");
+      alert(error instanceof Error ? error.message : "Prodaja nije sačuvana");
     } finally {
       setSaving(false);
     }
@@ -1243,14 +1243,13 @@ export default function SalesPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Satış / Sales
+          Prodaja / Satış
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Showroom satış girişlerinin yapılacağı ana kayıt ekranı. / Main entry
-          screen for showroom sales registration.
+          Glavni ekran za unos prodaje u showroom-u. / Showroom satış girişlerinin yapılacağı ana kayıt ekranı.
         </p>
       </div>
 
@@ -1261,18 +1260,16 @@ export default function SalesPage() {
         >
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Satış Girişi / Sales Entry</h2>
+              <h2 className="text-lg font-semibold">Unos prodaje / Satış Girişi</h2>
               <p className="mt-1 text-sm text-slate-400">
-                Önce müşteri, sonra ürün grubu, sonra ürün seç. / Select customer
-                first, then product group, then product.
+                Prvo odaberi kupca, zatim grupu proizvoda, pa proizvod. / Önce müşteri, sonra ürün grubu, sonra ürün seç.
               </p>
             </div>
 
             {prefillMode && (
               <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 px-4 py-3">
                 <p className="text-sm font-medium text-blue-300">
-                  Aynı siparişe yeni ürün ekleme modu aktif. / Add product to same
-                  order mode is active.
+                  Aktivan je režim dodavanja novog proizvoda u istu narudžbu. / Aynı siparişe yeni ürün ekleme modu aktif.
                 </p>
                 <p className="mt-1 text-xs text-slate-300">
                   Order ID: {activeOrderId || "-"}
@@ -1281,7 +1278,7 @@ export default function SalesPage() {
                   onClick={clearForm}
                   className="mt-2 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white transition hover:bg-slate-800"
                 >
-                  Formu Temizle / Clear Form
+                  Očisti formu / Formu Temizle
                 </button>
               </div>
             )}
@@ -1290,7 +1287,7 @@ export default function SalesPage() {
           <div className="grid gap-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Müşteri Seç / Select Customer
+                Odaberi kupca / Müşteri Seç
               </label>
               <select
                 value={selectedCustomerId}
@@ -1298,7 +1295,7 @@ export default function SalesPage() {
                 className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
               >
                 <option value="">
-                  Müşteri seç veya yeni gir / Select customer or enter new
+                  Kupca odaberi ili unesi novog / Müşteri seç veya yeni gir
                 </option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
@@ -1311,14 +1308,14 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün Grubu / Product Group
+                  Grupa proizvoda / Ürün Grubu
                 </label>
                 <select
                   value={selectedGroupId}
                   onChange={(e) => handleGroupChange(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option value="">Grup seç / Select group</option>
+                  <option value="">Odaberi grupu / Grup seç</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -1329,7 +1326,7 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün / Product
+                  Proizvod / Ürün
                 </label>
                 <select
                   value={selectedProductId}
@@ -1339,8 +1336,8 @@ export default function SalesPage() {
                 >
                   <option value="">
                     {!selectedGroupId
-                      ? "Önce grup seç / Select group first"
-                      : "Ürün seç / Select product"}
+                      ? "Prvo odaberi grupu / Önce grup seç"
+                      : "Odaberi proizvod / Ürün seç"}
                   </option>
                   {filteredProductsByGroup.map((product) => (
                     <option key={product.id} value={product.id}>
@@ -1354,19 +1351,19 @@ export default function SalesPage() {
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="grid gap-3 text-sm md:grid-cols-3">
                 <div>
-                  <p className="text-slate-500">Grup / Group</p>
+                  <p className="text-slate-500">Grupa / Grup</p>
                   <p className="mt-1 font-semibold text-white">
                     {selectedGroupName}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Stok / Stock</p>
+                  <p className="text-slate-500">Zaliha / Stok</p>
                   <p className="mt-1 font-semibold text-white">
                     {selectedProductData ? Number(selectedProductData.stock) : 0}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Maliyet / Cost</p>
+                  <p className="text-slate-500">Trošak / Maliyet</p>
                   <p className="mt-1 font-semibold text-white">
                     €{Number(selectedProductData?.cost || 0).toFixed(2)}
                   </p>
@@ -1377,7 +1374,7 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Adet / Quantity
+                  Količina / Adet
                 </label>
                 <input
                   type="number"
@@ -1390,7 +1387,7 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Liste Fiyatı / List Price
+                  Kataloška cijena / Liste Fiyatı
                 </label>
                 <input
                   type="number"
@@ -1403,7 +1400,7 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  İndirim / Discount
+                  Popust / İndirim
                 </label>
                 <input
                   type="number"
@@ -1418,25 +1415,25 @@ export default function SalesPage() {
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="grid gap-3 text-sm md:grid-cols-4">
                 <div>
-                  <p className="text-slate-500">Liste / List</p>
+                  <p className="text-slate-500">Lista / Liste</p>
                   <p className="mt-1 font-semibold text-white">
                     €{Number(listPrice).toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Net Birim / Final Unit</p>
+                  <p className="text-slate-500">Neto jedinica / Net Birim</p>
                   <p className="mt-1 font-semibold text-emerald-300">
                     €{Number(finalUnitPrice).toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Toplam / Total</p>
+                  <p className="text-slate-500">Ukupno / Toplam</p>
                   <p className="mt-1 font-semibold text-white">
                     €{Number(total).toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Tahmini Kâr / Estimated Profit</p>
+                  <p className="text-slate-500">Procijenjena dobit / Tahmini Kâr</p>
                   <p className="mt-1 font-semibold text-amber-300">
                     €{Number(estimatedProfit).toFixed(2)}
                   </p>
@@ -1447,7 +1444,7 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Müşteri / Customer
+                  Kupac / Müşteri
                 </label>
                 <input
                   value={customerName}
@@ -1459,7 +1456,7 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Telefon / Phone
+                  Telefon / Telefon
                 </label>
                 <input
                   value={customerPhone}
@@ -1472,12 +1469,12 @@ export default function SalesPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Adres / Address
+                Adresa / Adres
               </label>
               <textarea
                 value={customerAddress}
                 onChange={(e) => setCustomerAddress(e.target.value)}
-                placeholder="Müşteri adresi / Customer address"
+                placeholder="Adresa kupca / Müşteri adresi"
                 rows={3}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
@@ -1486,7 +1483,7 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Çalışan / Employee
+                  Zaposleni / Çalışan
                 </label>
                 <input
                   value={employee}
@@ -1498,14 +1495,14 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Şehir / City
+                  Grad / Şehir
                 </label>
                 <select
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option value="">Şehir seç / Select city</option>
+                  <option value="">Odaberi grad / Şehir seç</option>
                   {MONTENEGRO_CITIES.map((cityName) => (
                     <option key={cityName} value={cityName}>
                       {cityName}
@@ -1518,13 +1515,13 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Sevkiyat Tarihi / Shipment Date
+                  Datum isporuke / Sevkiyat Tarihi
                 </label>
                 <DatePicker
                   selected={shipmentDate}
                   onChange={(date: Date | null) => setShipmentDate(date)}
                   dateFormat="yyyy-MM-dd"
-                  placeholderText="Tarih seç / Select date"
+                  placeholderText="Odaberi datum / Tarih seç"
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                   calendarClassName="baudecor-datepicker"
                   popperClassName="baudecor-datepicker-popper z-50"
@@ -1534,7 +1531,7 @@ export default function SalesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Durum / Status
+                  Status / Durum
                 </label>
                 <select
                   value={simpleStatus}
@@ -1550,7 +1547,7 @@ export default function SalesPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Ödeme Durumu / Payment Status
+                Status plaćanja / Ödeme Durumu
               </label>
               <select
                 value={paymentStatus}
@@ -1564,12 +1561,12 @@ export default function SalesPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Not / Note
+                Napomena / Not
               </label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Satış notu / Sale note"
+                placeholder="Napomena o prodaji / Satış notu"
                 rows={3}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
@@ -1580,36 +1577,36 @@ export default function SalesPage() {
               disabled={saving}
               className="mt-2 rounded-2xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Kaydediliyor... / Saving..." : "Satışı Kaydet / Save Sale"}
+              {saving ? "Čuva se... / Kaydediliyor..." : "Sačuvaj prodaju / Satışı Kaydet"}
             </button>
           </div>
         </section>
 
         <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-          <h2 className="text-lg font-semibold">Özet / Summary</h2>
+          <h2 className="text-lg font-semibold">Sažetak / Özet</h2>
 
           <div className="mt-6 space-y-4">
             <InfoCard
-              title="Aktif Sipariş / Active Order"
-              value={activeOrderId ? "Mevcut siparişe ekleniyor" : "Yeni sipariş"}
+              title="Aktivna narudžba / Aktif Sipariş"
+              value={activeOrderId ? "Dodaje se postojećoj narudžbi" : "Nova narudžba"}
             />
             <InfoCard
-              title="Seçili Müşteri / Selected Customer"
+              title="Odabrani kupac / Seçili Müşteri"
               value={customerName || "-"}
             />
-            <InfoCard title="Şehir / City" value={city || "-"} />
-            <InfoCard title="Satış Tarihi / Sale Date" value={saleDate || "-"} />
-            <InfoCard title="Grup / Group" value={selectedGroupName} />
-            <InfoCard title="Ürün / Product" value={selectedProductName} />
-            <InfoCard title="Adet / Quantity" value={String(quantity)} />
+            <InfoCard title="Grad / Şehir" value={city || "-"} />
+            <InfoCard title="Datum prodaje / Satış Tarihi" value={saleDate || "-"} />
+            <InfoCard title="Grupa / Grup" value={selectedGroupName} />
+            <InfoCard title="Proizvod / Ürün" value={selectedProductName} />
+            <InfoCard title="Količina / Adet" value={String(quantity)} />
             <InfoCard
-              title="Net Birim / Final Unit"
+              title="Neto jedinica / Net Birim"
               value={`€${Number(finalUnitPrice).toFixed(2)}`}
               green
             />
-            <InfoCard title="Toplam / Total" value={`€${Number(total).toFixed(2)}`} />
+            <InfoCard title="Ukupno / Toplam" value={`€${Number(total).toFixed(2)}`} />
             <InfoCard
-              title="Tahmini Kâr / Estimated Profit"
+              title="Procijenjena dobit / Tahmini Kâr"
               value={`€${Number(estimatedProfit).toFixed(2)}`}
               amber
             />
@@ -1620,7 +1617,7 @@ export default function SalesPage() {
       
       <section className="mt-8 grid gap-6 xl:grid-cols-2">
         <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold mb-4">En Kârlı Müşteriler / Top Customers</h3>
+          <h3 className="text-lg font-semibold mb-4">Najprofitabilniji kupci / En Kârlı Müşteriler</h3>
           {topCustomers.map((c, i) => (
             <div key={i} className="flex justify-between text-sm mb-2">
               <span>{c.name}</span>
@@ -1632,7 +1629,7 @@ export default function SalesPage() {
         </div>
 
         <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold mb-4">Zarardaki Müşteriler / Loss Customers</h3>
+          <h3 className="text-lg font-semibold mb-4">Kupci u minusu / Zarardaki Müşteriler</h3>
           {worstCustomers.map((c, i) => (
             <div key={i} className="flex justify-between text-sm mb-2">
               <span>{c.name}</span>
@@ -1647,16 +1644,15 @@ export default function SalesPage() {
 <section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Aktif Satış Listesi / Active Sales List
+            Lista aktivne prodaje / Aktif Satış Listesi
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Teslim edilmemiş veya ödemesi tamamlanmamış satışların sipariş bazlı
-            gruplanmış görünümü. / Order-grouped view of undelivered or unpaid sales.
+            Grupisani prikaz po narudžbi za prodaje koje nijesu isporučene ili plaćene. / Teslim edilmemiş veya ödemesi tamamlanmamış satışların sipariş bazlı gruplanmış görünümü.
           </p>
         </div>
 
         {loadingSales ? (
-          <div className="text-sm text-slate-400">Yükleniyor / Loading...</div>
+          <div className="text-sm text-slate-400">Učitava se / Yükleniyor...</div>
         ) : (
           <div className="space-y-8">
             {groupedSales.map((groupBlock, groupIndex) => {
@@ -1677,7 +1673,7 @@ export default function SalesPage() {
                       <div>
                         <div className="mb-2 flex flex-wrap items-center gap-2">
                           <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300">
-                            Sipariş / Order
+                            Narudžba / Sipariş
                           </span>
                           <span className="text-xs text-slate-400">
                             {first.order_id || "-"}
@@ -1688,24 +1684,24 @@ export default function SalesPage() {
                           {first.customer_name || "-"}
                         </h3>
                         <p className="mt-1 text-sm text-slate-300">
-                          Telefon / Phone: {first.customer_phone || "-"}
+                          Telefon / Telefon: {first.customer_phone || "-"}
                         </p>
                         <p className="mt-1 text-sm text-slate-400">
-                          Adres / Address: {first.customer_address || "-"} /{" "}
+                          Adresa / Adres: {first.customer_address || "-"} /{" "}
                           {first.city || "-"}
                         </p>
                         <p className="mt-1 text-sm text-slate-400">
-                          Satış Tarihi / Sale Date: {getDisplaySaleDate(first)}
+                          Datum prodaje / Satış Tarihi: {getDisplaySaleDate(first)}
                         </p>
                         <p className="mt-1 text-sm text-slate-400">
-                          Sevkiyat Tarihi / Shipment Date: {first.shipment_date || "-"}
+                          Datum isporuke / Sevkiyat Tarihi: {first.shipment_date || "-"}
                         </p>
                       </div>
 
                       <div className="flex flex-col items-start gap-3 md:items-end">
                         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 text-right">
                           <p className="text-xs uppercase tracking-wide text-emerald-300">
-                            Sipariş Toplamı / Order Total
+                            Ukupno narudžbe / Sipariş Toplamı
                           </p>
                           <p className="mt-2 text-2xl font-bold text-emerald-300">
                             €{totalOrder.toFixed(2)}
@@ -1716,7 +1712,7 @@ export default function SalesPage() {
                           onClick={() => handleAddProductToOrder(first)}
                           className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
-                          + Ürün Ekle / Add Product
+                          + Dodaj proizvod / Ürün Ekle
                         </button>
                       </div>
                     </div>
@@ -1726,24 +1722,24 @@ export default function SalesPage() {
                     <table className="w-full min-w-[2600px] text-sm">
                       <thead className="text-slate-400">
                         <tr className="border-b border-slate-800">
-                          <th className="py-3 text-left">Müşteri / Customer</th>
-                          <th className="py-3 text-left">Telefon / Phone</th>
-                          <th className="py-3 text-left">Şehir / City</th>
-                          <th className="py-3 text-left">Adres / Address</th>
-                          <th className="py-3 text-left">Satış Tarihi / Sale Date</th>
-                          <th className="py-3 text-left">Kayıt Tarihi / Record Date</th>
-                          <th className="py-3 text-left">Grup / Group</th>
-                          <th className="py-3 text-left">Ürün / Product</th>
-                          <th className="py-3 text-center">Adet / Qty</th>
-                          <th className="py-3 text-center">Net Birim / Final Unit</th>
-                          <th className="py-3 text-center">İndirim / Discount</th>
-                          <th className="py-3 text-center">Toplam / Total</th>
-                          <th className="py-3 text-center">Maliyet / Cost</th>
-                          <th className="py-3 text-center">Kâr / Profit</th>
-                          <th className="py-3 text-center">Ödeme / Payment</th>
-                          <th className="py-3 text-center">Durum / Status</th>
-                          <th className="py-3 text-center">Sevkiyat / Shipment Date</th>
-                          <th className="py-3 text-center">İşlemler / Actions</th>
+                          <th className="py-3 text-left">Kupac / Müşteri</th>
+                          <th className="py-3 text-left">Telefon / Telefon</th>
+                          <th className="py-3 text-left">Grad / Şehir</th>
+                          <th className="py-3 text-left">Adresa / Adres</th>
+                          <th className="py-3 text-left">Datum prodaje / Satış Tarihi</th>
+                          <th className="py-3 text-left">Datum unosa / Kayıt Tarihi</th>
+                          <th className="py-3 text-left">Grupa / Grup</th>
+                          <th className="py-3 text-left">Proizvod / Ürün</th>
+                          <th className="py-3 text-center">Količina / Adet</th>
+                          <th className="py-3 text-center">Neto jedinica / Net Birim</th>
+                          <th className="py-3 text-center">Popust / İndirim</th>
+                          <th className="py-3 text-center">Ukupno / Toplam</th>
+                          <th className="py-3 text-center">Trošak / Maliyet</th>
+                          <th className="py-3 text-center">Dobit / Kâr</th>
+                          <th className="py-3 text-center">Plaćanje / Ödeme</th>
+                          <th className="py-3 text-center">Status / Durum</th>
+                          <th className="py-3 text-center">Isporuka / Sevkiyat Tarihi</th>
+                          <th className="py-3 text-center">Akcije / İşlemler</th>
                         </tr>
                       </thead>
 
@@ -1779,7 +1775,7 @@ export default function SalesPage() {
                                   }
                                   className="w-[150px] rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                                 >
-                                  <option value="">Şehir seç / Select city</option>
+                                  <option value="">Odaberi grad / Şehir seç</option>
                                   {MONTENEGRO_CITIES.map((cityName) => (
                                     <option key={cityName} value={cityName}>
                                       {cityName}
@@ -1809,7 +1805,7 @@ export default function SalesPage() {
                                   }
                                   className="w-[170px] rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                                 >
-                                  <option value="">Grup seç / Select group</option>
+                                  <option value="">Odaberi grupu / Grup seç</option>
                                   {groups.map((groupItem) => (
                                     <option key={groupItem.id} value={groupItem.id}>
                                       {groupItem.name}
@@ -1913,7 +1909,7 @@ export default function SalesPage() {
                                     disabled={rowBusy || !canDeleteSale(sale)}
                                     className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
                                   >
-                                    {rowBusy ? "Bekle... / Wait..." : "Sil / Delete"}
+                                    {rowBusy ? "Sačekaj... / Bekle..." : "Obriši / Sil"}
                                   </button>
                                 </div>
                               </td>
@@ -1929,7 +1925,7 @@ export default function SalesPage() {
 
             {groupedSales.length === 0 && (
               <div className="rounded-3xl border border-slate-800 bg-slate-900/50 py-8 text-center text-slate-400">
-                Aktif kayıt yok / No active sales found
+                Aktivni zapis ne postoji / Aktif kayıt yok
               </div>
             )}
           </div>
