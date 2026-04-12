@@ -16,7 +16,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [type, setType] = useState("Kira / Kira");
+  const [type, setType] = useState("Zakup / Kira");
   const [amount, setAmount] = useState(0);
   const [note, setNote] = useState("");
 
@@ -67,7 +67,7 @@ export default function ExpensesPage() {
 
     alert("Trošak je sačuvan / Gider kaydedildi ✅");
 
-    setType("Kira / Kira");
+    setType("Zakup / Kira");
     setAmount(0);
     setNote("");
 
@@ -128,12 +128,12 @@ export default function ExpensesPage() {
                 onChange={(e) => setType(e.target.value)}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
-                <option>Kira / Kira</option>
+                <option>Zakup / Kira</option>
                 <option>Plata / Maaş</option>
                 <option>Struja / Elektrik</option>
                 <option>Internet / İnternet</option>
-                <option>Transport / Nakliye</option>
-                <option>Marketing / Reklam</option>
+                <option>Prevoz / Nakliye</option>
+                <option>Oglašavanje / Reklam</option>
                 <option>Popravka / Tamirat</option>
                 <option>Porez / Vergi</option>
                 <option>Ostalo / Diğer</option>
