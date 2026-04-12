@@ -44,7 +44,7 @@ export default function NewProductPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      alert("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı");
       setLoadingGroups(false);
       return;
     }
@@ -63,7 +63,7 @@ export default function NewProductPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
+      alert("Dobavljači nijesu učitani / Tedarikçiler alınamadı");
       setLoadingSuppliers(false);
       return;
     }
@@ -88,18 +88,18 @@ export default function NewProductPage() {
 
   async function handleSave() {
     if (!name.trim()) {
-      alert("Lütfen ürün adı gir / Please enter product name");
+      alert("Unesi naziv proizvoda / Lütfen ürün adı gir");
       return;
     }
 
     if (!groupId) {
-      alert("Lütfen ürün grubu seç / Please select product group");
+      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
       return;
     }
 
     if (price < 0 || cost < 0 || stock < 0 || minimumStock < 0) {
       alert(
-        "Fiyat, stok veya minimum stok geçersiz / Invalid price, stock, or minimum stock"
+        "Cijena, zaliha veya minimum stok nijesu ispravni / Fiyat, stok veya minimum stok geçersiz"
       );
       return;
     }
@@ -135,11 +135,11 @@ export default function NewProductPage() {
     setSaving(false);
 
     if (error) {
-      alert("Ürün eklenemedi / Product insert failed: " + error.message);
+      alert("Proizvod eklenemedi / Ürün eklenemedi: " + error.message);
       return;
     }
 
-    alert("Ürün eklendi / Product created ✅");
+    alert("Proizvod eklendi / Ürün eklendi ✅");
 
     setName("");
     setGroupId("");
@@ -169,16 +169,16 @@ export default function NewProductPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-widest text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold">
-          Yeni Ürün / New Product
+          Novi proizvod / Yeni Ürün
         </h1>
         <p className="mt-2 text-sm text-slate-400">
+          Dodaj novi proizvod u sistem. Početna zaliha se čuva kao opening_stock.
+          Podrazumijevani dobavljač ubrzava buduće unose zaliha. /
           Sisteme yeni ürün ekle. Açılış stoku opening stock olarak kaydedilir.
-          Varsayılan tedarikçi seçimi gelecekte stok girişlerinde hız sağlar. /
-          Add a new product to the system. Initial stock is saved as opening
-          stock. Default supplier selection will help future stock entry flows.
+          Varsayılan tedarikçi seçimi gelecekte stok girişlerinde hız sağlar.
         </p>
       </div>
 
@@ -187,7 +187,7 @@ export default function NewProductPage() {
           <div className="grid gap-4">
             <div>
               <label className="text-sm text-slate-400">
-                Ürün Adı / Product Name
+                Naziv proizvoda / Ürün Adı
               </label>
               <input
                 value={name}
@@ -198,7 +198,7 @@ export default function NewProductPage() {
 
             <div>
               <label className="text-sm text-slate-400">
-                Ürün Grubu / Product Group
+                Grupa proizvoda / Ürün Grubu
               </label>
               <select
                 value={groupId}
@@ -208,8 +208,8 @@ export default function NewProductPage() {
               >
                 <option value="">
                   {loadingGroups
-                    ? "Gruplar yükleniyor... / Loading groups..."
-                    : "Grup seç / Select group"}
+                    ? "Grupe se učitavaju... / Gruplar yükleniyor..."
+                    : "Odaberi grupu / Grup seç"}
                 </option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
@@ -220,15 +220,15 @@ export default function NewProductPage() {
 
               {!loadingGroups && groups.length === 0 && (
                 <p className="mt-2 text-xs text-amber-300">
-                  Henüz grup yok. Önce veritabanına grup eklemelisin. / No
-                  groups found yet. Add groups in the database first.
+                  Još nema grupa. Önce veritabanına grup eklemelisin. /
+                  Henüz grup yok. Önce veritabanına grup eklemelisin.
                 </p>
               )}
             </div>
 
             <div>
               <label className="text-sm text-slate-400">
-                Varsayılan Tedarikçi / Default Supplier
+                Podrazumijevani dobavljač / Varsayılan Tedarikçi
               </label>
               <select
                 value={supplierId}
@@ -238,8 +238,8 @@ export default function NewProductPage() {
               >
                 <option value="">
                   {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor... / Loading suppliers..."
-                    : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
+                    ? "Dobavljači se učitavaju... / Tedarikçiler yükleniyor..."
+                    : "Odaberi dobavljača (opciono) / Tedarikçi seç (opsiyonel)"}
                 </option>
                 {suppliers.map((supplier) => (
                   <option key={supplier.id} value={String(supplier.id)}>
@@ -250,25 +250,27 @@ export default function NewProductPage() {
 
               {!loadingSuppliers && suppliers.length === 0 && (
                 <p className="mt-2 text-xs text-amber-300">
+                  Još nema aktivnih dobavljača. Önce Tedarikçiler ekranından firma
+                  ekleyebilirsin. /
                   Henüz aktif tedarikçi yok. Önce Tedarikçiler ekranından firma
-                  ekleyebilirsin. / No active suppliers found yet. You can add a
-                  supplier first from the Suppliers screen.
+                  ekleyebilirsin.
                 </p>
               )}
 
               <p className="mt-2 text-xs text-slate-500">
+                Ovo polje nije obavezno. Ürünün ana tedarikçisini tanımlamak için
+                kullanılır. Gerçek alım yapılan firma stok girişinde ayrıca
+                seçilecek. /
                 Bu alan zorunlu değil. Ürünün ana tedarikçisini tanımlamak için
                 kullanılır. Gerçek alım yapılan firma stok girişinde ayrıca
-                seçilecek. / This field is optional. It defines the product's
-                default supplier. The actual supplier used for purchasing will
-                also be selected separately during stock entry.
+                seçilecek.
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="text-sm text-slate-400">
-                  Satış Fiyatı / Price
+                  Prodajna cijena / Satış Fiyatı
                 </label>
                 <input
                   type="number"
@@ -281,7 +283,7 @@ export default function NewProductPage() {
 
               <div>
                 <label className="text-sm text-slate-400">
-                  Maliyet / Cost
+                  Trošak / Maliyet
                 </label>
                 <input
                   type="number"
@@ -295,7 +297,7 @@ export default function NewProductPage() {
 
             <div>
               <label className="text-sm text-slate-400">
-                Başlangıç Stok / Initial Stock
+                Početna zaliha / Başlangıç Stok
               </label>
               <input
                 type="number"
@@ -305,16 +307,16 @@ export default function NewProductPage() {
                 className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
               />
               <p className="mt-2 text-xs text-slate-500">
+                Ova vrijednost se čuva kao opening_stock. Sistem uyumu için
+                products.stock alanına da aynı değer yazılır. /
                 Bu değer opening_stock olarak kaydedilir. Sistem uyumu için
-                products.stock alanına da aynı değer yazılır. / This value is
-                saved as opening_stock. For compatibility, the same value is
-                also written to products.stock.
+                products.stock alanına da aynı değer yazılır.
               </p>
             </div>
 
             <div>
               <label className="text-sm text-slate-400">
-                Minimum Stok / Minimum Stock
+                Minimalna zaliha / Minimum Stok
               </label>
               <input
                 type="number"
@@ -324,10 +326,10 @@ export default function NewProductPage() {
                 className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
               />
               <p className="mt-2 text-xs text-slate-500">
+                Ova vrijednost je granica kritične zalihe. Dashboard ve ürünler ekranı bu
+                limite göre uyarı verir. /
                 Bu değer kritik stok sınırıdır. Dashboard ve ürünler ekranı bu
-                limite göre uyarı verir. / This value is the critical stock
-                threshold. Dashboard and products screens will use this limit
-                for alerts.
+                limite göre uyarı verir.
               </p>
             </div>
 
@@ -341,43 +343,43 @@ export default function NewProductPage() {
               }
               className="mt-4 rounded-2xl bg-blue-600 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
+              {saving ? "Čuva se... / Kaydediliyor..." : "Sačuvaj / Kaydet"}
             </button>
           </div>
         </section>
 
         <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
-          <h2 className="text-lg font-semibold">Özet / Summary</h2>
+          <h2 className="text-lg font-semibold">Sažetak / Özet</h2>
 
           <div className="mt-6 space-y-4">
-            <InfoCard title="Ürün / Product" value={name || "-"} />
-            <InfoCard title="Grup / Group" value={selectedGroupName} />
+            <InfoCard title="Proizvod / Ürün" value={name || "-"} />
+            <InfoCard title="Grupa / Grup" value={selectedGroupName} />
             <InfoCard
-              title="Tedarikçi / Supplier"
+              title="Dobavljač / Tedarikçi"
               value={selectedSupplierName}
             />
-            <InfoCard title="Fiyat / Price" value={`€${Number(price).toFixed(2)}`} />
-            <InfoCard title="Maliyet / Cost" value={`€${Number(cost).toFixed(2)}`} />
+            <InfoCard title="Cijena / Fiyat" value={`€${Number(price).toFixed(2)}`} />
+            <InfoCard title="Trošak / Maliyet" value={`€${Number(cost).toFixed(2)}`} />
             <InfoCard
-              title="Marj / Margin"
+              title="Marža / Marj"
               value={`€${Number(margin).toFixed(2)}`}
               green={margin >= 0}
               red={margin < 0}
             />
             <InfoCard
-              title="Başlangıç Stok / Initial Stock"
+              title="Početna zaliha / Başlangıç Stok"
               value={String(initialStockValue)}
             />
             <InfoCard
-              title="Minimum Stok / Minimum Stock"
+              title="Minimalna zaliha / Minimum Stok"
               value={String(Number(minimumStock || 0))}
             />
             <InfoCard
-              title="Açılış Maliyeti / Opening Cost"
+              title="Početni trošak / Açılış Maliyeti"
               value={`€${initialInventoryCost.toFixed(2)}`}
             />
             <InfoCard
-              title="Açılış Satış Değeri / Opening Sale Value"
+              title="Početna prodajna vrijednost / Açılış Satış Değeri"
               value={`€${initialInventorySaleValue.toFixed(2)}`}
             />
           </div>
