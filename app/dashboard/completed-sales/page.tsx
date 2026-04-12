@@ -38,8 +38,8 @@ type Product = {
 export default function CompletedSalesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setUčitava se / Yükleniyor] = useState(true);
-  const [actionUčitava se / YükleniyorId, setActionUčitava se / YükleniyorId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState("");
 
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -57,7 +57,7 @@ export default function CompletedSalesPage() {
   }
 
   async function fetchRows() {
-    setUčitava se / Yükleniyor(true);
+    setLoading(true);
 
     const { data, error } = await supabase
       .from("sales")
@@ -67,14 +67,14 @@ export default function CompletedSalesPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Hata / Error: " + error.message);
+      alert("Greška / Hata: " + error.message);
       setRows([]);
-      setUčitava se / Yükleniyor(false);
+      setLoading(false);
       return;
     }
 
     setRows((data || []) as Row[]);
-    setUčitava se / Yükleniyor(false);
+    setLoading(false);
   }
 
   async function fetchProducts() {
@@ -112,13 +112,13 @@ export default function CompletedSalesPage() {
     ]);
   }
 
-  async function handlePovrat / İade(row: Row) {
+  async function handleReturn(row: Row) {
     const confirmed = window.confirm(
-      `Bu satış iade edilecek ve stok geri eklenecek.\n\nMüşteri: ${
+      `Ova prodaja će biti vraćena i zaliha će biti obnovljena.\n\nKupac: ${
         row.customer_name || "-"
-      }\nÜrün: ${row.product_name || "-"}\nAdet: ${
+      }\nProizvod: ${row.product_name || "-"}\nKoličina: ${
         row.quantity || 0
-      }\n\nDevam edilsin mi? / Continue?`
+      }\n\nNastaviti? / Devam edilsin mi?`
     );
 
     if (!confirmed) return;
@@ -126,11 +126,11 @@ export default function CompletedSalesPage() {
     const product = findProductByName(row.product_name);
 
     if (!product) {
-      alert("Ürün bulunamadı / Product not found");
+      alert("Proizvod nije pronađen / Ürün bulunamadı");
       return;
     }
 
-    setActionUčitava se / YükleniyorId(row.id);
+    setActionLoadingId(row.id);
 
     const newStock = Number(product.stock || 0) + Number(row.quantity || 0);
 
@@ -140,36 +140,36 @@ export default function CompletedSalesPage() {
       .eq("id", product.id);
 
     if (stockError) {
-      setActionUčitava se / YükleniyorId("");
-      alert("Stok geri eklenemedi / Stock restore failed: " + stockError.message);
+      setActionLoadingId("");
+      alert("Zaliha nije vraćena / Stok geri eklenemedi: " + stockError.message);
       return;
     }
 
     await updateStockMovementLog({
       product,
-      movementType: "Sale Povrat / İade / Satış İade",
+      movementType: "Povrat prodaje / Satış İade",
       quantity: Number(row.quantity || 0),
-      note: `${row.customer_name || "-"} completed sales iade işlemi / completed sales return`,
+      note: `${row.customer_name || "-"} completed sales iade işlemi / završeni povrat prodaje`,
     });
 
     const { error: saleError } = await supabase
       .from("sales")
       .update({
-        delivery_status: "İade Edildi / Povrat / İadeed",
-        shipment_status: "İade Edildi / Povrat / İadeed",
+        delivery_status: "İade Edildi / Returned",
+        shipment_status: "İade Edildi / Returned",
         payment_status: "Bekliyor / Pending",
-        note: `${row.note ? row.note + " | " : ""}İade yapıldı / Povrat / İadeed`,
+        note: `${row.note ? row.note + " | " : ""}Povrat izvršen / İade yapıldı`,
       })
       .eq("id", row.id);
 
-    setActionUčitava se / YükleniyorId("");
+    setActionLoadingId("");
 
     if (saleError) {
-      alert("Satış güncellenemedi / Sale update failed: " + saleError.message);
+      alert("Prodaja nije ažurirana / Satış güncellenemedi: " + saleError.message);
       return;
     }
 
-    alert("İade tamamlandı ve stok geri eklendi / Povrat / İade completed and stock restored ✅");
+    alert("Povrat završen i zaliha vraćena / İade tamamlandı ve stok geri eklendi ✅");
 
     await fetchRows();
     await fetchProducts();
@@ -220,15 +220,14 @@ export default function CompletedSalesPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Tamamlanan Satışlar / Završene prodaje / Tamamlanan Satışlar
+          Završene prodaje / Tamamlanan Satışlar
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme,
-          arama ve iade işlemleri buradan yapılır. / Completed sales where delivery
-          and payment are both finished.
+          Isporučeni i plaćeni prodajni zapisi. Ovdje se rade retroaktivno filtriranje, pretraga i povrat. /
+          Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme, arama ve iade işlemleri buradan yapılır.
         </p>
       </div>
 
@@ -236,61 +235,61 @@ export default function CompletedSalesPage() {
         <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Ara / Search
+              Pretraga / Arama
             </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sipariş, müşteri, telefon, ürün..."
+              placeholder="Sipariş, kupac, telefon, proizvod... / Sipariş, müşteri, telefon, ürün..."
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Şehir / City
+              Grad / Şehir
             </label>
             <input
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              placeholder="Şehir..."
+              placeholder="Grad... / Şehir..."
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Ödeme / Payment
+              Plaćanje / Ödeme
             </label>
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             >
-              <option value="all">Tümü / All</option>
-              <option value="Ödendi / Paid">Ödendi / Paid</option>
-              <option value="Bekliyor / Pending">Bekliyor / Pending</option>
+              <option value="all">Sve / Tümü</option>
+              <option value="Ödendi / Paid">Plaćeno / Ödendi</option>
+              <option value="Bekliyor / Pending">Čeka / Bekliyor</option>
             </select>
           </div>
 
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Durum / Status
+              Status / Durum
             </label>
             <select
               value={deliveryFilter}
               onChange={(e) => setDeliveryFilter(e.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             >
-              <option value="all">Tümü / All</option>
-              <option value="Teslim Edildi / Delivered">Teslim Edildi / Delivered</option>
-              <option value="İade Edildi / Povrat / İadeed">İade Edildi / Povrat / İadeed</option>
+              <option value="all">Sve / Tümü</option>
+              <option value="Teslim Edildi / Delivered">Isporučeno / Teslim Edildi</option>
+              <option value="İade Edildi / Returned">Vraćeno / İade Edildi</option>
             </select>
           </div>
 
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Başlangıç Tarihi / Date From
+              Početni datum / Başlangıç Tarihi
             </label>
             <input
               type="date"
@@ -302,7 +301,7 @@ export default function CompletedSalesPage() {
 
           <div>
             <label className="mb-2 block text-sm text-slate-300">
-              Bitiş Tarihi / Date To
+              Završni datum / Bitiş Tarihi
             </label>
             <input
               type="date"
@@ -316,34 +315,34 @@ export default function CompletedSalesPage() {
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         {loading ? (
-          <div className="text-slate-400">Yükleniyor / Učitava se / Yükleniyor...</div>
+          <div className="text-slate-400">Učitava se / Yükleniyor...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[2200px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Sipariş / Order</th>
-                  <th className="py-3 text-left">Müşteri / Customer</th>
-                  <th className="py-3 text-left">Telefon / Phone</th>
-                  <th className="py-3 text-left">Adres / Address</th>
-                  <th className="py-3 text-left">Şehir / City</th>
-                  <th className="py-3 text-left">Ürün / Product</th>
-                  <th className="py-3 text-center">Adet / Qty</th>
-                  <th className="py-3 text-center">Net Birim / Final Unit</th>
-                  <th className="py-3 text-center">Toplam / Total</th>
-                  <th className="py-3 text-center">Satış Tarihi / Sale Date</th>
-                  <th className="py-3 text-center">Sevkiyat Tarihi / Shipment Date</th>
-                  <th className="py-3 text-center">Teslimat / Delivery</th>
-                  <th className="py-3 text-center">Ödeme / Payment</th>
-                  <th className="py-3 text-center">Araç / Vehicle</th>
-                  <th className="py-3 text-center">Kurye / Courier</th>
-                  <th className="py-3 text-center">İşlem / Action</th>
+                  <th className="py-3 text-left">Narudžba / Sipariş</th>
+                  <th className="py-3 text-left">Kupac / Müşteri</th>
+                  <th className="py-3 text-left">Telefon / Telefon</th>
+                  <th className="py-3 text-left">Adresa / Adres</th>
+                  <th className="py-3 text-left">Grad / Şehir</th>
+                  <th className="py-3 text-left">Proizvod / Ürün</th>
+                  <th className="py-3 text-center">Količina / Adet</th>
+                  <th className="py-3 text-center">Neto jedinica / Net Birim</th>
+                  <th className="py-3 text-center">Ukupno / Toplam</th>
+                  <th className="py-3 text-center">Datum prodaje / Satış Tarihi</th>
+                  <th className="py-3 text-center">Datum isporuke / Sevkiyat Tarihi</th>
+                  <th className="py-3 text-center">Isporuka / Teslimat</th>
+                  <th className="py-3 text-center">Plaćanje / Ödeme</th>
+                  <th className="py-3 text-center">Vozilo / Araç</th>
+                  <th className="py-3 text-center">Kurir / Kurye</th>
+                  <th className="py-3 text-center">Akcija / İşlem</th>
                 </tr>
               </thead>
 
               <tbody>
                 {filteredRows.map((row) => {
-                  const rowBusy = actionUčitava se / YükleniyorId === row.id;
+                  const rowBusy = actionLoadingId === row.id;
 
                   return (
                     <tr
@@ -367,17 +366,17 @@ export default function CompletedSalesPage() {
                         {row.sale_date || row.created_at?.slice(0, 10) || "-"}
                       </td>
                       <td className="py-3 text-center">{row.shipment_date || "-"}</td>
-                      <td className="py-3 text-center">{row.delivery_status || "-"}</td>
-                      <td className="py-3 text-center">{row.payment_status || "-"}</td>
+                      <td className="py-3 text-center">{row.delivery_status === "Teslim Edildi / Delivered" ? "Isporučeno / Teslim Edildi" : row.delivery_status === "İade Edildi / Returned" ? "Vraćeno / İade Edildi" : row.delivery_status || "-"}</td>
+                      <td className="py-3 text-center">{row.payment_status === "Ödendi / Paid" ? "Plaćeno / Ödendi" : row.payment_status === "Bekliyor / Pending" ? "Čeka / Bekliyor" : row.payment_status || "-"}</td>
                       <td className="py-3 text-center">{row.assigned_vehicle || "-"}</td>
                       <td className="py-3 text-center">{row.assigned_courier || "-"}</td>
                       <td className="py-3 text-center">
                         <button
-                          onClick={() => handlePovrat / İade(row)}
+                          onClick={() => handleReturn(row)}
                           disabled={rowBusy}
                           className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          {rowBusy ? "Bekle... / Wait..." : "İade / Povrat / İade"}
+                          {rowBusy ? "Sačekaj... / Bekle..." : "Povrat / İade"}
                         </button>
                       </td>
                     </tr>
@@ -390,7 +389,7 @@ export default function CompletedSalesPage() {
                       colSpan={16}
                       className="py-8 text-center text-slate-400"
                     >
-                      Kayıt yok / No records
+                      Nema zapisa / Kayıt yok
                     </td>
                   </tr>
                 )}
