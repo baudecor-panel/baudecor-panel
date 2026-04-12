@@ -1,4 +1,4 @@
-"use client";
+content = r''' "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1409,3 +1409,10 @@ function EmptyState() {
     </div>
   );
 }
+'''
+# Remove accidental leading space before first quote if present
+content = content.lstrip()
+path = "/mnt/data/app-dashboard-page-premium-karadagca-turkce.txt"
+with open(path, "w", encoding="utf-8") as f:
+    f.write(content)
+print(path)
