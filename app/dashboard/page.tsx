@@ -651,7 +651,7 @@ export default function DashboardPage() {
             BAUDECOR EXECUTIVE VIEW
           </p>
           <h1 className="mt-4 text-4xl font-black tracking-tight">
-            Kontrol Paneli / Dashboard
+            Kontrolna tabla / Kontrol Paneli
           </h1>
           <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-slate-400">
             Yükleniyor / Loading...
@@ -682,7 +682,7 @@ export default function DashboardPage() {
             </div>
 
             <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
-              Kontrol Paneli / Dashboard
+              Kontrolna tabla / Kontrol Paneli
             </h1>
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
@@ -709,13 +709,13 @@ export default function DashboardPage() {
 
             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <HeroStatCard
-                label="Toplam Ciro / Total Revenue"
+                label="Ukupan prihod / Toplam Ciro"
                 value={`€${totalRevenue.toFixed(2)}`}
                 helper="Seçili dönem geliri / Revenue for selected period"
                 tone="blue"
               />
               <HeroStatCard
-                label="Toplam Kâr / Total Profit"
+                label="Ukupan profit / Toplam Kâr"
                 value={`€${totalProfit.toFixed(2)}`}
                 helper="Brüt kârlılık görünümü / Gross profit view"
                 tone={totalProfit >= 0 ? "green" : "red"}
@@ -727,7 +727,7 @@ export default function DashboardPage() {
                 tone="slate"
               />
               <HeroStatCard
-                label="Stok Sağlığı / Stock Health"
+                label="Zdravlje zalihe / Stok Sağlığı"
                 value={`%${stockHealthRate}`}
                 helper="Minimum stok üstü ürün oranı / Share of products above minimum stock"
                 tone={
@@ -743,37 +743,37 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <ExecutiveMetric
-              title="Tamamlanma Oranı / Completion Rate"
+              title="Stopa završetka / Tamamlanma Oranı"
               value={`%${completionRate}`}
               subtitle="Teslim + ödeme tamamlanan siparişler / Delivered and paid orders"
               tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="İptal Oranı / Cancellation Rate"
+              title="Stopa otkazivanja / İptal Oranı"
               value={`%${cancellationRate}`}
               subtitle="Dönem içi iptal baskısı / Cancellation pressure in period"
               tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Bekleyen Ödeme / Pending Payment"
+              title="Plaćanje na čekanju / Bekleyen Ödeme"
               value={`€${pendingPaymentsTotal.toFixed(2)}`}
               subtitle={`Cironun %${pendingPaymentRate}'i`}
               tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Teslimat Backlog / Delivery Backlog"
+              title="Zaostale isporuke / Teslimat Backlog"
               value={String(deliveryBacklog)}
               subtitle="Kapanmamış teslimatlar / Undelivered orders"
               tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Kritik Stok / Critical Stock"
+              title="Kritična zaliha / Kritik Stok"
               value={String(criticalStockCount)}
               subtitle="Minimum stok seviyesinde / At minimum stock"
               tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Stoksuz Ürün / Out of Stock"
+              title="Proizvod bez zalihe / Stoksuz Ürün"
               value={String(outOfStockCount)}
               subtitle="Doğrudan satış kaybı riski / Immediate lost-sales risk"
               tone={outOfStockCount === 0 ? "green" : "red"}
@@ -790,7 +790,7 @@ export default function DashboardPage() {
                 PRIORITY ALERTS
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
-                Kritik Uyarılar / Alerts
+                Kritična upozorenja / Uyarılar
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
@@ -829,7 +829,7 @@ export default function DashboardPage() {
                 CEO INSIGHTS
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
-                Stratejik Yorumlar / Strategic Insights
+                Strateški uvidi / Stratejik Yorumlar
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
@@ -858,7 +858,7 @@ export default function DashboardPage() {
                 REVENUE INTELLIGENCE
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
-                Satış ve Kâr Trendi / Sales & Profit Trend
+                Trend prodaje i profita / Satış ve Kâr Trendi
               </h2>
               <p className="mt-2 text-sm text-slate-400">
                 Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir. / Shows how sales volume and profitability move together in the selected period.
@@ -913,7 +913,7 @@ export default function DashboardPage() {
               STOCK PRESSURE
             </p>
             <h2 className="mt-2 text-2xl font-bold text-white">
-              Stok Riski / Stock Risk
+              Rizik zalihe / Stok Riski
             </h2>
             <p className="mt-2 text-sm text-slate-300">
               Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar. / Products that may create lost-sales risk based on minimum stock are highlighted here.
@@ -994,7 +994,7 @@ export default function DashboardPage() {
 
       <section className="mb-8 grid gap-6 xl:grid-cols-3">
         <PanelCard
-          title="Kârlılık Özeti / Profitability Summary"
+          title="Sažetak profita / Kârlılık Özeti"
           subtitle="Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -1026,7 +1026,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="En Kârlı Ürünler / Most Profitable Products"
+          title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
           subtitle="Stok kâr potansiyeline göre en güçlü ürünler."
         >
           <div className="space-y-3">
@@ -1048,7 +1048,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="En Zayıf Marj / Weakest Margins"
+          title="Najslabija marža / En Zayıf Marj"
           subtitle="Marj yüzdesi en düşük ürünler."
         >
           <div className="space-y-3">
@@ -1072,7 +1072,7 @@ export default function DashboardPage() {
 
       <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
         <PanelCard
-          title="En İyi Ürünler / Top Products"
+          title="Najbolji proizvodi / En İyi Ürünler"
           subtitle="Seçili dönemde en fazla ciro üreten ürünler."
         >
           <div className="space-y-3">
@@ -1094,7 +1094,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="Şehir Performansı / City Performance"
+          title="Performanse po gradovima / Şehir Performansı"
           subtitle="En yüksek ciroya sahip şehirler."
         >
           <div className="space-y-3">
@@ -1116,7 +1116,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="En İyi Müşteriler / Top Customers"
+          title="Najbolji kupci / En İyi Müşteriler"
           subtitle="En fazla ciro bırakan müşteriler."
         >
           <div className="space-y-3">
@@ -1138,7 +1138,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="En Karlı Müşteriler / Most Profitable Customers"
+          title="Najprofitabilniji kupci / En Karlı Müşteriler"
           subtitle="Toplam kâra göre sıralama / Ranked by total profit."
         >
           <div className="space-y-3">
@@ -1160,7 +1160,7 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="Son Satışlar / Recent Sales"
+          title="Nedavne prodaje / Son Satışlar"
           subtitle="Seçili dönemdeki en son satış kayıtları."
         >
           <div className="space-y-3">
