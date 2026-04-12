@@ -348,20 +348,20 @@ function calculateDistance(
 }
 
 function formatDistance(distance: number) {
-  if (!Number.isFinite(distance)) return "Nema udaljenosti / Mesafe yok";
+  if (!Number.isFinite(distance)) return "Mesafe yok / Nema udaljenosti";
   return `${distance.toFixed(1)} km`;
 }
 
 function getMethodLabel(row: DispatchRow) {
   if (isVehicleRow(row)) return "Sopstveno vozilo / Kendi Araç";
   if (isCourierRow(row)) return "Kurir / Kurye";
-  return normalizeText(row.delivery_method) || "Belirsiz / Unknown";
+  return normalizeText(row.delivery_method) || "Belirsiz / Nepoznato";
 }
 
-function buildGroupSections(zapisa / rows: DispatchRow[]) {
+function buildGroupSections(rows: DispatchRow[]) {
   const map = new Map<string, DispatchRow[]>();
 
-  zapisa / rows.forEach((row) => {
+  rows.forEach((row) => {
     const groupName = normalizeGroupName(row.dispatch_group);
     if (!groupName) return;
 
@@ -402,7 +402,7 @@ function buildGroupSections(zapisa / rows: DispatchRow[]) {
 }
 
 export default function DispatchPage() {
-  const [zapisa / rows, setRows] = useState<DispatchRow[]>([]);
+  const [rows, setRows] = useState<DispatchRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [cityFilter, setCityFilter] = useState("all");
@@ -421,7 +421,7 @@ export default function DispatchPage() {
       .from("sales")
       .select("*")
       .or(
-        "delivery_status.neq.Isporučeno / Teslim Edildi,payment_status.neq.Ödendi / Paid"
+        "delivery_status.neq.Teslim Edildi / Delivered,payment_status.neq.Ödendi / Paid"
       )
       .order("shipment_date", { ascending: true, nullsFirst: false })
       .order("dispatch_group", { ascending: true, nullsFirst: true })
@@ -430,7 +430,7 @@ export default function DispatchPage() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      alert("Sevkiyat kayıtları alınamadı / Failed to fetch dispatch zapisa / rows");
+      alert("Sevkiyat kayıtları alınamadı / Zapisi isporuke nijesu učitani");
       setRows([]);
     } else {
       setRows((data || []) as DispatchRow[]);
@@ -445,14 +445,14 @@ export default function DispatchPage() {
 
   const cityOptions = useMemo(() => {
     return Array.from(
-      new Set(zapisa / rows.map((row) => row.city?.trim()).filter(Boolean) as string[])
+      new Set(rows.map((row) => row.city?.trim()).filter(Boolean) as string[])
     ).sort((a, b) => a.localeCompare(b));
-  }, [zapisa / rows]);
+  }, [rows]);
 
   const existingGroups = useMemo(() => {
     const counts = new Map<string, number>();
 
-    zapisa / rows.forEach((row) => {
+    rows.forEach((row) => {
       const value = normalizeGroupName(row.dispatch_group);
       if (!value) return;
       counts.set(value, (counts.get(value) || 0) + 1);
@@ -461,10 +461,10 @@ export default function DispatchPage() {
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [zapisa / rows]);
+  }, [rows]);
 
   const filteredRows = useMemo(() => {
-    return zapisa / rows.filter((row) => {
+    return rows.filter((row) => {
       const cityValue = row.city?.trim() || "";
       const methodLabel = getMethodLabel(row);
       const groupValue = normalizeGroupName(row.dispatch_group);
@@ -483,7 +483,7 @@ export default function DispatchPage() {
 
       return cityOk && methodOk && dateOk && groupOk;
     });
-  }, [zapisa / rows, cityFilter, methodFilter, groupFilter, dateFilter]);
+  }, [rows, cityFilter, methodFilter, groupFilter, dateFilter]);
 
   const filteredIds = useMemo(() => filteredRows.map((row) => row.id), [filteredRows]);
 
@@ -534,8 +534,8 @@ export default function DispatchPage() {
   }, [filteredRows]);
 
   const selectedRows = useMemo(
-    () => zapisa / rows.filter((row) => selectedIds.includes(row.id)),
-    [zapisa / rows, selectedIds]
+    () => rows.filter((row) => selectedIds.includes(row.id)),
+    [rows, selectedIds]
   );
 
   const selectedGroupNames = useMemo(() => {
@@ -556,10 +556,10 @@ export default function DispatchPage() {
 
   const activeGroupRows = useMemo(() => {
     if (!activeGroupName) return [];
-    return zapisa / rows.filter(
+    return rows.filter(
       (row) => normalizeGroupName(row.dispatch_group) === activeGroupName
     );
-  }, [zapisa / rows, activeGroupName]);
+  }, [rows, activeGroupName]);
 
   const activeGroupSelectedCount = useMemo(() => {
     if (!activeGroupName) return 0;
@@ -607,7 +607,7 @@ export default function DispatchPage() {
     value: any,
     successMessage?: string
   ) {
-    const currentRow = zapisa / rows.find((row) => row.id === id);
+    const currentRow = rows.find((row) => row.id === id);
 
     const updatePayload: Partial<DispatchRow> & Record<string, any> = {
       [field]: value,
@@ -624,7 +624,7 @@ export default function DispatchPage() {
     setSavingIds((prev) => prev.filter((item) => item !== id));
 
     if (error) {
-      alert("Hata / Error: " + error.message);
+      alert("Greška / Hata: " + error.message);
       return false;
     }
 
@@ -659,7 +659,7 @@ export default function DispatchPage() {
     setSavingIds((prev) => prev.filter((item) => item !== id));
 
     if (error) {
-      alert("Hata / Error: " + error.message);
+      alert("Greška / Hata: " + error.message);
       return false;
     }
 
@@ -673,7 +673,7 @@ export default function DispatchPage() {
 
   async function optimizeSingleGroupRows(groupRows: DispatchRow[]) {
     if (groupRows.length === 0) {
-      alert("Bu grupta optimize edilecek kayıt yok / No zapisa / rows to optimize");
+      alert("Bu grupta optimize edilecek kayıt yok / U ovoj grupi nema zapisa za optimizaciju");
       return false;
     }
 
@@ -697,7 +697,7 @@ export default function DispatchPage() {
           .eq("id", row.id);
 
         if (error) {
-          alert("Rota güncellenemedi / Failed to update route: " + error.message);
+          alert("Rota güncellenemedi / Ažuriranje rute nije uspjelo: " + error.message);
           return false;
         }
       }
@@ -705,8 +705,8 @@ export default function DispatchPage() {
       return true;
     }
 
-    function optimizeNearestNeighbor(zapisa / rowsToOptimize: DispatchRow[]) {
-      const validRows = zapisa / rowsToOptimize.filter(
+    function optimizeNearestNeighbor(rowsToOptimize: DispatchRow[]) {
+      const validRows = rowsToOptimize.filter(
         (row) =>
           typeof row.latitude === "number" &&
           typeof row.longitude === "number" &&
@@ -714,7 +714,7 @@ export default function DispatchPage() {
           Number.isFinite(row.longitude)
       );
 
-      const invalidRows = zapisa / rowsToOptimize.filter(
+      const invalidRows = rowsToOptimize.filter(
         (row) =>
           !(
             typeof row.latitude === "number" &&
@@ -786,16 +786,16 @@ export default function DispatchPage() {
     const value = normalizeGroupName(groupName);
 
     if (!value) {
-      alert("Önce grup seç / Select group first");
+      alert("Önce grup seç / Prvo odaberi grupu");
       return;
     }
 
-    const groupRows = zapisa / rows.filter(
+    const groupRows = rows.filter(
       (row) => normalizeGroupName(row.dispatch_group) === value
     );
 
     if (groupRows.length === 0) {
-      alert("Grup bulunamadı / Group not found");
+      alert("Grup bulunamadı / Grupa nije pronađena");
       return;
     }
 
@@ -805,7 +805,7 @@ export default function DispatchPage() {
 
     if (ok) {
       await fetchDispatchRows();
-      alert(`Rota optimize edildi / Route optimized: ${value}`);
+      alert(`Rota optimize edildi / Ruta optimizovana: ${value}`);
     }
   }
 
@@ -813,7 +813,7 @@ export default function DispatchPage() {
     const groupName = activeGroupName;
 
     if (!groupName) {
-      alert("Optimize için aktif grup yok / No active group to optimize");
+      alert("Optimize için aktif grup yok / Nema aktivne grupe za optimizaciju");
       return;
     }
 
@@ -826,7 +826,7 @@ export default function DispatchPage() {
   }
 
   async function copyGroupRoute(groupName: string) {
-    const groupRows = zapisa / rows
+    const groupRows = rows
       .filter((row) => normalizeGroupName(row.dispatch_group) === groupName)
       .sort((a, b) => {
         const vehicleA = isVehicleRow(a);
@@ -844,7 +844,7 @@ export default function DispatchPage() {
       });
 
     if (groupRows.length === 0) {
-      alert("Kopyalanacak grup bulunamadı / No group found to copy");
+      alert("Kopyalanacak grup bulunamadı / Nije pronađena grupa za kopiranje");
       return;
     }
 
@@ -876,7 +876,7 @@ export default function DispatchPage() {
         setCopiedGroup((current) => (current === groupName ? null : current));
       }, 2000);
     } catch {
-      alert("Kopyalama başarısız / Failed to copy");
+      alert("Kopyalama başarısız / Kopiranje nije uspjelo");
     }
   }
 
@@ -889,11 +889,11 @@ export default function DispatchPage() {
     const value = normalizeGroupName(groupName);
 
     if (!value) {
-      alert("Önce grup seç / Select group first");
+      alert("Önce grup seç / Prvo odaberi grupu");
       return;
     }
 
-    const groupRows = zapisa / rows.filter(
+    const groupRows = rows.filter(
       (row) => normalizeGroupName(row.dispatch_group) === value
     );
 
@@ -910,7 +910,7 @@ export default function DispatchPage() {
     const groupName = activeGroupName;
 
     if (!groupName) {
-      alert("Yazdırmak için aktif grup yok / No active group to print");
+      alert("Yazdırmak için aktif grup yok / Nema aktivne grupe za štampu");
       return;
     }
 
@@ -919,7 +919,7 @@ export default function DispatchPage() {
 
   async function setGroupForIds(ids: string[], value: string | null) {
     if (ids.length === 0) {
-      alert("Lütfen kayıt seç / Please select records");
+      alert("Lütfen kayıt seç / Molimo odaberite kayıtlar");
       return false;
     }
 
@@ -929,7 +929,7 @@ export default function DispatchPage() {
       .in("id", ids);
 
     if (error) {
-      alert("Hata / Error: " + error.message);
+      alert("Greška / Hata: " + error.message);
       return false;
     }
 
@@ -941,17 +941,17 @@ export default function DispatchPage() {
     const value = groupNameInput.trim();
 
     if (!value) {
-      alert("Grup adı gir / Enter group name");
+      alert("Grup adı gir / Unesi naziv grupe");
       return null;
     }
 
-    const exists = zapisa / rows.some(
+    const exists = rows.some(
       (row) => normalizeGroupName(row.dispatch_group) === value
     );
 
     if (exists) {
       const confirmAdd = window.confirm(
-        "Bu grup zaten var. İçine eklemek istiyor musun? / This group already exists. Do you want to add into it?"
+        "Bu grup zaten var. İçine eklemek istiyor musun? / Ova grupa već postoji. Da li želiš dodati u nju?"
       );
 
       if (!confirmAdd) {
@@ -974,7 +974,7 @@ export default function DispatchPage() {
       setGroupNameInput(groupName);
       setSelectedIds([]);
       alert(
-        `Tüm görünen kayıtlar bu gruba alındı / Added all visible zapisa / rows to this group: ${groupName}`
+        `Tüm görünen kayıtlar bu gruba alındı / Svi prikazani zapisi dodati su u ovu grupu: ${groupName}`
       );
     }
   }
@@ -990,7 +990,7 @@ export default function DispatchPage() {
       setGroupNameInput(groupName);
       setSelectedIds([]);
       alert(
-        `Seçili kayıtlar bu gruba alındı / Added selected zapisa / rows to this group: ${groupName}`
+        `Seçili kayıtlar bu gruba alındı / Odabrani zapisi dodati su u ovu grupu: ${groupName}`
       );
     }
   }
@@ -999,7 +999,7 @@ export default function DispatchPage() {
     const value = groupNameInput.trim();
 
     if (!value) {
-      alert("Grup adı gir / Enter group name");
+      alert("Grup adı gir / Unesi naziv grupe");
       return;
     }
 
@@ -1008,13 +1008,13 @@ export default function DispatchPage() {
     if (ok) {
       setSelectedIds([]);
       alert(
-        `Seçili kayıtlar gruba eklendi / Selected zapisa / rows added to group: ${value}`
+        `Seçili kayıtlar gruba eklendi / Odabrani zapisi dodati su u grupu: ${value}`
       );
     }
   }
 
   async function removeSelectedFromGroup() {
-    const targetIds = zapisa / rows
+    const targetIds = rows
       .filter((row) => selectedIds.includes(row.id))
       .map((row) => row.id);
 
@@ -1023,23 +1023,23 @@ export default function DispatchPage() {
     if (ok) {
       setSelectedIds([]);
       alert(
-        "Seçili kayıtlar gruptan çıkarıldı / Selected zapisa / rows removed from group"
+        "Seçili kayıtlar gruptan çıkarıldı / Odabrani zapisi uklonjeni su iz grupe"
       );
     }
   }
 
   async function clearAllGroups() {
-    const groupIds = zapisa / rows
+    const groupIds = rows
       .filter((row) => normalizeGroupName(row.dispatch_group))
       .map((row) => row.id);
 
     if (groupIds.length === 0) {
-      alert("Temizlenecek grup yok / No groups to clear");
+      alert("Temizlenecek grup yok / Nema grupa za čišćenje");
       return;
     }
 
     const confirmed = window.confirm(
-      "Tüm grup bağlantıları kaldırılacak. Emin misin? / All group assignments will be cleared. Are you sure?"
+      "Tüm grup bağlantıları kaldırılacak. Emin misin? / Sve veze grupa biće uklonjene. Da li si siguran?"
     );
 
     if (!confirmed) return;
@@ -1049,7 +1049,7 @@ export default function DispatchPage() {
     if (ok) {
       setGroupNameInput("");
       setSelectedIds([]);
-      alert("Tüm gruplar temizlendi / All groups cleared");
+      alert("Tüm gruplar temizlendi / Sve grupe su očišćene");
     }
   }
 
@@ -1075,7 +1075,7 @@ export default function DispatchPage() {
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
                 Ukupno / Toplam
               </div>
-              <div className="mt-2 text-3xl font-semibold text-white">{zapisa / rows.length}</div>
+              <div className="mt-2 text-3xl font-semibold text-white">{rows.length}</div>
               <div className="mt-1 text-xs text-slate-400">
                 Aktivni zapisi isporuke / Aktif sevkiyat kayıtları
               </div>
@@ -1113,7 +1113,7 @@ export default function DispatchPage() {
                 {activeGroupName || "-"}
               </div>
               <div className="mt-1 text-xs text-blue-200/70">
-                Gruptaki seçili: {activeGroupSelectedCount} / In selected group
+                Gruptaki seçili: {activeGroupSelectedCount} / Odabrano u grupi
               </div>
             </div>
           </div>
@@ -1135,7 +1135,7 @@ export default function DispatchPage() {
                 className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
               >
                 {allFilteredSelected
-                  ? "Görünen seçimi kaldır / Görünenleri Bırak"
+                  ? "Görünenleri Bırak / Vidljivo seçimi kaldır"
                   : "Odaberi prikazane / Görünenleri Seç"}
               </button>
 
@@ -1143,14 +1143,14 @@ export default function DispatchPage() {
                 onClick={resetFilters}
                 className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
               >
-                Očisti filtre / Filtreleri Temizle
+                Filtreleri Temizle / Clear Filters
               </button>
 
               <button
                 onClick={fetchDispatchRows}
                 className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Osvježi / Yenile
+                Yenile / Refresh
               </button>
             </div>
           </div>
@@ -1223,7 +1223,7 @@ export default function DispatchPage() {
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                Operasyon Akışı / Tok operacije / Operasyon Akışı
+                Tok operacije / Operasyon Akışı
               </h2>
               <p className="mt-1 text-sm text-slate-400">
                 Izaberi → Grupiši → Optimizuj → Štampaj /
@@ -1238,7 +1238,7 @@ export default function DispatchPage() {
                 className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {optimizingGroup === activeGroupName
-                  ? "Rota Hesaplanıyor... / Optimizing..."
+                  ? "Rota hesaplanıyor... / Optimizuje se..."
                   : "Optimizuj aktivnu grupu / Aktif Grubu Optimize Et"}
               </button>
 
@@ -1247,7 +1247,7 @@ export default function DispatchPage() {
                 disabled={!activeGroupName}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Štampaj aktivnu grupu / Aktif Grubu Yazdır
+                Aktif Grubu Yazdır / Print Active Group
               </button>
             </div>
           </div>
@@ -1356,7 +1356,7 @@ export default function DispatchPage() {
                     >
                       <div className="text-sm font-semibold">{group.name}</div>
                       <div className="mt-1 text-xs text-slate-400">
-                        {group.count} zapis / Kayıt
+                        {group.count} kayıt / Zapisi
                       </div>
                     </button>
                   );
@@ -1364,7 +1364,7 @@ export default function DispatchPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-                Još nema grupa / Henüz grup yok
+                Henüz grup yok / Još nema grupa
               </div>
             )}
           </div>
@@ -1476,7 +1476,7 @@ export default function DispatchPage() {
                         disabled={isSaving || row.payment_status === "Ödendi / Paid"}
                         className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                       >
-                        Plaćanje alındı / Ödeme Alındı
+                        Ödeme Alındı / Paid
                       </button>
 
                       <button
@@ -1493,7 +1493,7 @@ export default function DispatchPage() {
                         disabled={isSaving}
                         className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                       >
-                        Isporučeno / Teslim Edildi
+                        Teslim Edildi / Delivered
                       </button>
                     </div>
                   </div>
@@ -1560,7 +1560,7 @@ export default function DispatchPage() {
                             onClick={() => setGroupNameInput(section.groupName)}
                             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
                           >
-                            Grubu Hazırla / Load Group
+                            Grubu hazırla / Učitaj grupu
                           </button>
 
                           <button
@@ -1569,7 +1569,7 @@ export default function DispatchPage() {
                             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                           >
                             {isOptimizing
-                              ? "Optimizuje se... / Optimize Ediliyor..."
+                              ? "Optimize Ediliyor... / Optimizing..."
                               : "Rota Optimize Et / Optimize Route"}
                           </button>
 
@@ -1578,8 +1578,8 @@ export default function DispatchPage() {
                             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
                           >
                             {isCopied
-                              ? "Kopyalandı / Copied"
-                              : "Rotayı Kopyala / Copy Route"}
+                              ? "Kopyalandı / Kopirano"
+                              : "Rotayı kopyala / Kopiraj rutu"}
                           </button>
 
                           <button
@@ -1599,14 +1599,14 @@ export default function DispatchPage() {
                             Sopstveno vozilo / Kendi Araç
                           </h4>
                           <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400">
-                            {vehicleCount} zapis / Kayıt
+                            {vehicleCount} kayıt / Zapisi
                           </span>
                         </div>
 
                         <div className="space-y-3">
                           {section.vehicleRows.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-500">
-                              Nema zapisa za vozilo / Araç kaydı yok
+                              Araç kaydı yok / Nema zapisa za vozilo
                             </div>
                           ) : (
                             section.vehicleRows.map((row) => {
@@ -1739,7 +1739,7 @@ export default function DispatchPage() {
                                       }
                                       className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                                     >
-                                      Plaćanje alındı / Ödeme Alındı
+                                      Ödeme Alındı / Paid
                                     </button>
 
                                     <button
@@ -1757,7 +1757,7 @@ export default function DispatchPage() {
                                       disabled={isSaving}
                                       className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                                     >
-                                      Isporučeno / Teslim Edildi
+                                      Teslim Edildi / Delivered
                                     </button>
                                   </div>
                                 </div>
@@ -1773,14 +1773,14 @@ export default function DispatchPage() {
                             Kurir / Kurye
                           </h4>
                           <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400">
-                            {courierCount} zapis / Kayıt
+                            {courierCount} kayıt / Zapisi
                           </span>
                         </div>
 
                         <div className="space-y-3">
                           {section.courierRows.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-500">
-                              Nema zapisa za kurira / Kurye kaydı yok
+                              Kurye kaydı yok / Nema zapisa za kurira
                             </div>
                           ) : (
                             section.courierRows.map((row) => {
@@ -1913,7 +1913,7 @@ export default function DispatchPage() {
                                       }
                                       className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                                     >
-                                      Plaćanje alındı / Ödeme Alındı
+                                      Ödeme Alındı / Paid
                                     </button>
 
                                     <button
@@ -1931,7 +1931,7 @@ export default function DispatchPage() {
                                       disabled={isSaving}
                                       className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                                     >
-                                      Isporučeno / Teslim Edildi
+                                      Teslim Edildi / Delivered
                                     </button>
                                   </div>
                                 </div>
@@ -1959,7 +1959,7 @@ export default function DispatchPage() {
             </div>
 
             <div className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300">
-              {ungroupedRows.length} kayıt / zapisa / rows
+              {ungroupedRows.length} kayıt / rows
             </div>
           </div>
 
@@ -1983,7 +1983,7 @@ export default function DispatchPage() {
                   {ungroupedRows.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                        Grupsuz kayıt yok / No ungrouped zapisa / rows
+                        Grupsuz kayıt yok / Nema zapisa bez grupe
                       </td>
                     </tr>
                   ) : (
@@ -2098,7 +2098,7 @@ export default function DispatchPage() {
                                 }
                                 className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                               >
-                                Plaćanje alındı / Ödeme Alındı
+                                Ödeme Alındı / Paid
                               </button>
 
                               <button
@@ -2116,7 +2116,7 @@ export default function DispatchPage() {
                                 disabled={isSaving}
                                 className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                               >
-                                Isporučeno / Teslim Edildi
+                                Teslim Edildi / Delivered
                               </button>
                             </div>
                           </td>
@@ -2133,7 +2133,7 @@ export default function DispatchPage() {
         {loading && (
           <div className="fixed inset-x-0 bottom-4 z-50 mx-auto flex w-fit items-center gap-3 rounded-full border border-slate-700 bg-slate-950/95 px-4 py-2 text-sm text-white shadow-2xl">
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-            Podaci o isporuci se učitavaju... / Sevkiyat verileri yükleniyor...
+            Sevkiyat verileri yükleniyor... / Podaci o isporuci se učitavaju...
           </div>
         )}
       </div>
