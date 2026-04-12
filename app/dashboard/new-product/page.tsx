@@ -3,402 +3,407 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
-type Row = {
-  id: string;
-  order_id?: string | null;
-  customer_id?: string | null;
-  customer_name?: string | null;
-  customer_phone?: string | null;
-  customer_address?: string | null;
-  product_name?: string | null;
-  quantity?: number;
-  unit_price?: number;
-  discount?: number;
-  final_unit_price?: number;
-  total?: number;
-  city?: string | null;
-  sale_date?: string | null;
-  shipment_date?: string | null;
-  shipment_status?: string | null;
-  delivery_status?: string | null;
-  payment_status?: string | null;
-  assigned_vehicle?: string | null;
-  assigned_courier?: string | null;
-  employee?: string | null;
-  note?: string | null;
-  created_at: string;
-};
-
-type Product = {
+type ProductGroup = {
   id: string;
   name: string;
-  stock: number;
 };
 
-export default function CompletedSalesPage() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState("");
+type Supplier = {
+  id: number;
+  name: string;
+  is_active?: boolean | null;
+};
 
-  const [search, setSearch] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [deliveryFilter, setDeliveryFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+export default function NewProductPage() {
+  const [groups, setGroups] = useState<ProductGroup[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
+
+  const [name, setName] = useState("");
+  const [groupId, setGroupId] = useState("");
+  const [supplierId, setSupplierId] = useState("");
+  const [price, setPrice] = useState(0);
+  const [cost, setCost] = useState(0);
+  const [stock, setStock] = useState(0);
+  const [minimumStock, setMinimumStock] = useState(5);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    initializePage();
+    fetchGroups();
+    fetchSuppliers();
   }, []);
 
-  async function initializePage() {
-    await Promise.all([fetchRows(), fetchProducts()]);
-  }
-
-  async function fetchRows() {
-    setLoading(true);
+  async function fetchGroups() {
+    setLoadingGroups(true);
 
     const { data, error } = await supabase
-      .from("sales")
-      .select("*")
-      .eq("delivery_status", "Teslim Edildi / Delivered")
-      .eq("payment_status", "Ödendi / Paid")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      alert("Hata / Error: " + error.message);
-      setRows([]);
-      setLoading(false);
-      return;
-    }
-
-    setRows((data || []) as Row[]);
-    setLoading(false);
-  }
-
-  async function fetchProducts() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, name, stock")
+      .from("product_groups")
+      .select("id, name")
       .order("name", { ascending: true });
 
     if (error) {
+      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      setLoadingGroups(false);
       return;
     }
 
-    setProducts((data || []) as Product[]);
+    setGroups((data || []) as ProductGroup[]);
+    setLoadingGroups(false);
   }
 
-  function findProductByName(productName?: string | null) {
-    if (!productName) return null;
-    return products.find((product) => product.name === productName) || null;
+  async function fetchSuppliers() {
+    setLoadingSuppliers(true);
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("id, name, is_active")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error) {
+      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
+      setLoadingSuppliers(false);
+      return;
+    }
+
+    setSuppliers((data || []) as Supplier[]);
+    setLoadingSuppliers(false);
   }
 
-  async function updateStockMovementLog(params: {
-    product: Product;
-    movementType: string;
-    quantity: number;
-    note: string;
-  }) {
-    await supabase.from("stock_movements").insert([
+  async function checkDuplicateName(productName: string) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id")
+      .ilike("name", productName.trim())
+      .limit(1);
+
+    if (error) {
+      return { exists: false };
+    }
+
+    return { exists: (data || []).length > 0 };
+  }
+
+  async function handleSave() {
+    if (!name.trim()) {
+      alert("Lütfen ürün adı gir / Please enter product name");
+      return;
+    }
+
+    if (!groupId) {
+      alert("Lütfen ürün grubu seç / Please select product group");
+      return;
+    }
+
+    if (price < 0 || cost < 0 || stock < 0 || minimumStock < 0) {
+      alert(
+        "Fiyat, stok veya minimum stok geçersiz / Invalid price, stock, or minimum stock"
+      );
+      return;
+    }
+
+    setSaving(true);
+
+    const duplicate = await checkDuplicateName(name);
+
+    if (duplicate.exists) {
+      setSaving(false);
+      alert(
+        "Bu isimde bir ürün zaten var!\nLütfen farklı isim kullan. / A product with this name already exists!"
+      );
+      return;
+    }
+
+    const initialStock = Number(stock);
+
+    const { error } = await supabase.from("products").insert([
       {
-        product_id: params.product.id,
-        product_name: params.product.name,
-        movement_type: params.movementType,
-        quantity: params.quantity,
-        note: params.note,
+        name: name.trim(),
+        group_id: groupId,
+        default_supplier_id: supplierId ? Number(supplierId) : null,
+        price: Number(price),
+        cost: Number(cost),
+        stock: initialStock,
+        opening_stock: initialStock,
+        minimum_stock: Number(minimumStock),
+        is_active: true,
       },
     ]);
+
+    setSaving(false);
+
+    if (error) {
+      alert("Ürün eklenemedi / Product insert failed: " + error.message);
+      return;
+    }
+
+    alert("Ürün eklendi / Product created ✅");
+
+    setName("");
+    setGroupId("");
+    setSupplierId("");
+    setPrice(0);
+    setCost(0);
+    setStock(0);
+    setMinimumStock(5);
   }
 
-  async function handleReturn(row: Row) {
-    const confirmed = window.confirm(
-      `Bu satış iade edilecek ve stok geri eklenecek.\n\nMüşteri: ${
-        row.customer_name || "-"
-      }\nÜrün: ${row.product_name || "-"}\nAdet: ${
-        row.quantity || 0
-      }\n\nDevam edilsin mi? / Continue?`
+  const selectedGroupName = useMemo(() => {
+    return groups.find((group) => group.id === groupId)?.name || "-";
+  }, [groups, groupId]);
+
+  const selectedSupplierName = useMemo(() => {
+    return (
+      suppliers.find((supplier) => String(supplier.id) === supplierId)?.name || "-"
     );
+  }, [suppliers, supplierId]);
 
-    if (!confirmed) return;
-
-    const product = findProductByName(row.product_name);
-
-    if (!product) {
-      alert("Ürün bulunamadı / Product not found");
-      return;
-    }
-
-    setActionLoadingId(row.id);
-
-    const newStock = Number(product.stock || 0) + Number(row.quantity || 0);
-
-    const { error: stockError } = await supabase
-      .from("products")
-      .update({ stock: newStock })
-      .eq("id", product.id);
-
-    if (stockError) {
-      setActionLoadingId("");
-      alert("Stok geri eklenemedi / Stock restore failed: " + stockError.message);
-      return;
-    }
-
-    await updateStockMovementLog({
-      product,
-      movementType: "Sale Return / Satış İade",
-      quantity: Number(row.quantity || 0),
-      note: `${row.customer_name || "-"} completed sales iade işlemi / completed sales return`,
-    });
-
-    const { error: saleError } = await supabase
-      .from("sales")
-      .update({
-        delivery_status: "İade Edildi / Returned",
-        shipment_status: "İade Edildi / Returned",
-        payment_status: "Bekliyor / Pending",
-        note: `${row.note ? row.note + " | " : ""}İade yapıldı / Returned`,
-      })
-      .eq("id", row.id);
-
-    setActionLoadingId("");
-
-    if (saleError) {
-      alert("Satış güncellenemedi / Sale update failed: " + saleError.message);
-      return;
-    }
-
-    alert("İade tamamlandı ve stok geri eklendi / Return completed and stock restored ✅");
-
-    await fetchRows();
-    await fetchProducts();
-  }
-
-  const filteredRows = useMemo(() => {
-    let result = [...rows];
-
-    if (paymentFilter !== "all") {
-      result = result.filter((row) => row.payment_status === paymentFilter);
-    }
-
-    if (deliveryFilter !== "all") {
-      result = result.filter((row) => row.delivery_status === deliveryFilter);
-    }
-
-    if (cityFilter.trim()) {
-      const q = cityFilter.trim().toLowerCase();
-      result = result.filter((row) => (row.city || "").toLowerCase().includes(q));
-    }
-
-    if (dateFrom) {
-      result = result.filter((row) => (row.sale_date || row.created_at.slice(0, 10)) >= dateFrom);
-    }
-
-    if (dateTo) {
-      result = result.filter((row) => (row.sale_date || row.created_at.slice(0, 10)) <= dateTo);
-    }
-
-    const q = search.trim().toLowerCase();
-
-    if (!q) return result;
-
-    return result.filter((row) => {
-      return (
-        (row.order_id || "").toLowerCase().includes(q) ||
-        (row.customer_name || "").toLowerCase().includes(q) ||
-        (row.customer_phone || "").toLowerCase().includes(q) ||
-        (row.customer_address || "").toLowerCase().includes(q) ||
-        (row.product_name || "").toLowerCase().includes(q) ||
-        (row.city || "").toLowerCase().includes(q) ||
-        (row.employee || "").toLowerCase().includes(q)
-      );
-    });
-  }, [rows, paymentFilter, deliveryFilter, cityFilter, dateFrom, dateTo, search]);
+  const margin = Number(price) - Number(cost);
+  const initialStockValue = Number(stock || 0);
+  const initialInventoryCost = initialStockValue * Number(cost || 0);
+  const initialInventorySaleValue = initialStockValue * Number(price || 0);
 
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SISTEM / BAUDECOR SİSTEM
+        <p className="text-xs uppercase tracking-widest text-slate-500">
+          BAUDECOR SYSTEM
         </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Tamamlanan Satışlar / Completed Sales
+        <h1 className="mt-3 text-4xl font-bold">
+          Yeni Ürün / New Product
         </h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme,
-          arama ve iade işlemleri buradan yapılır. / Completed sales where delivery
-          and payment are both finished.
+        <p className="mt-2 text-sm text-slate-400">
+          Sisteme yeni ürün ekle. Açılış stoku opening stock olarak kaydedilir.
+          Varsayılan tedarikçi seçimi gelecekte stok girişlerinde hız sağlar. /
+          Add a new product to the system. Initial stock is saved as opening
+          stock. Default supplier selection will help future stock entry flows.
         </p>
       </div>
 
-      <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Ara / Search
-            </label>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sipariş, müşteri, telefon, ürün..."
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-            />
-          </div>
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+          <div className="grid gap-4">
+            <div>
+              <label className="text-sm text-slate-400">
+                Ürün Adı / Product Name
+              </label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
+              />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Şehir / City
-            </label>
-            <input
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-              placeholder="Şehir..."
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-            />
-          </div>
+            <div>
+              <label className="text-sm text-slate-400">
+                Ürün Grubu / Product Group
+              </label>
+              <select
+                value={groupId}
+                onChange={(e) => setGroupId(e.target.value)}
+                disabled={loadingGroups}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4 text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">
+                  {loadingGroups
+                    ? "Gruplar yükleniyor... / Loading groups..."
+                    : "Grup seç / Select group"}
+                </option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Ödeme / Payment
-            </label>
-            <select
-              value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              {!loadingGroups && groups.length === 0 && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Henüz grup yok. Önce veritabanına grup eklemelisin. / No
+                  groups found yet. Add groups in the database first.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-400">
+                Varsayılan Tedarikçi / Default Supplier
+              </label>
+              <select
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                disabled={loadingSuppliers}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4 text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">
+                  {loadingSuppliers
+                    ? "Tedarikçiler yükleniyor... / Loading suppliers..."
+                    : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
+                </option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={String(supplier.id)}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+
+              {!loadingSuppliers && suppliers.length === 0 && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Henüz aktif tedarikçi yok. Önce Tedarikçiler ekranından firma
+                  ekleyebilirsin. / No active suppliers found yet. You can add a
+                  supplier first from the Suppliers screen.
+                </p>
+              )}
+
+              <p className="mt-2 text-xs text-slate-500">
+                Bu alan zorunlu değil. Ürünün ana tedarikçisini tanımlamak için
+                kullanılır. Gerçek alım yapılan firma stok girişinde ayrıca
+                seçilecek. / This field is optional. It defines the product's
+                default supplier. The actual supplier used for purchasing will
+                also be selected separately during stock entry.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm text-slate-400">
+                  Satış Fiyatı / Price
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-slate-400">
+                  Maliyet / Cost
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={cost}
+                  onChange={(e) => setCost(Number(e.target.value))}
+                  className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-400">
+                Başlangıç Stok / Initial Stock
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={stock}
+                onChange={(e) => setStock(Number(e.target.value))}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
+              />
+              <p className="mt-2 text-xs text-slate-500">
+                Bu değer opening_stock olarak kaydedilir. Sistem uyumu için
+                products.stock alanına da aynı değer yazılır. / This value is
+                saved as opening_stock. For compatibility, the same value is
+                also written to products.stock.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-400">
+                Minimum Stok / Minimum Stock
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={minimumStock}
+                onChange={(e) => setMinimumStock(Number(e.target.value))}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4"
+              />
+              <p className="mt-2 text-xs text-slate-500">
+                Bu değer kritik stok sınırıdır. Dashboard ve ürünler ekranı bu
+                limite göre uyarı verir. / This value is the critical stock
+                threshold. Dashboard and products screens will use this limit
+                for alerts.
+              </p>
+            </div>
+
+            <button
+              onClick={handleSave}
+              disabled={
+                saving ||
+                loadingGroups ||
+                groups.length === 0 ||
+                loadingSuppliers
+              }
+              className="mt-4 rounded-2xl bg-blue-600 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <option value="all">Tümü / All</option>
-              <option value="Ödendi / Paid">Ödendi / Paid</option>
-              <option value="Bekliyor / Pending">Bekliyor / Pending</option>
-            </select>
+              {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
+            </button>
           </div>
+        </section>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Durum / Status
-            </label>
-            <select
-              value={deliveryFilter}
-              onChange={(e) => setDeliveryFilter(e.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-            >
-              <option value="all">Tümü / All</option>
-              <option value="Teslim Edildi / Delivered">Teslim Edildi / Delivered</option>
-              <option value="İade Edildi / Returned">İade Edildi / Returned</option>
-            </select>
-          </div>
+        <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+          <h2 className="text-lg font-semibold">Özet / Summary</h2>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Başlangıç Tarihi / Date From
-            </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+          <div className="mt-6 space-y-4">
+            <InfoCard title="Ürün / Product" value={name || "-"} />
+            <InfoCard title="Grup / Group" value={selectedGroupName} />
+            <InfoCard
+              title="Tedarikçi / Supplier"
+              value={selectedSupplierName}
+            />
+            <InfoCard title="Fiyat / Price" value={`€${Number(price).toFixed(2)}`} />
+            <InfoCard title="Maliyet / Cost" value={`€${Number(cost).toFixed(2)}`} />
+            <InfoCard
+              title="Marj / Margin"
+              value={`€${Number(margin).toFixed(2)}`}
+              green={margin >= 0}
+              red={margin < 0}
+            />
+            <InfoCard
+              title="Başlangıç Stok / Initial Stock"
+              value={String(initialStockValue)}
+            />
+            <InfoCard
+              title="Minimum Stok / Minimum Stock"
+              value={String(Number(minimumStock || 0))}
+            />
+            <InfoCard
+              title="Açılış Maliyeti / Opening Cost"
+              value={`€${initialInventoryCost.toFixed(2)}`}
+            />
+            <InfoCard
+              title="Açılış Satış Değeri / Opening Sale Value"
+              value={`€${initialInventorySaleValue.toFixed(2)}`}
             />
           </div>
-
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Bitiş Tarihi / Date To
-            </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-        {loading ? (
-          <div className="text-slate-400">Yükleniyor / Loading...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[2200px] text-sm">
-              <thead className="text-slate-400">
-                <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Sipariş / Order</th>
-                  <th className="py-3 text-left">Müşteri / Customer</th>
-                  <th className="py-3 text-left">Telefon / Phone</th>
-                  <th className="py-3 text-left">Adres / Address</th>
-                  <th className="py-3 text-left">Şehir / City</th>
-                  <th className="py-3 text-left">Proizvod / Ürün</th>
-                  <th className="py-3 text-center">Adet / Qty</th>
-                  <th className="py-3 text-center">Net Birim / Final Unit</th>
-                  <th className="py-3 text-center">Toplam / Total</th>
-                  <th className="py-3 text-center">Satış Tarihi / Sale Date</th>
-                  <th className="py-3 text-center">Sevkiyat Tarihi / Shipment Date</th>
-                  <th className="py-3 text-center">Teslimat / Delivery</th>
-                  <th className="py-3 text-center">Ödeme / Payment</th>
-                  <th className="py-3 text-center">Araç / Vehicle</th>
-                  <th className="py-3 text-center">Kurye / Courier</th>
-                  <th className="py-3 text-center">İşlem / Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredRows.map((row) => {
-                  const rowBusy = actionLoadingId === row.id;
-
-                  return (
-                    <tr
-                      key={row.id}
-                      className="border-t border-slate-800 transition hover:bg-slate-800/30"
-                    >
-                      <td className="py-3">{row.order_id || "-"}</td>
-                      <td className="py-3">{row.customer_name || "-"}</td>
-                      <td className="py-3">{row.customer_phone || "-"}</td>
-                      <td className="py-3">{row.customer_address || "-"}</td>
-                      <td className="py-3">{row.city || "-"}</td>
-                      <td className="py-3">{row.product_name || "-"}</td>
-                      <td className="py-3 text-center">{row.quantity || 0}</td>
-                      <td className="py-3 text-center">
-                        €{Number(row.final_unit_price ?? row.unit_price ?? 0).toFixed(2)}
-                      </td>
-                      <td className="py-3 text-center font-medium">
-                        €{Number(row.total || 0).toFixed(2)}
-                      </td>
-                      <td className="py-3 text-center">
-                        {row.sale_date || row.created_at?.slice(0, 10) || "-"}
-                      </td>
-                      <td className="py-3 text-center">{row.shipment_date || "-"}</td>
-                      <td className="py-3 text-center">{row.delivery_status || "-"}</td>
-                      <td className="py-3 text-center">{row.payment_status || "-"}</td>
-                      <td className="py-3 text-center">{row.assigned_vehicle || "-"}</td>
-                      <td className="py-3 text-center">{row.assigned_courier || "-"}</td>
-                      <td className="py-3 text-center">
-                        <button
-                          onClick={() => handleReturn(row)}
-                          disabled={rowBusy}
-                          className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {rowBusy ? "Bekle... / Wait..." : "İade / Return"}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {filteredRows.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={16}
-                      className="py-8 text-center text-slate-400"
-                    >
-                      Kayıt yok / No records
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+        </aside>
+      </div>
     </main>
+  );
+}
+
+function InfoCard({
+  title,
+  value,
+  green,
+  red,
+}: {
+  title: string;
+  value: string;
+  green?: boolean;
+  red?: boolean;
+}) {
+  const color = green ? "text-emerald-300" : red ? "text-red-300" : "text-white";
+
+  return (
+    <div className="rounded-xl border border-slate-800 p-4">
+      <p className="text-xs text-slate-500">{title}</p>
+      <p className={`mt-1 text-lg ${color}`}>{value}</p>
+    </div>
   );
 }
