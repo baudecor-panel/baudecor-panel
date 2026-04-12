@@ -55,6 +55,9 @@ type Sale = {
   discount?: number;
   final_unit_price?: number;
   total: number;
+  unit_cost?: number;
+  total_cost?: number;
+  profit?: number;
   customer_id?: string | null;
   group_id?: string | null;
   group_name?: string;
@@ -1145,6 +1148,10 @@ export default function SalesPage() {
       const today = getTodayDate();
       const formattedShipmentDate = shipmentDate.toISOString().split("T")[0];
 
+      const unitCost = Number(product.cost || 0);
+      const totalCost = unitCost * Number(quantity);
+      const profit = Number(total) - totalCost;
+
       const { error: insertError } = await supabase.from("sales").insert([
         {
           order_id: finalOrderId,
@@ -1157,6 +1164,9 @@ export default function SalesPage() {
           discount,
           final_unit_price: finalUnitPrice,
           total,
+          unit_cost: unitCost,
+          total_cost: totalCost,
+          profit: profit,
           customer_name: customerName,
           customer_phone: customerPhone,
           customer_address: customerAddress,
@@ -1679,6 +1689,8 @@ export default function SalesPage() {
                           <th className="py-3 text-center">Net Birim / Final Unit</th>
                           <th className="py-3 text-center">İndirim / Discount</th>
                           <th className="py-3 text-center">Toplam / Total</th>
+                          <th className="py-3 text-center">Maliyet / Cost</th>
+                          <th className="py-3 text-center">Kâr / Profit</th>
                           <th className="py-3 text-center">Ödeme / Payment</th>
                           <th className="py-3 text-center">Durum / Status</th>
                           <th className="py-3 text-center">Sevkiyat / Shipment Date</th>
@@ -1808,6 +1820,16 @@ export default function SalesPage() {
 
                               <td className="py-3 text-center font-medium">
                                 €{Number(sale.total).toFixed(2)}
+                              </td>
+
+                              <td className="py-3 text-center text-slate-300">
+                                €{Number(sale.total_cost || 0).toFixed(2)}
+                              </td>
+
+                              <td className={`py-3 text-center font-semibold ${
+                                Number(sale.profit || 0) >= 0 ? "text-emerald-300" : "text-red-300"
+                              }`}>
+                                €{Number(sale.profit || 0).toFixed(2)}
                               </td>
 
                               <td className="py-3 text-center">
