@@ -358,10 +358,10 @@ export default function StockOutPage() {
                   onChange={(e) => setReason(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option>Hasarlı / Damaged</option>
-                  <option>Kayıp / Lost</option>
-                  <option>Sayım Düzeltme / Adjustment</option>
-                  <option>Showroom Kullanım / Showroom Use</option>
+                  <option value="Hasarlı / Damaged">Oštećeno / Hasarlı</option>
+                  <option value="Kayıp / Lost">Izgubljeno / Kayıp</option>
+                  <option value="Sayım Düzeltme / Adjustment">Korekcija / Sayım Düzeltme</option>
+                  <option value="Showroom Kullanım / Showroom Use">Showroom upotreba / Showroom Kullanım</option>
                 </select>
               </div>
             </div>
@@ -421,7 +421,20 @@ export default function StockOutPage() {
               }
               red
             />
-            <InfoCard title="Razlog / Sebep" value={reason} />
+            <InfoCard
+              title="Razlog / Sebep"
+              value={
+                reason === "Hasarlı / Damaged"
+                  ? "Oštećeno / Hasarlı"
+                  : reason === "Kayıp / Lost"
+                  ? "Izgubljeno / Kayıp"
+                  : reason === "Sayım Düzeltme / Adjustment"
+                  ? "Korekcija / Sayım Düzeltme"
+                  : reason === "Showroom Kullanım / Showroom Use"
+                  ? "Showroom upotreba / Showroom Kullanım"
+                  : reason
+              }
+            />
             <InfoCard
               title="Prodajna cijena / Satış Fiyatı"
               value={
