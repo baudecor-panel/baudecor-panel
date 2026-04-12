@@ -1001,6 +1001,28 @@ export default function SalesPage() {
       });
   }, [filteredSales]);
 
+  const customerProfitStats = useMemo(() => {
+    const map = new Map<string, { revenue: number; cost: number; profit: number }>();
+
+    sales.forEach((s) => {
+      const key = s.customer_name || "Bilinmiyor / Unknown";
+      if (!map.has(key)) {
+        map.set(key, { revenue: 0, cost: 0, profit: 0 });
+      }
+      const curr = map.get(key)!;
+      curr.revenue += Number(s.total || 0);
+      curr.cost += Number(s.total_cost || 0);
+      curr.profit += Number(s.profit || 0);
+    });
+
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.profit - a.profit);
+  }, [sales]);
+
+  const topCustomers = useMemo(() => customerProfitStats.slice(0,5), [customerProfitStats]);
+  const worstCustomers = useMemo(() => [...customerProfitStats].sort((a,b)=>a.profit-b.profit).slice(0,5), [customerProfitStats]);
+
   const filteredProductsByGroup = useMemo(() => {
     if (!selectedGroupId) return [];
     return products.filter((product) => product.group_id === selectedGroupId);
@@ -1595,7 +1617,34 @@ export default function SalesPage() {
         </aside>
       </div>
 
-      <section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
+      
+      <section className="mt-8 grid gap-6 xl:grid-cols-2">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+          <h3 className="text-lg font-semibold mb-4">En Kârlı Müşteriler / Top Customers</h3>
+          {topCustomers.map((c, i) => (
+            <div key={i} className="flex justify-between text-sm mb-2">
+              <span>{c.name}</span>
+              <span className={c.profit>=0 ? "text-emerald-300":"text-red-300"}>
+                €{c.profit.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+          <h3 className="text-lg font-semibold mb-4">Zarardaki Müşteriler / Loss Customers</h3>
+          {worstCustomers.map((c, i) => (
+            <div key={i} className="flex justify-between text-sm mb-2">
+              <span>{c.name}</span>
+              <span className={c.profit>=0 ? "text-emerald-300":"text-red-300"}>
+                €{c.profit.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+<section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
             Aktif Satış Listesi / Active Sales List
