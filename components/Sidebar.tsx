@@ -7,13 +7,13 @@ export default function Sidebar() {
   const path = usePathname();
 
   const menu = [
-    { name: "Dashboard / Panel", href: "/dashboard" },
-    { name: "Satış / Sales", href: "/dashboard/sales" },
-    { name: "Ürünler / Products", href: "/dashboard/products" },
-    { name: "Müşteriler / Customers", href: "/dashboard/customers" },
-    { name: "Giderler / Expenses", href: "/dashboard/expenses" },
-    { name: "Teslimat / Deliveries", href: "/dashboard/deliveries" },
-    { name: "Raporlar / Reports", href: "/dashboard/reports" },
+    { name: "Kontrolna tabla / Panel", href: "/dashboard" },
+    { name: "Prodaja / Satış", href: "/dashboard/sales" },
+    { name: "Proizvodi / Ürünler", href: "/dashboard/products" },
+    { name: "Kupci / Müşteriler", href: "/dashboard/customers" },
+    { name: "Troškovi / Giderler", href: "/dashboard/expenses" },
+    { name: "Isporuka / Teslimat", href: "/dashboard/deliveries" },
+    { name: "Izvještaji / Raporlar", href: "/dashboard/reports" },
   ];
 
   return (
@@ -25,9 +25,7 @@ export default function Sidebar() {
           <Link key={item.href} href={item.href}>
             <div
               className={`p-3 rounded-lg cursor-pointer ${
-                path === item.href
-                  ? "bg-blue-600"
-                  : "hover:bg-slate-800"
+                path === item.href ? "bg-blue-600" : "hover:bg-slate-800"
               }`}
             >
               {item.name}
