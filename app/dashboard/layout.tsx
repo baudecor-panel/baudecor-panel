@@ -18,57 +18,57 @@ type MenuGroup = {
 const menuGroups: MenuGroup[] = [
   {
     id: "general",
-    label: "Genel / General",
-    children: [{ href: "/dashboard", label: "Dashboard / Panel" }],
+    label: "Opšte / Genel",
+    children: [{ href: "/dashboard", label: "Kontrolna tabla / Panel" }],
   },
   {
     id: "sales",
-    label: "Satış / Sales",
+    label: "Prodaja / Satış",
     children: [
-      { href: "/dashboard/sales", label: "Satış / Sales" },
+      { href: "/dashboard/sales", label: "Prodaja / Satış" },
       {
         href: "/dashboard/completed-sales",
-        label: "Tamamlanan Satışlar / Completed Sales",
+        label: "Završene prodaje / Tamamlanan Satışlar",
       },
-      { href: "/dashboard/customers", label: "Müşteriler / Customers" },
+      { href: "/dashboard/customers", label: "Kupci / Müşteriler" },
     ],
   },
   {
     id: "dispatch",
-    label: "Sevkiyat / Dispatch",
+    label: "Isporuka / Sevkiyat",
     children: [
-      { href: "/dashboard/dispatch", label: "Sevkiyat / Dispatch" },
+      { href: "/dashboard/dispatch", label: "Isporuka / Sevkiyat" },
       {
         href: "/dashboard/dispatch-map",
-        label: "Sevkiyat Harita / Dispatch Map",
+        label: "Mapa isporuke / Sevkiyat Haritası",
       },
     ],
   },
   {
     id: "products",
-    label: "Ürün / Product",
+    label: "Proizvodi / Ürünler",
     children: [
-      { href: "/dashboard/products", label: "Ürünler / Products" },
+      { href: "/dashboard/products", label: "Proizvodi / Ürünler" },
       {
         href: "/dashboard/product-groups",
-        label: "Ürün Grupları / Product Groups",
+        label: "Grupe proizvoda / Ürün Grupları",
       },
-      { href: "/dashboard/new-product", label: "Yeni Ürün / New Product" },
-      { href: "/dashboard/suppliers", label: "Tedarikçiler / Suppliers" },
+      { href: "/dashboard/new-product", label: "Novi proizvod / Yeni Ürün" },
+      { href: "/dashboard/suppliers", label: "Dobavljači / Tedarikçiler" },
     ],
   },
   {
     id: "stock",
-    label: "Stok / Stock",
+    label: "Zaliha / Stok",
     children: [
-      { href: "/dashboard/stock-entry", label: "Stok Girişi / Stock Entry" },
-      { href: "/dashboard/stock-out", label: "Stok Çıkışı / Stock Out" },
+      { href: "/dashboard/stock-entry", label: "Unos zaliha / Stok Girişi" },
+      { href: "/dashboard/stock-out", label: "Izlaz zaliha / Stok Çıkışı" },
     ],
   },
   {
     id: "finance",
-    label: "Finans / Finance",
-    children: [{ href: "/dashboard/expenses", label: "Giderler / Expenses" }],
+    label: "Finansije / Finans",
+    children: [{ href: "/dashboard/expenses", label: "Troškovi / Giderler" }],
   },
 ];
 
@@ -105,7 +105,7 @@ export default function DashboardLayout({
             <div>
               <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
-                  Showroom System
+                  SHOWROOM SISTEM
                 </p>
 
                 <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">
@@ -113,7 +113,7 @@ export default function DashboardLayout({
                 </h1>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Yönetim paneli / Management panel
+                  Upravljački panel / Yönetim Paneli
                 </p>
               </div>
 
@@ -195,19 +195,19 @@ export default function DashboardLayout({
             <div className="mt-auto">
               <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                  Status / Durum
+                  STATUS / DURUM
                 </p>
 
                 <div className="mt-3 flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                   <span className="text-sm text-slate-300">
-                    Sistem aktif / System online
+                    Sistem aktivan / Sistem aktif
                   </span>
                 </div>
 
                 <p className="mt-4 text-xs text-slate-500">
-                  Showroom satış, stok, müşteri ve tedarikçi yönetimi /
-                  Showroom sales, stock, customer and supplier management
+                  Upravljanje prodajom, zalihama, kupcima i dobavljačima /
+                  Satış, stok, müşteri ve tedarikçi yönetimi
                 </p>
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function DashboardLayout({
         <section className="min-w-0 flex-1 overflow-y-auto bg-slate-950">
           <div className="border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur">
             <h2 className="text-lg font-semibold text-white">
-              Yönetim Paneli / Management Dashboard
+              Upravljački panel / Yönetim Paneli
             </h2>
           </div>
 
