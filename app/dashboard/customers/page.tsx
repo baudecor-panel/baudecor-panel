@@ -40,7 +40,7 @@ type FilterType =
   | "Bekliyor / Pending"
   | "Hazırlanıyor / Preparing"
   | "Teslim Edildi / Delivered"
-  | "İptal / Cancelled";
+  | "Otkaži / İptalled";
 
 type CustomerSummary = {
   customer: Customer;
@@ -95,7 +95,7 @@ export default function CustomersPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Müşteriler alınamadı / Customers could not be loaded");
+      alert("Kupci nijesu učitani / Müşteriler alınamadı");
       return;
     }
 
@@ -109,7 +109,7 @@ export default function CustomersPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Satış kayıtları alınamadı / Sales records could not be loaded");
+      alert("Zapisi prodaje nijesu učitani / Satış kayıtları alınamadı");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function CustomersPage() {
       .eq("id", id);
 
     if (error) {
-      alert("Teslim durumu güncellenemedi / Delivery status update failed");
+      alert("Status isporuke nije ažuriran / Teslim durumu güncellenemedi");
       return;
     }
 
@@ -158,7 +158,7 @@ export default function CustomersPage() {
     if (!editForm.id) return;
 
     if (!editForm.name.trim()) {
-      alert("Müşteri adı boş olamaz / Customer name cannot be empty");
+      alert("Ime kupca ne može biti prazno / Müşteri adı boş olamaz");
       return;
     }
 
@@ -176,7 +176,7 @@ export default function CustomersPage() {
 
     if (customerError) {
       setSavingEdit(false);
-      alert("Müşteri güncellenemedi / Customer update failed");
+      alert("Kupac nije ažuriran / Müşteri güncellenemedi");
       return;
     }
 
@@ -194,14 +194,14 @@ export default function CustomersPage() {
 
     if (salesError) {
       alert(
-        "Müşteri güncellendi ama satış kayıtları güncellenemedi / Customer updated but sales sync failed"
+        "Kupac je ažuriran ali zapisi prodaje nijesu sinhronizovani / Müşteri güncellendi ama satış kayıtları güncellenemedi"
       );
       await initializePage();
       cancelEdit();
       return;
     }
 
-    alert("Müşteri güncellendi / Customer updated ✅");
+    alert("Kupac je ažuriran / Müşteri güncellendi ✅");
     await initializePage();
     cancelEdit();
   }
@@ -210,7 +210,7 @@ export default function CustomersPage() {
     const salesCount = sales.filter((sale) => sale.customer_id === customer.id).length;
 
     const confirmed = window.confirm(
-      `${customer.name || "-"} adlı müşteri silinecek.\n\nBağlı satış sayısı: ${salesCount}\n\nBu işlemde müşteri kartı silinir ama eski satış kayıtları korunur. Satışların customer_id alanı boşaltılır.\n\nDevam edilsin mi? / Continue?`
+      `${customer.name || "-"}  adlı kupac će biti obrisan.\n\nBroj povezanih prodaja: ${salesCount}\n\nU ovoj radnji kartica kupca se briše, ali stari zapisi prodaje ostaju. Polje customer_id u prodajama će biti ispražnjeno.\n\nNastaviti? / Devam edilsin mi?`
     );
 
     if (!confirmed) return;
@@ -224,7 +224,7 @@ export default function CustomersPage() {
 
     if (detachError) {
       setDeletingCustomerId("");
-      alert("Satış bağlantısı kaldırılamadı / Sales detach failed");
+      alert("Veza prodaje nije uklonjena / Satış bağlantısı kaldırılamadı");
       return;
     }
 
@@ -236,7 +236,7 @@ export default function CustomersPage() {
     setDeletingCustomerId("");
 
     if (deleteError) {
-      alert("Müşteri silinemedi / Customer delete failed");
+      alert("Kupac nije obrisan / Müşteri silinemedi");
       return;
     }
 
@@ -248,7 +248,7 @@ export default function CustomersPage() {
       cancelEdit();
     }
 
-    alert("Müşteri silindi / Customer deleted ✅");
+    alert("Kupac je obrisan / Müşteri silindi ✅");
     await initializePage();
   }
 
@@ -341,14 +341,13 @@ export default function CustomersPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Müşteriler / Customers
+          Kupci / Müşteriler
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Gerçek müşteri listesi ve sipariş geçmişi görünümü. / Real customer list
-          and order history view.
+          Prikaz stvarne liste kupaca i istorije narudžbi. / Gerçek müşteri listesi ve sipariş geçmişi görünümü.
         </p>
       </div>
 
@@ -356,57 +355,57 @@ export default function CustomersPage() {
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto]">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-300">
-              Ara / Search
+              Pretraga / Arama
             </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Müşteri, telefon, adres, şehir, ürün ara..."
+              placeholder="Kupac, telefon, adresa, grad, proizvod ara... / Müşteri, telefon, adres, şehir, ürün ara..."
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-300">
-              Teslim Filtresi / Delivery Filter
+              Filter isporuke / Teslim Filtresi
             </label>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as FilterType)}
               className="h-[52px] min-w-[260px] rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tümü / All</option>
-              <option value="Bekliyor / Pending">Bekliyor / Pending</option>
+              <option value="all">Sve / Tümü</option>
+              <option value="Bekliyor / Pending">Čeka / Bekliyor</option>
               <option value="Hazırlanıyor / Preparing">
-                Hazırlanıyor / Preparing
+                Priprema se / Hazırlanıyor
               </option>
               <option value="Teslim Edildi / Delivered">
-                Teslim Edildi / Delivered
+                Isporučeno / Teslim Edildi
               </option>
-              <option value="İptal / Cancelled">İptal / Cancelled</option>
+              <option value="Otkaži / İptalled">Otkazano / İptal</option>
             </select>
           </div>
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-4">
           <StatCard
-            title="Toplam Müşteri / Total Customers"
+            title="Ukupno kupaca / Ukupno Müşteri"
             value={String(filteredSummaries.length)}
           />
           <StatCard
-            title="Toplam Sipariş / Total Orders"
+            title="Ukupno narudžbi / Ukupno Narudžba"
             value={String(
               filteredSummaries.reduce((sum, item) => sum + item.orderCount, 0)
             )}
           />
           <StatCard
-            title="Toplam Ürün / Total Items"
+            title="Ukupno proizvoda / Ukupno Proizvod"
             value={String(
               filteredSummaries.reduce((sum, item) => sum + item.itemCount, 0)
             )}
           />
           <StatCard
-            title="Toplam Ciro / Total Revenue"
+            title="Ukupan promet / Ukupno Ciro"
             value={`€${filteredSummaries
               .reduce((sum, item) => sum + item.totalSpent, 0)
               .toFixed(2)}`}
@@ -416,11 +415,11 @@ export default function CustomersPage() {
 
         {loading ? (
           <div className="rounded-3xl border border-slate-800 bg-slate-950/50 py-10 text-center text-slate-400">
-            Yükleniyor / Loading...
+            Učitava se / Yükleniyor...
           </div>
         ) : filteredSummaries.length === 0 ? (
           <div className="rounded-3xl border border-slate-800 bg-slate-950/50 py-10 text-center text-slate-400">
-            Müşteri bulunamadı / No customers found
+            Kupac nije pronađen / Müşteri bulunamadı
           </div>
         ) : (
           <div className="space-y-6">
@@ -443,10 +442,10 @@ export default function CustomersPage() {
                               {summary.customer.name || "-"}
                             </h2>
                             <p className="mt-1 text-sm text-slate-300">
-                              Telefon / Phone: {summary.customer.phone || "-"}
+                              Telefon / Telefon: {summary.customer.phone || "-"}
                             </p>
                             <p className="mt-1 text-sm text-slate-400">
-                              Adres / Address: {summary.customer.address || "-"} /{" "}
+                              Adresa / Adres: {summary.customer.address || "-"} /{" "}
                               {summary.customer.city || "-"}
                             </p>
                           </>
@@ -454,7 +453,7 @@ export default function CustomersPage() {
                           <div className="grid gap-4 md:grid-cols-2">
                             <div>
                               <label className="mb-2 block text-sm text-slate-300">
-                                Müşteri / Customer
+                                Kupac / Müşteri
                               </label>
                               <input
                                 value={editForm.name}
@@ -470,7 +469,7 @@ export default function CustomersPage() {
 
                             <div>
                               <label className="mb-2 block text-sm text-slate-300">
-                                Telefon / Phone
+                                Telefon / Telefon
                               </label>
                               <input
                                 value={editForm.phone}
@@ -486,7 +485,7 @@ export default function CustomersPage() {
 
                             <div>
                               <label className="mb-2 block text-sm text-slate-300">
-                                Adres / Address
+                                Adresa / Adres
                               </label>
                               <input
                                 value={editForm.address}
@@ -502,7 +501,7 @@ export default function CustomersPage() {
 
                             <div>
                               <label className="mb-2 block text-sm text-slate-300">
-                                Şehir / City
+                                Grad / Şehir
                               </label>
                               <input
                                 value={editForm.city}
@@ -521,20 +520,20 @@ export default function CustomersPage() {
 
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <MiniInfoCard
-                          title="Sipariş"
+                          title="Narudžba"
                           value={String(summary.orderCount)}
                         />
                         <MiniInfoCard
-                          title="Ürün"
+                          title="Proizvod"
                           value={String(summary.itemCount)}
                         />
                         <MiniInfoCard
-                          title="Toplam"
+                          title="Ukupno"
                           value={`€${summary.totalSpent.toFixed(2)}`}
                           green
                         />
                         <MiniInfoCard
-                          title="Son Durum"
+                          title="Posljednji status"
                           value={summary.lastDeliveryStatus}
                         />
                       </div>
@@ -542,7 +541,7 @@ export default function CustomersPage() {
 
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                       <p className="text-xs text-slate-500">
-                        Son Sipariş / Last Order:{" "}
+                        Son Narudžba / Last Order:{" "}
                         {summary.lastOrderDate
                           ? summary.lastOrderDate.slice(0, 10)
                           : "-"}
@@ -560,15 +559,15 @@ export default function CustomersPage() {
                               className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white transition hover:bg-slate-800"
                             >
                               {isExpanded
-                                ? "Detayı Gizle / Hide Details"
-                                : "Detayı Aç / Show Details"}
+                                ? "Sakrij detalje / Detayı Gizle"
+                                : "Otvori detalje / Detayı Aç"}
                             </button>
 
                             <button
                               onClick={() => startEdit(summary.customer)}
                               className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition hover:bg-amber-500/20"
                             >
-                              Düzenle / Edit
+                              Uredi / Düzenle
                             </button>
 
                             <button
@@ -576,7 +575,7 @@ export default function CustomersPage() {
                               disabled={isDeleting}
                               className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              {isDeleting ? "Siliniyor... / Deleting..." : "Sil / Delete"}
+                              {isDeleting ? "Briše se... / Siliniyor..." : "Obriši / Sil"}
                             </button>
                           </>
                         ) : (
@@ -587,8 +586,8 @@ export default function CustomersPage() {
                               className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {savingEdit
-                                ? "Kaydediliyor... / Saving..."
-                                : "Kaydet / Save"}
+                                ? "Čuva se... / Kaydediliyor..."
+                                : "Sačuvaj / Kaydet"}
                             </button>
 
                             <button
@@ -596,7 +595,7 @@ export default function CustomersPage() {
                               disabled={savingEdit}
                               className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              İptal / Cancel
+                              Otkaži / İptal
                             </button>
                           </>
                         )}
@@ -608,30 +607,30 @@ export default function CustomersPage() {
                     <div className="border-t border-slate-800 px-6 py-6">
                       {summary.sales.length === 0 ? (
                         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 py-8 text-center text-slate-400">
-                          Bu müşteriye ait satış bulunamadı / No sales found for this customer
+                          Za ovog kupca nije pronađena prodaja / Bu müşteriye ait satış bulunamadı
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full min-w-[1600px] text-sm">
                             <thead className="text-slate-400">
                               <tr className="border-b border-slate-800">
-                                <th className="py-3 text-left">Sipariş / Order</th>
-                                <th className="py-3 text-left">Tarih / Date</th>
+                                <th className="py-3 text-left">Narudžba / Order</th>
+                                <th className="py-3 text-left">Datum / Tarih</th>
                                 <th className="py-3 text-left">
-                                  Sevkiyat / Shipment Date
+                                  Datum isporuke / Sevkiyat Tarihi
                                 </th>
-                                <th className="py-3 text-left">Ürün / Product</th>
-                                <th className="py-3 text-center">Adet / Qty</th>
-                                <th className="py-3 text-center">Birim / Unit</th>
-                                <th className="py-3 text-center">Toplam / Total</th>
+                                <th className="py-3 text-left">Proizvod / Product</th>
+                                <th className="py-3 text-center">Količina / Adet</th>
+                                <th className="py-3 text-center">Jedinica / Birim</th>
+                                <th className="py-3 text-center">Ukupno / Total</th>
                                 <th className="py-3 text-center">
-                                  Teslimat / Delivery
-                                </th>
-                                <th className="py-3 text-center">
-                                  Sevkiyat / Shipment
+                                  Isporuka / Teslimat
                                 </th>
                                 <th className="py-3 text-center">
-                                  Yöntem / Method
+                                  Pošiljka / Sevkiyat
+                                </th>
+                                <th className="py-3 text-center">
+                                  Metod / Yöntem
                                 </th>
                               </tr>
                             </thead>
@@ -676,10 +675,10 @@ export default function CustomersPage() {
                                       }
                                       className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-white"
                                     >
-                                      <option>Bekliyor / Pending</option>
-                                      <option>Hazırlanıyor / Preparing</option>
-                                      <option>Teslim Edildi / Delivered</option>
-                                      <option>İptal / Cancelled</option>
+                                      <option>Čeka / Bekliyor</option>
+                                      <option>Priprema se / Hazırlanıyor</option>
+                                      <option>Isporučeno / Teslim Edildi</option>
+                                      <option>Otkaži / İptalled</option>
                                     </select>
                                   </td>
                                   <td className="py-3 text-center">
