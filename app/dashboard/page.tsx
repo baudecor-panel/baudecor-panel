@@ -542,8 +542,7 @@ export default function DashboardPage() {
 
     if (stockAlerts.some((item) => item.level === "critical")) {
       list.push({
-        text:
-          "Otkriven je proizvod na kritičnom nivou zalihe / Kritik stok seviyesinde ürün var",
+        text: "Otkriven je proizvod na kritičnom nivou zalihe / Kritik stok seviyesinde ürün var",
         type: "warning",
       });
     }
@@ -564,8 +563,7 @@ export default function DashboardPage() {
     if (totalRevenue > 0 && totalProfit <= 0) {
       list.push({
         title: "Pritisak na profit / Kâr Baskısı",
-        text:
-          "Prodaja postoji, ali je profitabilnost perioda slaba. Treba pregledati cijene ili strukturu troškova / Satış var ancak dönem kârlılığı zayıf. Fiyatlama veya maliyet yapısı gözden geçirilmeli.",
+        text: "Prodaja postoji, ali je profitabilnost perioda slaba. Treba pregledati cijene ili strukturu troškova / Satış var ancak dönem kârlılığı zayıf. Fiyatlama veya maliyet yapısı gözden geçirilmeli.",
         tone: "danger",
       });
     }
@@ -573,8 +571,7 @@ export default function DashboardPage() {
     if (pendingPaymentRate >= 30) {
       list.push({
         title: "Rizik naplate / Tahsilat Riski",
-        text:
-          "Važan dio prihoda još nije naplaćen. Novčani tok može biti pod pritiskom / Cironun önemli bölümü henüz tahsil edilmemiş durumda. Nakit akışı baskı altında olabilir.",
+        text: "Važan dio prihoda još nije naplaćen. Novčani tok može biti pod pritiskom / Cironun önemli bölümü henüz tahsil edilmemiş durumda. Nakit akışı baskı altında olabilir.",
         tone: "warning",
       });
     }
@@ -582,8 +579,7 @@ export default function DashboardPage() {
     if (criticalStockCount + outOfStockCount >= 5) {
       list.push({
         title: "Pritisak zalihe / Stok Baskısı",
-        text:
-          "Više proizvoda je na minimalnom nivou zalihe ili je potpuno potrošeno. Rizik gubitka prodaje raste / Birden fazla ürün minimum stok seviyesinde veya tamamen tükenmiş. Satış kaybı riski artıyor.",
+        text: "Više proizvoda je na minimalnom nivou zalihe ili je potpuno potrošeno. Rizik gubitka prodaje raste / Birden fazla ürün minimum stok seviyesinde veya tamamen tükenmiş. Satış kaybı riski artıyor.",
         tone: "danger",
       });
     }
@@ -591,8 +587,7 @@ export default function DashboardPage() {
     if (completionRate >= 70 && cancellationRate <= 10) {
       list.push({
         title: "Operativna snaga / Operasyon Gücü",
-        text:
-          "Stopa završetka je snažna, a stopa otkazivanja pod kontrolom. Kvalitet operacija izgleda zdravo / Tamamlanma oranı güçlü ve iptal oranı kontrollü. Operasyon kalitesi sağlıklı görünüyor.",
+        text: "Stopa završetka je snažna, a stopa otkazivanja pod kontrolom. Kvalitet operacija izgleda zdravo / Tamamlanma oranı güçlü ve iptal oranı kontrollü. Operasyon kalitesi sağlıklı görünüyor.",
         tone: "positive",
       });
     }
@@ -610,8 +605,7 @@ export default function DashboardPage() {
     if (list.length === 0) {
       list.push({
         title: "Uravnotežen prikaz / Dengeli Görünüm",
-        text:
-          "U izabranom periodu nema pretjerano negativnih signala. Ipak, treba pratiti ravnotežu plaćanja, zalihe i isporuke / Seçili dönemde aşırı negatif sinyal görünmüyor. Yine de ödeme, stok ve teslimat dengesi izlenmeli.",
+        text: "U izabranom periodu nema pretjerano negativnih signala. Ipak, treba pratiti ravnotežu plaćanja, zalihe i isporuke / Seçili dönemde aşırı negatif sinyal görünmüyor. Yine de ödeme, stok ve teslimat dengesi izlenmeli.",
         tone: "neutral",
       });
     }
@@ -643,333 +637,101 @@ export default function DashboardPage() {
   }
 
   function getStockClass(level: StockAlertItem["level"]) {
-    if (level === "out") return "text-rose-300";
+    if (level === "out") return "text-red-300";
     if (level === "critical") return "text-amber-300";
     return "text-cyan-300";
   }
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#030712] p-6 text-white md:p-8">
-        <div className="mx-auto max-w-[1600px]">
-          <section className="rounded-[34px] border border-white/10 bg-white/[0.04] p-8 shadow-[0_25px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.36em] text-slate-500">
-              PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
-            </p>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-white">
-              Kontrolna tabla / Kontrol Paneli
-            </h1>
-            <div className="mt-6 rounded-3xl border border-white/10 bg-slate-950/60 px-6 py-6 text-slate-400">
-              Učitava se / Yükleniyor
-            </div>
-          </section>
+      <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
+        <div className="rounded-[32px] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-black/30">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+            PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
+          </p>
+          <h1 className="mt-4 text-4xl font-black tracking-tight">
+            Kontrolna tabla / Kontrol Paneli
+          </h1>
+          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-slate-400">
+            Učitava se / Yükleniyor
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#030712] px-4 py-6 text-white md:px-6 md:py-8">
-      <div className="mx-auto max-w-[1600px]">
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="rounded-2xl border border-rose-500/25 bg-rose-500/10 px-4 py-2.5 text-sm font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
-          </button>
-        </div>
+    <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
+        </button>
+      </div>
 
-        <section className="relative mb-8 overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_24%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.45)] md:p-8 xl:p-10">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:52px_52px] opacity-30" />
-          <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.34em] text-cyan-200">
-                PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
-              </div>
-
-              <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
-                Kontrolna tabla / Kontrol Paneli
-              </h1>
-
-              <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 md:text-[15px]">
-                Pogledajte prodajne rezultate, pritisak profitabilnosti, rizik naplate i
-                osjetljivost zaliha na jednom ekranu. Ova stranica je dizajnirana za
-                upravu i brzo donošenje odluka /
-                Şirketin satış performansını, kârlılık baskısını, tahsilat riskini ve
-                stok kırılganlığını tek ekranda gör. Bu sayfa yönetim seviyesinde hızlı
-                karar almak için tasarlandı.
-              </p>
-
-              <div className="mt-7 flex flex-wrap gap-2.5">
-                {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => setRange(item)}
-                    className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
-                      range === item
-                        ? "bg-white text-slate-950 shadow-lg shadow-white/10"
-                        : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                    }`}
-                  >
-                    {getRangeLabel(item)}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <HeroStatCard
-                  label="Ukupan prihod / Toplam Ciro"
-                  value={`€${totalRevenue.toFixed(2)}`}
-                  helper="Prihod izabranog perioda / Seçili dönem geliri"
-                  tone="blue"
-                />
-                <HeroStatCard
-                  label="Ukupan profit / Toplam Kâr"
-                  value={`€${totalProfit.toFixed(2)}`}
-                  helper="Pregled bruto profitabilnosti / Brüt kârlılık görünümü"
-                  tone={totalProfit >= 0 ? "green" : "red"}
-                />
-                <HeroStatCard
-                  label="Narudžbe / Sipariş"
-                  value={String(totalOrders)}
-                  helper="Ukupan broj jedinstvenih narudžbi / Benzersiz sipariş toplamı"
-                  tone="slate"
-                />
-                <HeroStatCard
-                  label="Zdravlje zalihe / Stok Sağlığı"
-                  value={`%${stockHealthRate}`}
-                  helper="Udio proizvoda iznad minimalne zalihe / Minimum stok üstü ürün oranı"
-                  tone={
-                    stockHealthRate >= 75
-                      ? "green"
-                      : stockHealthRate >= 50
-                      ? "amber"
-                      : "red"
-                  }
-                />
-              </div>
+      <section className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-2xl shadow-black/40 md:p-8">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
+        <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
+              PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ExecutiveMetric
-                title="Stopa završetka / Tamamlanma Oranı"
-                value={`%${completionRate}`}
-                subtitle="Isporučene i plaćene narudžbe / Teslim + ödeme tamamlanan siparişler"
-                tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
-              />
-              <ExecutiveMetric
-                title="Stopa otkazivanja / İptal Oranı"
-                value={`%${cancellationRate}`}
-                subtitle="Pritisak otkazivanja u periodu / Dönem içi iptal baskısı"
-                tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
-              />
-              <ExecutiveMetric
-                title="Plaćanje na čekanju / Bekleyen Ödeme"
-                value={`€${pendingPaymentsTotal.toFixed(2)}`}
-                subtitle={`Udio u prihodu / Ciro payı: %${pendingPaymentRate}`}
-                tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
-              />
-              <ExecutiveMetric
-                title="Aktivne narudžbe / Aktif Sipariş"
-                value={String(activeOrders)}
-                subtitle="Otvorene narudžbe / Açık siparişler"
-                tone={activeOrders === 0 ? "green" : activeOrders <= 10 ? "blue" : "amber"}
-              />
-              <ExecutiveMetric
-                title="Zaostale isporuke / Teslimat Backlog"
-                value={String(deliveryBacklog)}
-                subtitle="Nezatvorene isporuke / Kapanmamış teslimatlar"
-                tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
-              />
-              <ExecutiveMetric
-                title="Kritična zaliha / Kritik Stok"
-                value={String(criticalStockCount)}
-                subtitle="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
-                tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
-              />
-              <ExecutiveMetric
-                title="Proizvod bez zalihe / Stoksuz Ürün"
-                value={String(outOfStockCount)}
-                subtitle="Neposredan rizik gubitka prodaje / Doğrudan satış kaybı riski"
-                tone={outOfStockCount === 0 ? "green" : "red"}
-              />
-              <ExecutiveMetric
-                title="Prosječna narudžba / Ortalama Sipariş"
-                value={`€${averageOrderValue.toFixed(2)}`}
-                subtitle="Kvalitet korpe / Sepet kalitesi"
-                tone="blue"
-              />
-            </div>
-          </div>
-        </section>
+            <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
+              Kontrolna tabla / Kontrol Paneli
+            </h1>
 
-        <section className="mb-8 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[30px] border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-slate-900/90 to-slate-950 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-200/80">
-                  PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-white">
-                  Kritična upozorenja / Kritik Uyarılar
-                </h2>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                {alerts.length} aktivnih signala / aktif sinyal
-              </div>
-            </div>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
+              Pogledajte prodajne rezultate, pritisak profitabilnosti, rizik naplate i
+              osjetljivost zaliha na jednom ekranu. Ova stranica je dizajnirana ne za
+              operativni rad, već za brzo donošenje odluka na nivou uprave /
+              Şirketin satış performansını, kârlılık baskısını, tahsilat riskini ve
+              stok kırılganlığını tek ekranda gör. Bu sayfa operasyon yapmak için değil,
+              yönetim seviyesinde hızlı karar almak için tasarlandı.
+            </p>
 
-            <div className="space-y-3">
-              {alerts.length === 0 ? (
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                  Sve je u redu / Her şey normal
-                </div>
-              ) : (
-                alerts.map((alert, index) => (
-                  <div
-                    key={index}
-                    className={`rounded-2xl border px-4 py-4 text-sm font-semibold ${
-                      alert.type === "danger"
-                        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                        : alert.type === "warning"
-                        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                        : "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
-                    }`}
-                  >
-                    {alert.text}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500">
-                  UVIDI ZA UPRAVU / YÖNETİM İÇGÖRÜLERİ
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-white">
-                  Strateški uvidi / Stratejik Yorumlar
-                </h2>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                Sažetak za upravu / Yönetim özeti
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {insights.map((insight, index) => (
-                <InsightPanel
-                  key={`${insight.title}-${index}`}
-                  title={insight.title}
-                  text={insight.text}
-                  tone={insight.tone}
-                />
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setRange(item)}
+                  className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
+                    range === item
+                      ? "bg-white text-slate-950 shadow-lg shadow-white/10"
+                      : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                  }`}
+                >
+                  {getRangeLabel(item)}
+                </button>
               ))}
             </div>
-          </div>
-        </section>
 
-        <section className="mb-8 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500">
-                  ANALIZA PRIHODA / CİRO ANALİZİ
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-white">
-                  Trend prodaje i profita / Satış ve Kâr Trendi
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Prikazuje kako se obim prodaje i profitabilnost zajedno kreću u
-                  izabranom periodu / Seçili dönemde satış hacmi ile kârlılığın birlikte
-                  nasıl hareket ettiğini gösterir.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                Prosječna narudžba / Ortalama sipariş: €{averageOrderValue.toFixed(2)}
-              </div>
-            </div>
-
-            <ResponsiveContainer width="100%" height={380}>
-              <ComposedChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="date" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#020617",
-                    border: "1px solid #334155",
-                    borderRadius: "18px",
-                    color: "#fff",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="sales"
-                  fill="rgba(59,130,246,0.18)"
-                  stroke="transparent"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  stroke="#60a5fa"
-                  strokeWidth={3.2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="profit"
-                  stroke="#34d399"
-                  strokeWidth={3.2}
-                  dot={false}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="rounded-[30px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-slate-950 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
-            <div className="mb-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-200/80">
-                PRITISAK ZALIHE / STOK BASKISI
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-white">
-                Rizik zalihe / Stok Riski
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                Ovdje su istaknuti proizvodi koji mogu izazvati gubitak prodaje prema
-                minimalnoj zalihi / Minimum stok eşiğine göre satış kaybı yaratabilecek
-                ürünler burada öne çıkar.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MiniRiskCard
-                title="Kritični proizvodi / Kritik Ürün"
-                value={String(criticalStockCount)}
-                helper="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
-                tone="amber"
-              />
-              <MiniRiskCard
-                title="Bez zalihe / Stoksuz"
-                value={String(outOfStockCount)}
-                helper="Potrebna hitna intervencija / Acil müdahale gerekir"
-                tone="red"
-              />
-              <MiniRiskCard
-                title="Niska zaliha / Düşük Stok"
-                value={String(lowStockCount)}
-                helper="Zona bliskog rizika / Yakın risk alanı"
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <HeroStatCard
+                label="Ukupan prihod / Toplam Ciro"
+                value={`€${totalRevenue.toFixed(2)}`}
+                helper="Prihod izabranog perioda / Seçili dönem geliri"
                 tone="blue"
               />
-              <MiniRiskCard
-                title="Zdravlje zalihe / Stok Sağlığı"
+              <HeroStatCard
+                label="Ukupan profit / Toplam Kâr"
+                value={`€${totalProfit.toFixed(2)}`}
+                helper="Pregled bruto profitabilnosti / Brüt kârlılık görünümü"
+                tone={totalProfit >= 0 ? "green" : "red"}
+              />
+              <HeroStatCard
+                label="Narudžbe / Sipariş"
+                value={String(totalOrders)}
+                helper="Ukupan broj jedinstvenih narudžbi / Benzersiz sipariş toplamı"
+                tone="slate"
+              />
+              <HeroStatCard
+                label="Zdravlje zalihe / Stok Sağlığı"
                 value={`%${stockHealthRate}`}
-                helper="Opšte stanje proizvoda / Genel ürün sağlığı"
+                helper="Udio proizvoda iznad minimalne zalihe / Minimum stok üstü ürün oranı"
                 tone={
                   stockHealthRate >= 75
                     ? "green"
@@ -979,248 +741,456 @@ export default function DashboardPage() {
                 }
               />
             </div>
+          </div>
 
-            <div className="mt-5 space-y-3">
-              {stockAlerts.length === 0 ? (
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                  Nivo zalihe je zdrav / Stoklar normal
-                </div>
-              ) : (
-                stockAlerts.map((item, index) => (
-                  <div
-                    key={`${item.name}-${index}`}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">{item.name}</p>
-                      <p className={`mt-1 text-sm ${getStockClass(item.level)}`}>
-                        {getStockLabel(item.level)} • Min {item.minimumStock}
-                      </p>
-                    </div>
-                    <p className={`ml-4 text-xl font-black ${getStockClass(item.level)}`}>
-                      {item.stock}
-                    </p>
-                  </div>
-                ))
-              )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ExecutiveMetric
+              title="Stopa završetka / Tamamlanma Oranı"
+              value={`%${completionRate}`}
+              subtitle="Isporučene i plaćene narudžbe / Teslim + ödeme tamamlanan siparişler"
+              tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Stopa otkazivanja / İptal Oranı"
+              value={`%${cancellationRate}`}
+              subtitle="Pritisak otkazivanja u periodu / Dönem içi iptal baskısı"
+              tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Plaćanje na čekanju / Bekleyen Ödeme"
+              value={`€${pendingPaymentsTotal.toFixed(2)}`}
+              subtitle={`Udio u prihodu / Ciro payı: %${pendingPaymentRate}`}
+              tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Zaostale isporuke / Teslimat Backlog"
+              value={String(deliveryBacklog)}
+              subtitle="Nezatvorene isporuke / Kapanmamış teslimatlar"
+              tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Kritična zaliha / Kritik Stok"
+              value={String(criticalStockCount)}
+              subtitle="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
+              tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Proizvod bez zalihe / Stoksuz Ürün"
+              value={String(outOfStockCount)}
+              subtitle="Neposredan rizik gubitka prodaje / Doğrudan satış kaybı riski"
+              tone={outOfStockCount === 0 ? "green" : "red"}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="rounded-[28px] border border-red-500/20 bg-gradient-to-br from-red-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-200/80">
+                PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Kritična upozorenja / Kritik Uyarılar
+              </h2>
             </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <ValueStrip
-                label="Trošak inventara / Envanter Maliyeti"
-                value={`€${inventoryCostValue.toFixed(2)}`}
-              />
-              <ValueStrip
-                label="Vrijednost prodaje / Satış Değeri"
-                value={`€${inventorySaleValue.toFixed(2)}`}
-              />
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              {alerts.length} aktivnih signala / aktif sinyal
             </div>
           </div>
-        </section>
 
-        <section className="mb-8 grid gap-6 xl:grid-cols-3">
-          <PanelCard
-            title="Sažetak profitabilnosti / Kârlılık Özeti"
-            subtitle="Mevcut stok i struktura cijena prema prikazu profitabilnosti proizvoda / Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MiniRiskCard
-                title="Potencijalni profit / Potansiyel Kâr"
-                value={`€${totalPotentialProfit.toFixed(2)}`}
-                helper="Očekivani profit iz postojeće zalihe / Stoktaki ürünlerden beklenen kâr"
-                tone={totalPotentialProfit >= 0 ? "green" : "red"}
+          <div className="space-y-3">
+            {alerts.length === 0 ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
+                Sve je u redu / Her şey normal
+              </div>
+            ) : (
+              alerts.map((alert, index) => (
+                <div
+                  key={index}
+                  className={`rounded-2xl border px-4 py-4 text-sm font-semibold ${
+                    alert.type === "danger"
+                      ? "border-red-500/20 bg-red-500/10 text-red-300"
+                      : alert.type === "warning"
+                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                      : "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
+                  }`}
+                >
+                  {alert.text}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
+                UVIDI ZA UPRAVU / YÖNETİM İÇGÖRÜLERİ
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Strateški uvidi / Stratejik Yorumlar
+              </h2>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              Sažetak za upravu / Yönetim özeti
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {insights.map((insight, index) => (
+              <InsightPanel
+                key={`${insight.title}-${index}`}
+                title={insight.title}
+                text={insight.text}
+                tone={insight.tone}
               />
-              <MiniRiskCard
-                title="Prosječna marža / Ortalama Marj"
-                value={`%${averageMarginPercent.toFixed(1)}`}
-                helper="Prosječna marža aktivnih proizvoda / Aktif ürünlerin ortalama marjı"
-                tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
+                ANALIZA PRIHODA / CİRO ANALİZİ
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Trend prodaje i profita / Satış ve Kâr Trendi
+              </h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Prikazuje kako se obim prodaje i profitabilnost zajedno kreću u izabranom periodu / Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              Prosječna narudžba / Ortalama sipariş: €{averageOrderValue.toFixed(2)}
+            </div>
+          </div>
+
+          <ResponsiveContainer width="100%" height={360}>
+            <ComposedChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="date" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#020617",
+                  border: "1px solid #334155",
+                  borderRadius: "16px",
+                  color: "#fff",
+                }}
               />
-              <MiniRiskCard
-                title="Profitabilni proizvodi / Kârlı Ürün"
-                value={String(profitableProductCount)}
-                helper="Proizvodi sa pozitivnim jediničnim profitom / Birim kârı pozitif ürünler"
-                tone="green"
+              <Area
+                type="monotone"
+                dataKey="sales"
+                fill="rgba(59,130,246,0.18)"
+                stroke="transparent"
               />
-              <MiniRiskCard
-                title="Proizvodi u gubitku / Zarardaki Ürün"
-                value={String(losingProductCount)}
-                helper="Proizvodi sa negativnim jediničnim profitom / Birim kârı negatif ürünler"
-                tone={losingProductCount === 0 ? "green" : "red"}
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#60a5fa"
+                strokeWidth={3}
+                dot={false}
               />
-            </div>
-          </PanelCard>
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#34d399"
+                strokeWidth={3}
+                dot={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
 
-          <PanelCard
-            title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
-            subtitle="Najjači proizvodi prema profitnom potencijalu zalihe / Stok kâr potansiyeline göre en güçlü ürünler."
-          >
-            <div className="space-y-3">
-              {topProfitableProducts.length === 0 ? (
-                <EmptyState />
-              ) : (
-                topProfitableProducts.map((item, index) => (
-                  <RankRow
-                    key={item.name}
-                    rank={index + 1}
-                    title={item.name}
-                    subtitle={`Marža %${item.marginPercent.toFixed(
-                      1
-                    )} • Zaliha ${item.stock} / Marj %${item.marginPercent.toFixed(
-                      1
-                    )} • Stok ${item.stock}`}
-                    value={`€${item.stockProfit.toFixed(2)}`}
-                    valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-rose-300"}
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
+        <div className="rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">
+              PRITISAK ZALIHE / STOK BASKISI
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-white">
+              Rizik zalihe / Stok Riski
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Ovdje su istaknuti proizvodi koji mogu izazvati gubitak prodaje prema minimalnoj zalihi / Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar.
+            </p>
+          </div>
 
-          <PanelCard
-            title="Najslabija marža / En Zayıf Marj"
-            subtitle="Proizvodi sa najnižim procentom marže / Marj yüzdesi en düşük ürünler."
-          >
-            <div className="space-y-3">
-              {worstMarginProducts.length === 0 ? (
-                <EmptyState />
-              ) : (
-                worstMarginProducts.map((item, index) => (
-                  <RankRow
-                    key={item.name}
-                    rank={index + 1}
-                    title={item.name}
-                    subtitle={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`}
-                    value={`%${item.marginPercent.toFixed(1)}`}
-                    valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-rose-300"}
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
-        </section>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MiniRiskCard
+              title="Kritični proizvodi / Kritik Ürün"
+              value={String(criticalStockCount)}
+              helper="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
+              tone="amber"
+            />
+            <MiniRiskCard
+              title="Bez zalihe / Stoksuz"
+              value={String(outOfStockCount)}
+              helper="Potrebna hitna intervencija / Acil müdahale gerekir"
+              tone="red"
+            />
+            <MiniRiskCard
+              title="Niska zaliha / Düşük Stok"
+              value={String(lowStockCount)}
+              helper="Zona bliskog rizika / Yakın risk alanı"
+              tone="blue"
+            />
+            <MiniRiskCard
+              title="Zdravlje zalihe / Stok Sağlığı"
+              value={`%${stockHealthRate}`}
+              helper="Opšte stanje proizvoda / Genel ürün sağlığı"
+              tone={
+                stockHealthRate >= 75
+                  ? "green"
+                  : stockHealthRate >= 50
+                  ? "amber"
+                  : "red"
+              }
+            />
+          </div>
 
-        <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
-          <PanelCard
-            title="Najbolji proizvodi / En İyi Ürünler"
-            subtitle="Proizvodi koji u izabranom periodu donose najviše prihoda / Seçili dönemde en fazla ciro üreten ürünler."
-          >
-            <div className="space-y-3">
-              {topProducts.length === 0 ? (
-                <EmptyState />
-              ) : (
-                topProducts.map((item, index) => (
-                  <RankRow
-                    key={item.name}
-                    rank={index + 1}
-                    title={item.name}
-                    subtitle="Doprinos prihodu / Ciro katkısı"
-                    value={`€${item.total.toFixed(2)}`}
-                    valueClassName="text-emerald-300"
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
-
-          <PanelCard
-            title="Učinak po gradu / Şehir Performansı"
-            subtitle="Gradovi sa najvećim prihodom / En yüksek ciroya sahip şehirler."
-          >
-            <div className="space-y-3">
-              {cityStats.length === 0 ? (
-                <EmptyState />
-              ) : (
-                cityStats.map((item, index) => (
-                  <RankRow
-                    key={item.city}
-                    rank={index + 1}
-                    title={item.city}
-                    subtitle={`${item.count} narudžba / sipariş`}
-                    value={`€${item.total.toFixed(2)}`}
-                    valueClassName="text-violet-300"
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
-
-          <PanelCard
-            title="Najbolji kupci / En İyi Müşteriler"
-            subtitle="Kupci koji ostavljaju najviše prihoda / En fazla ciro bırakan müşteriler."
-          >
-            <div className="space-y-3">
-              {customerStats.length === 0 ? (
-                <EmptyState />
-              ) : (
-                customerStats.map((item, index) => (
-                  <RankRow
-                    key={item.customer}
-                    rank={index + 1}
-                    title={item.customer}
-                    subtitle={`${item.orderCount} narudžba / sipariş`}
-                    value={`€${item.total.toFixed(2)}`}
-                    valueClassName="text-cyan-300"
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
-
-          <PanelCard
-            title="Najprofitabilniji kupci / En Karlı Müşteriler"
-            subtitle="Poredano prema ukupnom profitu / Toplam kâra göre sıralama."
-          >
-            <div className="space-y-3">
-              {topCustomersByProfit.length === 0 ? (
-                <EmptyState />
-              ) : (
-                topCustomersByProfit.map((item, index) => (
-                  <RankRow
-                    key={item.customer}
-                    rank={index + 1}
-                    title={item.customer}
-                    subtitle={`${item.orderCount} narudžba / sipariş`}
-                    value={`€${item.profit.toFixed(2)}`}
-                    valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-rose-300"}
-                  />
-                ))
-              )}
-            </div>
-          </PanelCard>
-
-          <PanelCard
-            title="Nedavne prodaje / Son Satışlar"
-            subtitle="Najnoviji zapisi prodaje u izabranom periodu / Seçili dönemdeki en son satış kayıtları."
-          >
-            <div className="space-y-3">
-              {recentSales.length === 0 ? (
-                <EmptyState />
-              ) : (
-                recentSales.map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">
-                        {sale.product_name || "Nepoznato / Bilinmiyor"}
-                      </p>
-                      <p className="mt-1 truncate text-sm text-slate-400">
-                        {sale.customer_name || "-"} •{" "}
-                        {sale.sale_date || sale.created_at?.slice(0, 10) || "-"}
-                      </p>
-                    </div>
-                    <p className="ml-4 text-base font-bold text-blue-300">
-                      €{Number(sale.total || 0).toFixed(2)}
+          <div className="mt-5 space-y-3">
+            {stockAlerts.length === 0 ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
+                Nivo zalihe je zdrav / Stoklar normal
+              </div>
+            ) : (
+              stockAlerts.map((item, index) => (
+                <div
+                  key={`${item.name}-${index}`}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">{item.name}</p>
+                    <p className={`mt-1 text-sm ${getStockClass(item.level)}`}>
+                      {getStockLabel(item.level)} • Min {item.minimumStock}
                     </p>
                   </div>
-                ))
-              )}
-            </div>
-          </PanelCard>
-        </section>
-      </div>
+                  <p className={`ml-4 text-xl font-black ${getStockClass(item.level)}`}>
+                    {item.stock}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <ValueStrip
+              label="Trošak inventara / Envanter Maliyeti"
+              value={`€${inventoryCostValue.toFixed(2)}`}
+            />
+            <ValueStrip
+              label="Vrijednost prodaje / Satış Değeri"
+              value={`€${inventorySaleValue.toFixed(2)}`}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-3">
+        <PanelCard
+          title="Sažetak profitabilnosti / Kârlılık Özeti"
+          subtitle="Mevcut stok i struktura cijena prema prikazu profitabilnosti proizvoda / Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MiniRiskCard
+              title="Potencijalni profit / Potansiyel Kâr"
+              value={`€${totalPotentialProfit.toFixed(2)}`}
+              helper="Očekivani profit iz postojeće zalihe / Stoktaki ürünlerden beklenen kâr"
+              tone={totalPotentialProfit >= 0 ? "green" : "red"}
+            />
+            <MiniRiskCard
+              title="Prosječna marža / Ortalama Marj"
+              value={`%${averageMarginPercent.toFixed(1)}`}
+              helper="Prosječna marža aktivnih proizvoda / Aktif ürünlerin ortalama marjı"
+              tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
+            />
+            <MiniRiskCard
+              title="Profitabilni proizvodi / Kârlı Ürün"
+              value={String(profitableProductCount)}
+              helper="Proizvodi sa pozitivnim jediničnim profitom / Birim kârı pozitif ürünler"
+              tone="green"
+            />
+            <MiniRiskCard
+              title="Proizvodi u gubitku / Zarardaki Ürün"
+              value={String(losingProductCount)}
+              helper="Proizvodi sa negativnim jediničnim profitom / Birim kârı negatif ürünler"
+              tone={losingProductCount === 0 ? "green" : "red"}
+            />
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
+          subtitle="Najjači proizvodi prema profitnom potencijalu zalihe / Stok kâr potansiyeline göre en güçlü ürünler."
+        >
+          <div className="space-y-3">
+            {topProfitableProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topProfitableProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Marža %${item.marginPercent.toFixed(1)} • Zaliha ${item.stock} / Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
+                  value={`€${item.stockProfit.toFixed(2)}`}
+                  valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najslabija marža / En Zayıf Marj"
+          subtitle="Proizvodi sa najnižim procentom marže / Marj yüzdesi en düşük ürünler."
+        >
+          <div className="space-y-3">
+            {worstMarginProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              worstMarginProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`}
+                  value={`%${item.marginPercent.toFixed(1)}`}
+                  valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
+        <PanelCard
+          title="Najbolji proizvodi / En İyi Ürünler"
+          subtitle="Proizvodi koji u izabranom periodu donose najviše prihoda / Seçili dönemde en fazla ciro üreten ürünler."
+        >
+          <div className="space-y-3">
+            {topProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle="Doprinos prihodu / Ciro katkısı"
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-emerald-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Učinak po gradu / Şehir Performansı"
+          subtitle="Gradovi sa najvećim prihodom / En yüksek ciroya sahip şehirler."
+        >
+          <div className="space-y-3">
+            {cityStats.length === 0 ? (
+              <EmptyState />
+            ) : (
+              cityStats.map((item, index) => (
+                <RankRow
+                  key={item.city}
+                  rank={index + 1}
+                  title={item.city}
+                  subtitle={`${item.count} narudžba / sipariş`}
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-violet-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najbolji kupci / En İyi Müşteriler"
+          subtitle="Kupci koji ostavljaju najviše prihoda / En fazla ciro bırakan müşteriler."
+        >
+          <div className="space-y-3">
+            {customerStats.length === 0 ? (
+              <EmptyState />
+            ) : (
+              customerStats.map((item, index) => (
+                <RankRow
+                  key={item.customer}
+                  rank={index + 1}
+                  title={item.customer}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-cyan-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najprofitabilniji kupci / En Karlı Müşteriler"
+          subtitle="Poredano prema ukupnom profitu / Toplam kâra göre sıralama."
+        >
+          <div className="space-y-3">
+            {topCustomersByProfit.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topCustomersByProfit.map((item, index) => (
+                <RankRow
+                  key={item.customer}
+                  rank={index + 1}
+                  title={item.customer}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
+                  value={`€${item.profit.toFixed(2)}`}
+                  valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Nedavne prodaje / Son Satışlar"
+          subtitle="Najnoviji zapisi prodaje u izabranom periodu / Seçili dönemdeki en son satış kayıtları."
+        >
+          <div className="space-y-3">
+            {recentSales.length === 0 ? (
+              <EmptyState />
+            ) : (
+              recentSales.map((sale) => (
+                <div
+                  key={sale.id}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">
+                      {sale.product_name || "Nepoznato / Bilinmiyor"}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-slate-400">
+                      {sale.customer_name || "-"} •{" "}
+                      {sale.sale_date || sale.created_at?.slice(0, 10) || "-"}
+                    </p>
+                  </div>
+                  <p className="ml-4 text-base font-bold text-blue-300">
+                    €{Number(sale.total || 0).toFixed(2)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </PanelCard>
+      </section>
     </main>
   );
 }
@@ -1240,17 +1210,17 @@ function HeroStatCard({
     blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
     green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
     amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-rose-500/20 bg-rose-500/10 text-rose-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
     slate: "border-white/10 bg-white/5 text-slate-200",
   };
 
   return (
-    <div className={`rounded-[26px] border p-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${styles[tone]}`}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.24em] opacity-80">
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
         {label}
       </p>
-      <p className="mt-4 text-3xl font-black">{value}</p>
-      <p className="mt-2 text-sm leading-6 opacity-80">{helper}</p>
+      <p className="mt-3 text-2xl font-black">{value}</p>
+      <p className="mt-1 text-sm opacity-80">{helper}</p>
     </div>
   );
 }
@@ -1269,18 +1239,18 @@ function ExecutiveMetric({
   const styles = {
     green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
     amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-rose-500/20 bg-rose-500/10 text-rose-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
     blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
     slate: "border-white/10 bg-white/5 text-slate-200",
   };
 
   return (
-    <div className={`rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(0,0,0,0.16)] ${styles[tone]}`}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] opacity-80">
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
         {title}
       </p>
       <p className="mt-3 text-3xl font-black">{value}</p>
-      <p className="mt-2 text-sm leading-6 opacity-80">{subtitle}</p>
+      <p className="mt-1 text-sm opacity-80">{subtitle}</p>
     </div>
   );
 }
@@ -1295,15 +1265,15 @@ function InsightPanel({
   tone: "danger" | "warning" | "positive" | "neutral";
 }) {
   const styles = {
-    danger: "border-rose-500/20 bg-rose-500/10 text-rose-200",
+    danger: "border-red-500/20 bg-red-500/10 text-red-200",
     warning: "border-amber-500/20 bg-amber-500/10 text-amber-200",
     positive: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
     neutral: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
   };
 
   return (
-    <div className={`rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(0,0,0,0.14)] ${styles[tone]}`}>
-      <p className="text-base font-bold">{title}</p>
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-sm font-bold">{title}</p>
       <p className="mt-2 text-sm leading-6 opacity-90">{text}</p>
     </div>
   );
@@ -1323,17 +1293,17 @@ function MiniRiskCard({
   const styles = {
     green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
     amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-rose-500/20 bg-rose-500/10 text-rose-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
     blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
   };
 
   return (
-    <div className={`rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(0,0,0,0.14)] ${styles[tone]}`}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] opacity-80">
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
         {title}
       </p>
-      <p className="mt-3 text-3xl font-black">{value}</p>
-      <p className="mt-2 text-sm leading-6 opacity-80">{helper}</p>
+      <p className="mt-2 text-2xl font-black">{value}</p>
+      <p className="mt-1 text-sm opacity-80">{helper}</p>
     </div>
   );
 }
@@ -1347,7 +1317,7 @@ function ValueStrip({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
         {label}
       </p>
       <p className="mt-2 text-lg font-bold text-white">{value}</p>
@@ -1365,9 +1335,9 @@ function PanelCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-      <h2 className="text-2xl font-black text-white">{title}</h2>
-      <p className="mb-5 mt-2 text-sm leading-6 text-slate-400">{subtitle}</p>
+    <section className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+      <h2 className="text-2xl font-bold text-white">{title}</h2>
+      <p className="mt-2 mb-5 text-sm text-slate-400">{subtitle}</p>
       {children}
     </section>
   );
@@ -1389,7 +1359,7 @@ function RankRow({
   return (
     <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
           #{rank}
         </p>
         <p className="truncate font-semibold text-white">{title}</p>
