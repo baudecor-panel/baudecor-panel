@@ -1538,9 +1538,9 @@ export default function SalesPage() {
                   onChange={(e) => setSimpleStatus(e.target.value as SimpleStatus)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option>Bekliyor / Pending</option>
-                  <option>Teslim Edildi / Delivered</option>
-                  <option>İptal / Cancelled</option>
+                  <option>Čeka / Bekliyor</option>
+                  <option>Isporučeno / Teslim Edildi</option>
+                  <option>Otkazano / İptal</option>
                 </select>
               </div>
             </div>
@@ -1554,8 +1554,8 @@ export default function SalesPage() {
                 onChange={(e) => setPaymentStatus(e.target.value)}
                 className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
               >
-                <option>Ödendi / Paid</option>
-                <option>Bekliyor / Pending</option>
+                <option>Plaćeno / Ödendi</option>
+                <option>Čeka / Bekliyor</option>
               </select>
             </div>
 
@@ -1878,7 +1878,11 @@ export default function SalesPage() {
                               </td>
 
                               <td className="py-3 text-center">
-                                {sale.payment_status || "-"}
+                                {sale.payment_status === "Ödendi / Paid"
+  ? "Plaćeno / Ödendi"
+  : sale.payment_status === "Bekliyor / Pending"
+  ? "Čeka / Bekliyor"
+  : sale.payment_status || "-"}
                               </td>
 
                               <td className="py-3 text-center">
@@ -1892,9 +1896,9 @@ export default function SalesPage() {
                                   }
                                   className="w-[180px] rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                                 >
-                                  <option>Bekliyor / Pending</option>
-                                  <option>Teslim Edildi / Delivered</option>
-                                  <option>İptal / Cancelled</option>
+                                  <option>Čeka / Bekliyor</option>
+                                  <option>Isporučeno / Teslim Edildi</option>
+                                  <option>Otkazano / İptal</option>
                                 </select>
                               </td>
 
