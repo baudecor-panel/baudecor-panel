@@ -39,12 +39,12 @@ export default function ExpensesPage() {
 
   async function handleSave() {
     if (!type.trim()) {
-      alert("Lütfen gider türü seç / Please select expense type");
+      alert("Odaberi tip troška / Lütfen gider türü seç");
       return;
     }
 
     if (!amount || amount <= 0) {
-      alert("Lütfen geçerli tutar gir / Please enter a valid amount");
+      alert("Unesi ispravan iznos / Lütfen geçerli tutar gir");
       return;
     }
 
@@ -61,11 +61,11 @@ export default function ExpensesPage() {
     setSaving(false);
 
     if (error) {
-      alert("Hata / Error: " + error.message);
+      alert("Greška / Hata: " + error.message);
       return;
     }
 
-    alert("Gider kaydedildi / Expense saved ✅");
+    alert("Trošak je sačuvan / Gider kaydedildi ✅");
 
     setType("Kira / Rent");
     setAmount(0);
@@ -96,13 +96,13 @@ export default function ExpensesPage() {
     <main className="flex-1 bg-slate-950 text-white p-8">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Giderler / Expenses
+          Troškovi / Giderler
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          İşletme giderlerini kaydet ve takip et. / Record and track business expenses.
+          Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet ve takip et.
         </p>
       </div>
 
@@ -110,17 +110,17 @@ export default function ExpensesPage() {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Gider Girişi / Expense Entry
+              Unos troška / Gider Girişi
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Yeni gider kaydı oluştur. / Create a new expense record.
+              Kreiraj novi zapis troška. / Yeni gider kaydı oluştur.
             </p>
           </div>
 
           <div className="grid gap-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Gider Türü / Expense Type
+                Tip troška / Gider Türü
               </label>
               <select
                 value={type}
@@ -128,20 +128,20 @@ export default function ExpensesPage() {
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
                 <option>Kira / Rent</option>
-                <option>Maaş / Salary</option>
-                <option>Elektrik / Electricity</option>
-                <option>İnternet / Internet</option>
-                <option>Nakliye / Transport</option>
-                <option>Reklam / Advertising</option>
-                <option>Tamirat / Repair</option>
-                <option>Vergi / Tax</option>
-                <option>Diğer / Other</option>
+                <option>Plata / Maaş</option>
+                <option>Struja / Elektrik</option>
+                <option>Internet / İnternet</option>
+                <option>Transport / Nakliye</option>
+                <option>Marketing / Reklam</option>
+                <option>Popravka / Tamirat</option>
+                <option>Porez / Vergi</option>
+                <option>Ostalo / Diğer</option>
               </select>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Tutar / Amount
+                Iznos / Tutar
               </label>
               <input
                 type="number"
@@ -155,12 +155,12 @@ export default function ExpensesPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Not / Note
+                Napomena / Not
               </label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Gider açıklaması / Expense note"
+                placeholder="Opciona napomena / Gider açıklaması"
                 rows={4}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
@@ -171,23 +171,23 @@ export default function ExpensesPage() {
               disabled={saving}
               className="mt-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
+              {saving ? "Čuva se... / Kaydediliyor..." : "Sačuvaj / Kaydet"}
             </button>
           </div>
         </section>
 
         <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <h2 className="text-lg font-semibold">
-            Gider Özeti / Expense Summary
+            Sažetak troškova / Gider Özeti
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Genel gider görünümü. / Overall expense overview.
+            Opšti pregled troškova. / Genel gider görünümü.
           </p>
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Toplam Gider / Total Expense
+                Ukupni troškovi / Toplam Gider
               </p>
               <p className="mt-2 text-2xl font-bold text-red-300">
                 €{totalExpense.toFixed(2)}
@@ -196,7 +196,7 @@ export default function ExpensesPage() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Bu Ay / This Month
+                Ovaj mjesec / Bu Ay
               </p>
               <p className="mt-2 text-xl font-semibold text-white">
                 €{thisMonthExpense.toFixed(2)}
@@ -205,7 +205,7 @@ export default function ExpensesPage() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Kayıt Sayısı / Record Count
+                Broj zapisa / Kayıt Sayısı
               </p>
               <p className="mt-2 text-xl font-semibold text-white">
                 {expenses.length}
@@ -218,35 +218,32 @@ export default function ExpensesPage() {
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Son Giderler / Recent Expenses
+            Posljednji troškovi / Son Giderler
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            En son eklenen gider kayıtları. / Most recently added expense records.
+            Najnoviji unosi troškova. / En son eklenen gider kayıtları.
           </p>
         </div>
 
         {loading ? (
           <div className="text-sm text-slate-400">
-            Yükleniyor / Loading...
+            Učitava se / Yükleniyor...
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Tür / Type</th>
-                  <th className="py-3 text-center">Tutar / Amount</th>
-                  <th className="py-3 text-left">Not / Note</th>
-                  <th className="py-3 text-center">Tarih / Date</th>
+                  <th className="py-3 text-left">Tip / Tür</th>
+                  <th className="py-3 text-center">Iznos / Tutar</th>
+                  <th className="py-3 text-left">Napomena / Not</th>
+                  <th className="py-3 text-center">Datum / Tarih</th>
                 </tr>
               </thead>
 
               <tbody>
                 {expenses.slice(0, 15).map((expense) => (
-                  <tr
-                    key={expense.id}
-                    className="border-t border-slate-800 transition hover:bg-slate-800/30"
-                  >
+                  <tr key={expense.id} className="border-t border-slate-800 hover:bg-slate-800/30">
                     <td className="py-3">{expense.type}</td>
                     <td className="py-3 text-center text-red-300 font-medium">
                       €{Number(expense.amount).toFixed(2)}
@@ -261,7 +258,7 @@ export default function ExpensesPage() {
                 {expenses.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-slate-400">
-                      Kayıt yok / No expenses found
+                      Nema zapisa / Kayıt yok
                     </td>
                   </tr>
                 )}
