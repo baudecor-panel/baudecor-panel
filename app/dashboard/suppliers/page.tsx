@@ -243,31 +243,27 @@ export default function SuppliersPage() {
       <div className="mb-8 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-            BAUDECOR SYSTEM
+            BAUDECOR SISTEM / BAUDECOR SİSTEM
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            Tedarikçiler / Suppliers
+            Dobavljači / Tedarikçiler
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-slate-400">
-            Ürün alımı yaptığın firmaları tek merkezden yönet. Bu yapı daha sonra
-            ürün, stok girişi ve geçmiş hareket kayıtlarıyla bağlanacak. / Manage
-            the companies you purchase products from in one place. This structure
-            will be linked later with products, stock entry and historical stock
-            movement records.
+            Upravljaj firmama od kojih kupuješ proizvode na jednom mjestu. Ova struktura će kasnije biti povezana sa proizvodima, unosom zaliha i istorijom kretanja. / Ürün alımı yaptığın firmaları tek merkezden yönet.
           </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/50 px-5 py-4 shadow-2xl shadow-black/20">
             <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-              Toplam / Total
+              Ukupno / Toplam
             </p>
             <p className="mt-2 text-3xl font-bold text-white">{stats.total}</p>
           </div>
 
           <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 shadow-2xl shadow-black/20">
             <p className="text-xs uppercase tracking-[0.22em] text-emerald-300/70">
-              Aktif / Active
+              Aktivno / Aktif
             </p>
             <p className="mt-2 text-3xl font-bold text-emerald-300">
               {stats.active}
@@ -276,7 +272,7 @@ export default function SuppliersPage() {
 
           <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 px-5 py-4 shadow-2xl shadow-black/20">
             <p className="text-xs uppercase tracking-[0.22em] text-amber-300/70">
-              Pasif / Passive
+              Pasivno / Pasif
             </p>
             <p className="mt-2 text-3xl font-bold text-amber-300">
               {stats.passive}
@@ -291,12 +287,11 @@ export default function SuppliersPage() {
             <div>
               <h2 className="text-lg font-semibold">
                 {editingId !== null
-                  ? "Tedarikçi Düzenle / Edit Supplier"
-                  : "Yeni Tedarikçi / New Supplier"}
+                  ? "Uredi dobavljača / Tedarikçi Düzenle"
+                  : "Novi dobavljač / Yeni Tedarikçi"}
               </h2>
               <p className="mt-1 text-sm text-slate-400">
-                Firma bilgilerini gir, düzenle ve kayıt altına al. / Enter,
-                update and store supplier details.
+                Unesi, ažuriraj i sačuvaj podatke o firmi. / Firma bilgilerini gir, düzenle ve kayıt altına al.
               </p>
             </div>
 
@@ -306,7 +301,7 @@ export default function SuppliersPage() {
                 onClick={resetForm}
                 className="rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
               >
-                İptal / Cancel
+                Otkaži / İptal
               </button>
             )}
           </div>
@@ -314,7 +309,7 @@ export default function SuppliersPage() {
           <div className="grid gap-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Firma Adı / Supplier Name
+                Naziv firme / Firma Adı
               </label>
               <input
                 value={name}
@@ -327,7 +322,7 @@ export default function SuppliersPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Yetkili Kişi / Contact Person
+                  Kontakt osoba / Yetkili Kişi
                 </label>
                 <input
                   value={contactPerson}
@@ -339,7 +334,7 @@ export default function SuppliersPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Telefon / Phone
+                  Telefon / Telefon
                 </label>
                 <input
                   value={phone}
@@ -352,7 +347,7 @@ export default function SuppliersPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                E-posta / Email
+                Email / E-posta
               </label>
               <input
                 type="email"
@@ -365,7 +360,7 @@ export default function SuppliersPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Adres / Address
+                Adresa / Adres
               </label>
               <textarea
                 value={address}
@@ -378,7 +373,7 @@ export default function SuppliersPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Not / Note
+                Napomena / Not
               </label>
               <textarea
                 value={note}
@@ -397,10 +392,10 @@ export default function SuppliersPage() {
                 className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving
-                  ? "Kaydediliyor... / Saving..."
+                  ? "Čuva se... / Kaydediliyor..."
                   : editingId !== null
-                  ? "Güncelle / Update"
-                  : "Kaydet / Save"}
+                  ? "Ažuriraj / Güncelle"
+                  : "Sačuvaj / Kaydet"}
               </button>
 
               <button
@@ -408,7 +403,7 @@ export default function SuppliersPage() {
                 onClick={resetForm}
                 className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
               >
-                Temizle / Clear
+                Očisti / Temizle
               </button>
             </div>
           </div>
@@ -418,18 +413,17 @@ export default function SuppliersPage() {
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                Firma Listesi / Supplier List
+                Lista firmi / Firma Listesi
               </h2>
               <p className="mt-1 text-sm text-slate-400">
-                Tedarikçi kayıtlarını ara, filtrele ve yönet. / Search, filter
-                and manage supplier records.
+                Pretražuj, filtriraj i upravljaj zapisima dobavljača. / Tedarikçi kayıtlarını ara, filtrele ve yönet.
               </p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-[1fr_220px]">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Arama / Search
+                  Pretraga / Arama
                 </label>
                 <input
                   value={searchTerm}
@@ -441,7 +435,7 @@ export default function SuppliersPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Durum / Status
+                  Status / Durum
                 </label>
                 <select
                   value={statusFilter}
@@ -450,9 +444,9 @@ export default function SuppliersPage() {
                   }
                   className="h-[52px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option value="all">Tümü / All</option>
-                  <option value="active">Aktif / Active</option>
-                  <option value="passive">Pasif / Passive</option>
+                  <option value="all">Sve / Tümü</option>
+                  <option value="active">Aktivno / Aktif</option>
+                  <option value="passive">Pasivno / Pasif</option>
                 </select>
               </div>
             </div>
@@ -464,22 +458,22 @@ export default function SuppliersPage() {
                 <thead className="bg-slate-950/80">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Firma / Supplier
+                      Firma / Dobavljač
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Yetkili / Contact
+                      Kontakt / Yetkili
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Telefon / Phone
+                      Telefon / Telefon
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      E-posta / Email
+                      Email / E-posta
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Durum / Status
+                      Status / Durum
                     </th>
                     <th className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      İşlem / Action
+                      Akcija / İşlem
                     </th>
                   </tr>
                 </thead>
@@ -491,7 +485,7 @@ export default function SuppliersPage() {
                         colSpan={6}
                         className="px-4 py-10 text-center text-sm text-slate-400"
                       >
-                        Tedarikçiler yükleniyor... / Suppliers are loading...
+                        Dobavljači se učitavaju... / Tedarikçiler yükleniyor...
                       </td>
                     </tr>
                   ) : filteredSuppliers.length === 0 ? (
@@ -500,7 +494,7 @@ export default function SuppliersPage() {
                         colSpan={6}
                         className="px-4 py-10 text-center text-sm text-slate-400"
                       >
-                        Kayıt bulunamadı / No records found
+                        Nema zapisa / Kayıt bulunamadı
                       </td>
                     </tr>
                   ) : (
@@ -541,8 +535,8 @@ export default function SuppliersPage() {
                             }`}
                           >
                             {supplier.is_active
-                              ? "Aktif / Active"
-                              : "Pasif / Passive"}
+                              ? "Aktivno / Aktif"
+                              : "Pasivno / Pasif"}
                           </span>
                         </td>
 
@@ -553,7 +547,7 @@ export default function SuppliersPage() {
                               onClick={() => fillFormForEdit(supplier)}
                               className="rounded-2xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-blue-500/10"
                             >
-                              Düzenle / Edit
+                              Uredi / Düzenle
                             </button>
 
                             <button
@@ -566,8 +560,8 @@ export default function SuppliersPage() {
                               }`}
                             >
                               {supplier.is_active
-                                ? "Pasife Al / Set Passive"
-                                : "Aktif Et / Activate"}
+                                ? "Pasiviraj / Pasife Al"
+                                : "Aktiviraj / Aktif Et"}
                             </button>
                           </div>
                         </td>
@@ -580,7 +574,7 @@ export default function SuppliersPage() {
           </div>
 
           <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-xs text-slate-500">
-            Toplam gösterilen kayıt / Total visible records:{" "}
+            Ukupno prikazanih zapisa / Toplam gösterilen kayıt:{" "}
             <span className="font-semibold text-slate-300">
               {filteredSuppliers.length}
             </span>
