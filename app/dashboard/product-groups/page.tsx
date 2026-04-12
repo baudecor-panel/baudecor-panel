@@ -3,23 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type ProductGroup = {
+type Proizvod / ÜrünGroup = {
   id: string;
   name: string;
   created_at?: string;
 };
 
-type ProductRow = {
+type Proizvod / ÜrünRow = {
   id: string;
   name: string;
   group_id?: string | null;
   is_active?: boolean | null;
 };
 
-export default function ProductGroupsPage() {
-  const [groups, setGroups] = useState<ProductGroup[]>([]);
-  const [products, setProducts] = useState<ProductRow[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Proizvod / ÜrünGroupsPage() {
+  const [groups, setGroups] = useState<Proizvod / ÜrünGroup[]>([]);
+  const [products, setProizvod / Ürüns] = useState<Proizvod / ÜrünRow[]>([]);
+  const [loading, setUčitava se / Yükleniyor] = useState(true);
 
   const [newGroupName, setNewGroupName] = useState("");
   const [savingNew, setSavingNew] = useState(false);
@@ -28,16 +28,16 @@ export default function ProductGroupsPage() {
   const [editingName, setEditingName] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [actionLoadingId, setActionLoadingId] = useState("");
+  const [actionUčitava se / YükleniyorId, setActionUčitava se / YükleniyorId] = useState("");
 
   useEffect(() => {
     initializePage();
   }, []);
 
   async function initializePage() {
-    setLoading(true);
-    await Promise.all([fetchGroups(), fetchProducts()]);
-    setLoading(false);
+    setUčitava se / Yükleniyor(true);
+    await Promise.all([fetchGroups(), fetchProizvod / Ürüns()]);
+    setUčitava se / Yükleniyor(false);
   }
 
   async function fetchGroups() {
@@ -51,10 +51,10 @@ export default function ProductGroupsPage() {
       return;
     }
 
-    setGroups((data || []) as ProductGroup[]);
+    setGroups((data || []) as Proizvod / ÜrünGroup[]);
   }
 
-  async function fetchProducts() {
+  async function fetchProizvod / Ürüns() {
     const { data, error } = await supabase
       .from("products")
       .select("id, name, group_id, is_active")
@@ -65,7 +65,7 @@ export default function ProductGroupsPage() {
       return;
     }
 
-    setProducts((data || []) as ProductRow[]);
+    setProizvod / Ürüns((data || []) as Proizvod / ÜrünRow[]);
   }
 
   function normalizeName(value: string) {
@@ -109,7 +109,7 @@ export default function ProductGroupsPage() {
     await fetchGroups();
   }
 
-  function startEdit(group: ProductGroup) {
+  function startEdit(group: Proizvod / ÜrünGroup) {
     setEditingGroupId(group.id);
     setEditingName(group.name);
   }
@@ -159,22 +159,22 @@ export default function ProductGroupsPage() {
     await fetchGroups();
   }
 
-  function getProductsInGroup(groupId: string) {
+  function getProizvod / ÜrünsInGroup(groupId: string) {
     return products.filter((product) => product.group_id === groupId);
   }
 
-  function getActiveProductsInGroup(groupId: string) {
+  function getAktivno / AktifProizvod / ÜrünsInGroup(groupId: string) {
     return products.filter(
       (product) => product.group_id === groupId && (product.is_active ?? true) === true
     );
   }
 
-  async function deleteGroup(group: ProductGroup) {
-    const linkedProducts = getProductsInGroup(group.id);
+  async function deleteGroup(group: Proizvod / ÜrünGroup) {
+    const linkedProizvod / Ürüns = getProizvod / ÜrünsInGroup(group.id);
 
-    if (linkedProducts.length > 0) {
+    if (linkedProizvod / Ürüns.length > 0) {
       alert(
-        `Ova grupa se ne može obrisati jer ima ${linkedProducts.length} ürün var. Önce ürünlerin grubunu değiştir. / This group cannot be deleted because ${linkedProducts.length} product(s) are linked to it. Reassign products first.`
+        `Ova grupa se ne može obrisati jer ima ${linkedProizvod / Ürüns.length} ürün var. Önce ürünlerin grubunu değiştir. / This group cannot be deleted because ${linkedProizvod / Ürüns.length} product(s) are linked to it. Reassign products first.`
       );
       return;
     }
@@ -185,14 +185,14 @@ export default function ProductGroupsPage() {
 
     if (!confirmed) return;
 
-    setActionLoadingId(group.id);
+    setActionUčitava se / YükleniyorId(group.id);
 
     const { error } = await supabase
       .from("product_groups")
       .delete()
       .eq("id", group.id);
 
-    setActionLoadingId("");
+    setActionUčitava se / YükleniyorId("");
 
     if (error) {
       alert("Grup silinemedi / Brisanje nije uspjelo: " + error.message);
@@ -209,14 +209,14 @@ export default function ProductGroupsPage() {
 
   const summary = useMemo(() => {
     const totalGroups = groups.length;
-    const usedGroups = groups.filter((group) => getProductsInGroup(group.id).length > 0).length;
+    const usedGroups = groups.filter((group) => getProizvod / ÜrünsInGroup(group.id).length > 0).length;
     const emptyGroups = totalGroups - usedGroups;
 
     return {
       totalGroups,
       usedGroups,
       emptyGroups,
-      totalProducts: products.length,
+      totalProizvod / Ürüns: products.length,
     };
   }, [groups, products]);
 
@@ -250,7 +250,7 @@ export default function ProductGroupsPage() {
         />
         <SummaryCard
           title="Povezani proizvodi / Bağlı Ürün"
-          value={String(summary.totalProducts)}
+          value={String(summary.totalProizvod / Ürüns)}
         />
       </div>
 
@@ -299,7 +299,7 @@ export default function ProductGroupsPage() {
             />
             <InfoCard
               title="Tok / Akış"
-              value="Gruplar → Ürünler → Satış / Stok / Groups → Products → Sales / Stock"
+              value="Gruplar → Ürünler → Satış / Stok / Groups → Proizvod / Ürüns → Sales / Stock"
             />
             <InfoCard
               title="Napomena / Not"
@@ -373,9 +373,9 @@ export default function ProductGroupsPage() {
 
               <tbody>
                 {groups.map((group) => {
-                  const linkedProducts = getProductsInGroup(group.id);
-                  const activeProducts = getActiveProductsInGroup(group.id);
-                  const busy = actionLoadingId === group.id;
+                  const linkedProizvod / Ürüns = getProizvod / ÜrünsInGroup(group.id);
+                  const activeProizvod / Ürüns = getAktivno / AktifProizvod / ÜrünsInGroup(group.id);
+                  const busy = actionUčitava se / YükleniyorId === group.id;
 
                   return (
                     <tr
@@ -383,10 +383,10 @@ export default function ProductGroupsPage() {
                       className="border-t border-slate-800 transition hover:bg-slate-800/30"
                     >
                       <td className="py-3 font-medium text-white">{group.name}</td>
-                      <td className="py-3 text-center">{linkedProducts.length}</td>
-                      <td className="py-3 text-center">{activeProducts.length}</td>
+                      <td className="py-3 text-center">{linkedProizvod / Ürüns.length}</td>
+                      <td className="py-3 text-center">{activeProizvod / Ürüns.length}</td>
                       <td className="py-3">
-                        {linkedProducts.length > 0 ? (
+                        {linkedProizvod / Ürüns.length > 0 ? (
                           <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
                             U upotrebi / Kullanılıyor
                           </span>
