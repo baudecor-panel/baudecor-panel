@@ -276,7 +276,7 @@ export default function DashboardPage() {
     const map = new Map<string, number>();
 
     filteredSales.forEach((sale) => {
-      const name = sale.product_name || "Bilinmiyor / Unknown";
+      const name = sale.product_name || "Nepoznato / Bilinmiyor";
       map.set(name, (map.get(name) || 0) + Number(sale.total || 0));
     });
 
@@ -300,7 +300,7 @@ export default function DashboardPage() {
     const map = new Map<string, { total: number; count: number }>();
 
     filteredSales.forEach((sale) => {
-      const city = sale.city || "Bilinmiyor / Unknown";
+      const city = sale.city || "Nepoznato / Bilinmiyor";
 
       if (!map.has(city)) {
         map.set(city, { total: 0, count: 0 });
@@ -325,7 +325,7 @@ export default function DashboardPage() {
     const map = new Map<string, { total: number; orderSet: Set<string> }>();
 
     filteredSales.forEach((sale) => {
-      const customer = sale.customer_name || "Bilinmiyor / Unknown";
+      const customer = sale.customer_name || "Nepoznato / Bilinmiyor";
       const orderKey = sale.order_id || `fallback_${sale.id}`;
 
       if (!map.has(customer)) {
@@ -351,7 +351,7 @@ export default function DashboardPage() {
     const map = new Map<string, { profit: number; orderSet: Set<string> }>();
 
     filteredSales.forEach((sale) => {
-      const customer = sale.customer_name || "Bilinmiyor / Unknown";
+      const customer = sale.customer_name || "Nepoznato / Bilinmiyor";
       const orderKey = sale.order_id || `fallback_${sale.id}`;
 
       const productName = sale.product_name || "";
@@ -389,7 +389,7 @@ export default function DashboardPage() {
         const stockProfit = unitProfit * stock;
 
         return {
-          name: product.name || "Bilinmiyor / Unknown",
+          name: product.name || "Nepoznato / Bilinmiyor",
           price,
           cost,
           stock,
@@ -446,7 +446,7 @@ export default function DashboardPage() {
         if (!level) return null;
 
         return {
-          name: product.name || "Bilinmiyor / Unknown",
+          name: product.name || "Nepoznato / Bilinmiyor",
           stock,
           minimumStock,
           level,
@@ -501,7 +501,7 @@ export default function DashboardPage() {
 
     if (filteredSales.length === 0) {
       list.push({
-        text: "Seçili dönemde satış yok / No sales in selected period",
+        text: "Nema prodaje u izabranom periodu / Seçili dönemde satış yok",
         type: "danger",
       });
     }
@@ -515,42 +515,42 @@ export default function DashboardPage() {
 
     if (cancelRate > 0.3) {
       list.push({
-        text: "İptal oranı yüksek / High cancellation rate",
+        text: "Visoka stopa otkazivanja / İptal oranı yüksek",
         type: "warning",
       });
     }
 
     if (pendingPaymentsTotal > 1000) {
       list.push({
-        text: "Bekleyen ödeme yüksek / Pending payments are high",
+        text: "Iznos čekajućih uplata je visok / Bekleyen ödeme yüksek",
         type: "warning",
       });
     }
 
     if (deliveryBacklog > 20) {
       list.push({
-        text: "Teslimat bekleyen sipariş sayısı yüksek / Delivery backlog is high",
+        text: "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
         type: "info",
       });
     }
 
     if (stockAlerts.some((item) => item.level === "out")) {
       list.push({
-        text: "Stoğu biten ürün var / Out of stock product detected",
+        text: "Otkriven je proizvod bez zalihe / Stoğu biten ürün var",
         type: "danger",
       });
     }
 
     if (stockAlerts.some((item) => item.level === "critical")) {
       list.push({
-        text: "Kritik stok seviyesinde ürün var / Critical stock level detected",
+        text: "Otkriven je proizvod na kritičnom nivou zalihe / Kritik stok seviyesinde ürün var",
         type: "warning",
       });
     }
 
     if (stockAlerts.length > 0) {
       list.push({
-        text: "Düşük stoklu ürünler izlenmeli / Low-stock products should be monitored",
+        text: "Proizvode sa niskom zalihom treba pratiti / Düşük stoklu ürünler izlenmeli",
         type: "info",
       });
     }
@@ -563,39 +563,39 @@ export default function DashboardPage() {
 
     if (totalRevenue > 0 && totalProfit <= 0) {
       list.push({
-        title: "Kâr Baskısı / Margin Pressure",
-        text: "Satış var ancak dönem kârlılığı zayıf. Fiyatlama veya maliyet yapısı gözden geçirilmeli.",
+        title: "Pritisak na profit / Kâr Baskısı",
+        text: "Prodaja postoji, ali je profitabilnost perioda slaba. Treba pregledati cijene ili strukturu troškova / Satış var ancak dönem kârlılığı zayıf. Fiyatlama veya maliyet yapısı gözden geçirilmeli.",
         tone: "danger",
       });
     }
 
     if (pendingPaymentRate >= 30) {
       list.push({
-        title: "Tahsilat Riski / Collection Risk",
-        text: "Cironun önemli bölümü henüz tahsil edilmemiş durumda. Nakit akışı baskı altında olabilir.",
+        title: "Rizik naplate / Tahsilat Riski",
+        text: "Važan dio prihoda još nije naplaćen. Novčani tok može biti pod pritiskom / Cironun önemli bölümü henüz tahsil edilmemiş durumda. Nakit akışı baskı altında olabilir.",
         tone: "warning",
       });
     }
 
     if (criticalStockCount + outOfStockCount >= 5) {
       list.push({
-        title: "Stok Baskısı / Stock Pressure",
-        text: "Birden fazla ürün minimum stok seviyesinde veya tamamen tükenmiş. Satış kaybı riski artıyor.",
+        title: "Pritisak zalihe / Stok Baskısı",
+        text: "Više proizvoda je na minimalnom nivou zalihe ili je potpuno potrošeno. Rizik gubitka prodaje raste / Birden fazla ürün minimum stok seviyesinde veya tamamen tükenmiş. Satış kaybı riski artıyor.",
         tone: "danger",
       });
     }
 
     if (completionRate >= 70 && cancellationRate <= 10) {
       list.push({
-        title: "Operasyon Gücü / Operational Strength",
-        text: "Tamamlanma oranı güçlü ve iptal oranı kontrollü. Operasyon kalitesi sağlıklı görünüyor.",
+        title: "Operativna snaga / Operasyon Gücü",
+        text: "Stopa završetka je snažna, a stopa otkazivanja pod kontrolom. Kvalitet operacija izgleda zdravo / Tamamlanma oranı güçlü ve iptal oranı kontrollü. Operasyon kalitesi sağlıklı görünüyor.",
         tone: "positive",
       });
     }
 
     if (averageOrderValue > 0 && totalOrders > 0) {
       list.push({
-        title: "Sepet Kalitesi / Basket Quality",
+        title: "Kvalitet korpe / Sepet Kalitesi",
         text: `Ortalama sipariş değeri €${averageOrderValue.toFixed(
           2
         )}. Üst segment satış performansı bu metrikten izlenebilir.`,
@@ -605,8 +605,8 @@ export default function DashboardPage() {
 
     if (list.length === 0) {
       list.push({
-        title: "Dengeli Görünüm / Balanced View",
-        text: "Seçili dönemde aşırı negatif sinyal görünmüyor. Yine de ödeme, stok ve teslimat dengesi izlenmeli.",
+        title: "Uravnotežen prikaz / Dengeli Görünüm",
+        text: "U izabranom periodu nema pretjerano negativnih signala. Ipak, treba pratiti ravnotežu plaćanja, zalihe i isporuke / Seçili dönemde aşırı negatif sinyal görünmüyor. Yine de ödeme, stok ve teslimat dengesi izlenmeli.",
         tone: "neutral",
       });
     }
@@ -625,16 +625,16 @@ export default function DashboardPage() {
   ]);
 
   function getRangeLabel(value: RangeType) {
-    if (value === "today") return "Bugün / Today";
-    if (value === "week") return "Bu Hafta / This Week";
-    if (value === "month") return "Bu Ay / This Month";
-    return "Bu Yıl / This Year";
+    if (value === "today") return "Danas / Bugün";
+    if (value === "week") return "Ove sedmice / Bu Hafta";
+    if (value === "month") return "Ovog mjeseca / Bu Ay";
+    return "Ove godine / Bu Yıl";
   }
 
   function getStockLabel(level: StockAlertItem["level"]) {
-    if (level === "out") return "Stok Yok / Out of Stock";
-    if (level === "critical") return "Kritik / Critical";
-    return "Düşük / Low";
+    if (level === "out") return "Nema na stanju / Stok Yok";
+    if (level === "critical") return "Kritično / Kritik";
+    return "Nisko / Düşük";
   }
 
   function getStockClass(level: StockAlertItem["level"]) {
@@ -654,7 +654,7 @@ export default function DashboardPage() {
             Kontrolna tabla / Kontrol Paneli
           </h1>
           <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-slate-400">
-            Yükleniyor / Loading...
+            Učitava se / Yükleniyor
           </div>
         </div>
       </main>
@@ -669,7 +669,7 @@ export default function DashboardPage() {
           disabled={loggingOut}
           className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loggingOut ? "Çıkış yapılıyor... / Logging out..." : "Çıkış Yap / Logout"}
+          {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
         </button>
       </div>
 
@@ -711,25 +711,25 @@ export default function DashboardPage() {
               <HeroStatCard
                 label="Ukupan prihod / Toplam Ciro"
                 value={`€${totalRevenue.toFixed(2)}`}
-                helper="Seçili dönem geliri / Revenue for selected period"
+                helper="Prihod izabranog perioda / Seçili dönem geliri"
                 tone="blue"
               />
               <HeroStatCard
                 label="Ukupan profit / Toplam Kâr"
                 value={`€${totalProfit.toFixed(2)}`}
-                helper="Brüt kârlılık görünümü / Gross profit view"
+                helper="Pregled bruto profitabilnosti / Brüt kârlılık görünümü"
                 tone={totalProfit >= 0 ? "green" : "red"}
               />
               <HeroStatCard
-                label="Sipariş / Orders"
+                label="Narudžbe / Sipariş"
                 value={String(totalOrders)}
-                helper="Benzersiz sipariş toplamı / Unique order count"
+                helper="Ukupan broj jedinstvenih narudžbi / Benzersiz sipariş toplamı"
                 tone="slate"
               />
               <HeroStatCard
                 label="Zdravlje zalihe / Stok Sağlığı"
                 value={`%${stockHealthRate}`}
-                helper="Minimum stok üstü ürün oranı / Share of products above minimum stock"
+                helper="Udio proizvoda iznad minimalne zalihe / Minimum stok üstü ürün oranı"
                 tone={
                   stockHealthRate >= 75
                     ? "green"
@@ -745,37 +745,37 @@ export default function DashboardPage() {
             <ExecutiveMetric
               title="Stopa završetka / Tamamlanma Oranı"
               value={`%${completionRate}`}
-              subtitle="Teslim + ödeme tamamlanan siparişler / Delivered and paid orders"
+              subtitle="Isporučene i plaćene narudžbe / Teslim + ödeme tamamlanan siparişler"
               tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
             />
             <ExecutiveMetric
               title="Stopa otkazivanja / İptal Oranı"
               value={`%${cancellationRate}`}
-              subtitle="Dönem içi iptal baskısı / Cancellation pressure in period"
+              subtitle="Pritisak otkazivanja u periodu / Dönem içi iptal baskısı"
               tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
               title="Plaćanje na čekanju / Bekleyen Ödeme"
               value={`€${pendingPaymentsTotal.toFixed(2)}`}
-              subtitle={`Cironun %${pendingPaymentRate}'i`}
+              subtitle={`Prihodun %${pendingPaymentRate} / Cironun %${pendingPaymentRate}'i`}
               tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
             />
             <ExecutiveMetric
               title="Zaostale isporuke / Teslimat Backlog"
               value={String(deliveryBacklog)}
-              subtitle="Kapanmamış teslimatlar / Undelivered orders"
+              subtitle="Nezatvorene isporuke / Kapanmamış teslimatlar"
               tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
               title="Kritična zaliha / Kritik Stok"
               value={String(criticalStockCount)}
-              subtitle="Minimum stok seviyesinde / At minimum stock"
+              subtitle="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
               tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
             />
             <ExecutiveMetric
               title="Proizvod bez zalihe / Stoksuz Ürün"
               value={String(outOfStockCount)}
-              subtitle="Doğrudan satış kaybı riski / Immediate lost-sales risk"
+              subtitle="Neposredan rizik gubitka prodaje / Doğrudan satış kaybı riski"
               tone={outOfStockCount === 0 ? "green" : "red"}
             />
           </div>
@@ -790,7 +790,7 @@ export default function DashboardPage() {
                 PRIORITY ALERTS
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
-                Kritična upozorenja / Uyarılar
+                Kritična upozorenja / Kritik Uyarılar
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
@@ -801,7 +801,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {alerts.length === 0 ? (
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                Her şey normal / All good
+                Sve je u redu / Her şey normal
               </div>
             ) : (
               alerts.map((alert, index) => (
@@ -833,7 +833,7 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Yönetim özeti / Executive summary
+              Sažetak za upravu / Yönetim özeti
             </div>
           </div>
 
@@ -861,12 +861,12 @@ export default function DashboardPage() {
                 Trend prodaje i profita / Satış ve Kâr Trendi
               </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir. / Shows how sales volume and profitability move together in the selected period.
+                Prikazuje kako se obim prodaje i profitabilnost zajedno kreću u izabranom periodu / Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Ortalama sipariş / Average order: €{averageOrderValue.toFixed(2)}
+              Prosječna narudžba / Ortalama sipariş: €{averageOrderValue.toFixed(2)}
             </div>
           </div>
 
@@ -916,33 +916,33 @@ export default function DashboardPage() {
               Rizik zalihe / Stok Riski
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar. / Products that may create lost-sales risk based on minimum stock are highlighted here.
+              Ovdje su istaknuti proizvodi koji mogu izazvati gubitak prodaje prema minimalnoj zalihi / Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <MiniRiskCard
-              title="Kritik Ürün / Critical Items"
+              title="Kritični proizvodi / Kritik Ürün"
               value={String(criticalStockCount)}
-              helper="Minimum stok seviyesinde / At minimum stock"
+              helper="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
               tone="amber"
             />
             <MiniRiskCard
               title="Stoksuz / Out of Stock"
               value={String(outOfStockCount)}
-              helper="Acil müdahale gerekir / Immediate action needed"
+              helper="Potrebna hitna intervencija / Acil müdahale gerekir"
               tone="red"
             />
             <MiniRiskCard
-              title="Düşük Stok / Low Stock"
+              title="Niska zaliha / Düşük Stok"
               value={String(lowStockCount)}
-              helper="Yakın risk alanı / Near-risk zone"
+              helper="Zona bliskog rizika / Yakın risk alanı"
               tone="blue"
             />
             <MiniRiskCard
               title="Stok Sağlığı"
               value={`%${stockHealthRate}`}
-              helper="Genel ürün sağlığı / Overall product health"
+              helper="Opšte stanje proizvoda / Genel ürün sağlığı"
               tone={
                 stockHealthRate >= 75
                   ? "green"
@@ -956,7 +956,7 @@ export default function DashboardPage() {
           <div className="mt-5 space-y-3">
             {stockAlerts.length === 0 ? (
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                Stoklar normal / Stock levels are healthy
+                Nivo zalihe je zdrav / Stoklar normal
               </div>
             ) : (
               stockAlerts.map((item, index) => (
@@ -980,11 +980,11 @@ export default function DashboardPage() {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <ValueStrip
-              label="Envanter Maliyeti / Inventory Cost"
+              label="Trošak inventara / Envanter Maliyeti"
               value={`€${inventoryCostValue.toFixed(2)}`}
             />
             <ValueStrip
-              label="Satış Değeri / Sale Value"
+              label="Vrijednost prodaje / Satış Değeri"
               value={`€${inventorySaleValue.toFixed(2)}`}
             />
           </div>
@@ -994,32 +994,32 @@ export default function DashboardPage() {
 
       <section className="mb-8 grid gap-6 xl:grid-cols-3">
         <PanelCard
-          title="Sažetak profita / Kârlılık Özeti"
+          title="Sažetak profitabilnosti / Kârlılık Özeti"
           subtitle="Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <MiniRiskCard
-              title="Potansiyel Kâr / Potential Profit"
+              title="Potencijalni profit / Potansiyel Kâr"
               value={`€${totalPotentialProfit.toFixed(2)}`}
-              helper="Stoktaki ürünlerden beklenen kâr / Expected profit from current stock"
+              helper="Očekivani profit iz postojeće zalihe / Stoktaki ürünlerden beklenen kâr"
               tone={totalPotentialProfit >= 0 ? "green" : "red"}
             />
             <MiniRiskCard
-              title="Ortalama Marj / Average Margin"
+              title="Prosječna marža / Ortalama Marj"
               value={`%${averageMarginPercent.toFixed(1)}`}
-              helper="Aktif ürünlerin ortalama marjı / Average margin across active products"
+              helper="Prosječna marža aktivnih proizvoda / Aktif ürünlerin ortalama marjı"
               tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
             />
             <MiniRiskCard
-              title="Kârlı Ürün / Profitable Products"
+              title="Profitabilni proizvodi / Kârlı Ürün"
               value={String(profitableProductCount)}
-              helper="Birim kârı pozitif ürünler / Products with positive unit profit"
+              helper="Proizvodi sa pozitivnim jediničnim profitom / Birim kârı pozitif ürünler"
               tone="green"
             />
             <MiniRiskCard
-              title="Zarardaki Ürün / Loss-making Products"
+              title="Proizvodi u gubitku / Zarardaki Ürün"
               value={String(losingProductCount)}
-              helper="Birim kârı negatif ürünler / Products with negative unit profit"
+              helper="Proizvodi sa negativnim jediničnim profitom / Birim kârı negatif ürünler"
               tone={losingProductCount === 0 ? "green" : "red"}
             />
           </div>
@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
 
         <PanelCard
           title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
-          subtitle="Stok kâr potansiyeline göre en güçlü ürünler."
+          subtitle="Najjači proizvodi prema profitnom potencijalu zalihe / Stok kâr potansiyeline göre en güçlü ürünler."
         >
           <div className="space-y-3">
             {topProfitableProducts.length === 0 ? (
@@ -1038,7 +1038,7 @@ export default function DashboardPage() {
                   key={item.name}
                   rank={index + 1}
                   title={item.name}
-                  subtitle={`Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
+                  subtitle={`Marža %${item.marginPercent.toFixed(1)} • Zaliha ${item.stock} / Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
                   value={`€${item.stockProfit.toFixed(2)}`}
                   valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"}
                 />
@@ -1049,7 +1049,7 @@ export default function DashboardPage() {
 
         <PanelCard
           title="Najslabija marža / En Zayıf Marj"
-          subtitle="Marj yüzdesi en düşük ürünler."
+          subtitle="Proizvodi sa najnižim procentom marže / Marj yüzdesi en düşük ürünler."
         >
           <div className="space-y-3">
             {worstMarginProducts.length === 0 ? (
@@ -1060,7 +1060,7 @@ export default function DashboardPage() {
                   key={item.name}
                   rank={index + 1}
                   title={item.name}
-                  subtitle={`Birim kâr / Unit profit: €${item.unitProfit.toFixed(2)}`}
+                  subtitle={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`}
                   value={`%${item.marginPercent.toFixed(1)}`}
                   valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"}
                 />
@@ -1073,7 +1073,7 @@ export default function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
         <PanelCard
           title="Najbolji proizvodi / En İyi Ürünler"
-          subtitle="Seçili dönemde en fazla ciro üreten ürünler."
+          subtitle="Proizvodi koji u izabranom periodu donose najviše prihoda / Seçili dönemde en fazla ciro üreten ürünler."
         >
           <div className="space-y-3">
             {topProducts.length === 0 ? (
@@ -1084,7 +1084,7 @@ export default function DashboardPage() {
                   key={item.name}
                   rank={index + 1}
                   title={item.name}
-                  subtitle="Ciro katkısı"
+                  subtitle="Doprinos prihodu / Ciro katkısı"
                   value={`€${item.total.toFixed(2)}`}
                   valueClassName="text-emerald-300"
                 />
@@ -1094,8 +1094,8 @@ export default function DashboardPage() {
         </PanelCard>
 
         <PanelCard
-          title="Performanse po gradovima / Şehir Performansı"
-          subtitle="En yüksek ciroya sahip şehirler."
+          title="Učinak po gradu / Şehir Performansı"
+          subtitle="Gradovi sa najvećim prihodom / En yüksek ciroya sahip şehirler."
         >
           <div className="space-y-3">
             {cityStats.length === 0 ? (
@@ -1106,7 +1106,7 @@ export default function DashboardPage() {
                   key={item.city}
                   rank={index + 1}
                   title={item.city}
-                  subtitle={`${item.count} sipariş / orders`}
+                  subtitle={`${item.count} narudžba / sipariş`}
                   value={`€${item.total.toFixed(2)}`}
                   valueClassName="text-violet-300"
                 />
@@ -1117,7 +1117,7 @@ export default function DashboardPage() {
 
         <PanelCard
           title="Najbolji kupci / En İyi Müşteriler"
-          subtitle="En fazla ciro bırakan müşteriler."
+          subtitle="Kupci koji ostavljaju najviše prihoda / En fazla ciro bırakan müşteriler."
         >
           <div className="space-y-3">
             {customerStats.length === 0 ? (
@@ -1128,7 +1128,7 @@ export default function DashboardPage() {
                   key={item.customer}
                   rank={index + 1}
                   title={item.customer}
-                  subtitle={`${item.orderCount} sipariş / orders`}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
                   value={`€${item.total.toFixed(2)}`}
                   valueClassName="text-cyan-300"
                 />
@@ -1139,7 +1139,7 @@ export default function DashboardPage() {
 
         <PanelCard
           title="Najprofitabilniji kupci / En Karlı Müşteriler"
-          subtitle="Toplam kâra göre sıralama / Ranked by total profit."
+          subtitle="Poredano prema ukupnom profitu / Toplam kâra göre sıralama."
         >
           <div className="space-y-3">
             {topCustomersByProfit.length === 0 ? (
@@ -1150,7 +1150,7 @@ export default function DashboardPage() {
                   key={item.customer}
                   rank={index + 1}
                   title={item.customer}
-                  subtitle={`${item.orderCount} sipariş / orders`}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
                   value={`€${item.profit.toFixed(2)}`}
                   valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-red-300"}
                 />
@@ -1161,7 +1161,7 @@ export default function DashboardPage() {
 
         <PanelCard
           title="Nedavne prodaje / Son Satışlar"
-          subtitle="Seçili dönemdeki en son satış kayıtları."
+          subtitle="Najnoviji zapisi prodaje u izabranom periodu / Seçili dönemdeki en son satış kayıtları."
         >
           <div className="space-y-3">
             {recentSales.length === 0 ? (
@@ -1174,7 +1174,7 @@ export default function DashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-white">
-                      {sale.product_name || "Bilinmiyor / Unknown"}
+                      {sale.product_name || "Nepoznato / Bilinmiyor"}
                     </p>
                     <p className="mt-1 truncate text-sm text-slate-400">
                       {sale.customer_name || "-"} •{" "}
