@@ -28,13 +28,13 @@ type DispatchRow = {
   created_at: string;
 };
 
-type MethodFilter = "all" | "Kendi Araç / Own Vehicle" | "Kurye / Courier";
+type Metod / YöntemFilter = "all" | "Kendi Araç / Own Vehicle" | "Kurye / Courier";
 
-type DispatchRowWithDistance = DispatchRow & {
+type DispatchRowWithUdaljenost / Mesafe = DispatchRow & {
   showroom_distance: number;
 };
 
-type GroupSection = {
+type Grupa / GrupSection = {
   groupName: string;
   vehicleRows: DispatchRow[];
   courierRows: DispatchRow[];
@@ -60,14 +60,14 @@ const MONTH_NAMES = [
 
 const WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function formatDateValue(date: Date) {
+function formatDatum / TarihValue(date: Datum / Tarih) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const day = String(date.getDatum / Tarih()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
-function parseDateValue(value?: string | null) {
+function parseDatum / TarihValue(value?: string | null) {
   if (!value) return null;
   const parts = value.split("-");
   if (parts.length !== 3) return null;
@@ -78,25 +78,25 @@ function parseDateValue(value?: string | null) {
 
   if (!year || !month || !day) return null;
 
-  return new Date(year, month - 1, day);
+  return new Datum / Tarih(year, month - 1, day);
 }
 
-function getMonthMatrix(baseDate: Date) {
-  const year = baseDate.getFullYear();
-  const month = baseDate.getMonth();
+function getMonthMatrix(baseDatum / Tarih: Datum / Tarih) {
+  const year = baseDatum / Tarih.getFullYear();
+  const month = baseDatum / Tarih.getMonth();
 
-  const firstDay = new Date(year, month, 1);
+  const firstDay = new Datum / Tarih(year, month, 1);
   const firstWeekday = (firstDay.getDay() + 6) % 7;
-  const startDate = new Date(year, month, 1 - firstWeekday);
+  const startDatum / Tarih = new Datum / Tarih(year, month, 1 - firstWeekday);
 
-  const weeks: Date[][] = [];
-  const cursor = new Date(startDate);
+  const weeks: Datum / Tarih[][] = [];
+  const cursor = new Datum / Tarih(startDatum / Tarih);
 
   for (let week = 0; week < 6; week++) {
-    const days: Date[] = [];
+    const days: Datum / Tarih[] = [];
     for (let day = 0; day < 7; day++) {
-      days.push(new Date(cursor));
-      cursor.setDate(cursor.getDate() + 1);
+      days.push(new Datum / Tarih(cursor));
+      cursor.setDatum / Tarih(cursor.getDatum / Tarih() + 1);
     }
     weeks.push(days);
   }
@@ -104,7 +104,7 @@ function getMonthMatrix(baseDate: Date) {
   return weeks;
 }
 
-function normalizeGroupName(value?: string | null) {
+function normalizeGrupa / GrupName(value?: string | null) {
   return (value || "").trim();
 }
 
@@ -116,7 +116,7 @@ function hasValue(value?: string | null) {
   return normalizeText(value).length > 0;
 }
 
-function formatDateForInput(date?: string | null) {
+function formatDatum / TarihForInput(date?: string | null) {
   if (!date) return "";
 
   if (date.includes("-")) return date;
@@ -151,10 +151,10 @@ function isCourierRow(row: DispatchRow) {
   return method === "Kurye / Courier";
 }
 
-function EnglishDatePicker({
+function EnglishDatum / TarihPicker({
   value,
   onChange,
-  placeholder = "Tarih seç / Select date",
+  placeholder = "Tarih seç / Izaberi / Seç date",
 }: {
   value?: string | null;
   onChange: (value: string) => void;
@@ -163,17 +163,17 @@ function EnglishDatePicker({
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const [visibleMonth, setVisibleMonth] = useState<Date>(() => {
-    const parsed = parseDateValue(value);
+  const [visibleMonth, setVisibleMonth] = useState<Datum / Tarih>(() => {
+    const parsed = parseDatum / TarihValue(value);
     return parsed
-      ? new Date(parsed.getFullYear(), parsed.getMonth(), 1)
-      : new Date();
+      ? new Datum / Tarih(parsed.getFullYear(), parsed.getMonth(), 1)
+      : new Datum / Tarih();
   });
 
   useEffect(() => {
-    const parsed = parseDateValue(value);
+    const parsed = parseDatum / TarihValue(value);
     if (parsed) {
-      setVisibleMonth(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+      setVisibleMonth(new Datum / Tarih(parsed.getFullYear(), parsed.getMonth(), 1));
     }
   }, [value]);
 
@@ -214,7 +214,7 @@ function EnglishDatePicker({
               type="button"
               onClick={() =>
                 setVisibleMonth(
-                  new Date(
+                  new Datum / Tarih(
                     visibleMonth.getFullYear(),
                     visibleMonth.getMonth() - 1,
                     1
@@ -235,7 +235,7 @@ function EnglishDatePicker({
               type="button"
               onClick={() =>
                 setVisibleMonth(
-                  new Date(
+                  new Datum / Tarih(
                     visibleMonth.getFullYear(),
                     visibleMonth.getMonth() + 1,
                     1
@@ -259,9 +259,9 @@ function EnglishDatePicker({
             ))}
 
             {monthMatrix.flat().map((day) => {
-              const dayValue = formatDateValue(day);
+              const dayValue = formatDatum / TarihValue(day);
               const isCurrentMonth = day.getMonth() === visibleMonth.getMonth();
-              const isSelected = value === dayValue;
+              const isIzaberi / Seçed = value === dayValue;
 
               return (
                 <button
@@ -272,14 +272,14 @@ function EnglishDatePicker({
                     setOpen(false);
                   }}
                   className={`aspect-square rounded-xl text-sm transition ${
-                    isSelected
+                    isIzaberi / Seçed
                       ? "bg-blue-600 text-white"
                       : isCurrentMonth
                       ? "bg-slate-900 text-white hover:bg-slate-800"
                       : "bg-slate-950 text-slate-500 hover:bg-slate-900"
                   }`}
                 >
-                  {day.getDate()}
+                  {day.getDatum / Tarih()}
                 </button>
               );
             })}
@@ -290,7 +290,7 @@ function EnglishDatePicker({
   );
 }
 
-function getDistanceKm(
+function getUdaljenost / MesafeKm(
   lat1?: number | null,
   lng1?: number | null,
   lat2?: number | null,
@@ -325,7 +325,7 @@ function getDistanceKm(
 
 
 
-function calculateDistance(
+function calculateUdaljenost / Mesafe(
   lat1: number,
   lng1: number,
   lat2: number,
@@ -347,22 +347,22 @@ function calculateDistance(
   return earthRadiusKm * c;
 }
 
-function formatDistance(distance: number) {
+function formatUdaljenost / Mesafe(distance: number) {
   if (!Number.isFinite(distance)) return "Mesafe yok / No distance";
   return `${distance.toFixed(1)} km`;
 }
 
-function getMethodLabel(row: DispatchRow) {
+function getMetod / YöntemLabel(row: DispatchRow) {
   if (isVehicleRow(row)) return "Kendi Araç / Own Vehicle";
   if (isCourierRow(row)) return "Kurye / Courier";
   return normalizeText(row.delivery_method) || "Belirsiz / Unknown";
 }
 
-function buildGroupSections(rows: DispatchRow[]) {
+function buildGrupa / GrupSections(zapisi / kayıt: DispatchRow[]) {
   const map = new Map<string, DispatchRow[]>();
 
-  rows.forEach((row) => {
-    const groupName = normalizeGroupName(row.dispatch_group);
+  zapisi / kayıt.forEach((row) => {
+    const groupName = normalizeGrupa / GrupName(row.dispatch_group);
     if (!groupName) return;
 
     if (!map.has(groupName)) {
@@ -402,16 +402,16 @@ function buildGroupSections(rows: DispatchRow[]) {
 }
 
 export default function DispatchPage() {
-  const [rows, setRows] = useState<DispatchRow[]>([]);
+  const [zapisi / kayıt, setRows] = useState<DispatchRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [cityFilter, setCityFilter] = useState("all");
-  const [methodFilter, setMethodFilter] = useState<MethodFilter>("all");
-  const [groupFilter, setGroupFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
-  const [groupNameInput, setGroupNameInput] = useState("");
-  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
-  const [optimizingGroup, setOptimizingGroup] = useState<string | null>(null);
+  const [selectedIds, setIzaberi / SeçedIds] = useState<string[]>([]);
+  const [cityFilter, setGrad / ŞehirFilter] = useState("all");
+  const [methodFilter, setMetod / YöntemFilter] = useState<Metod / YöntemFilter>("all");
+  const [groupFilter, setGrupa / GrupFilter] = useState("all");
+  const [dateFilter, setDatum / TarihFilter] = useState("");
+  const [groupNameInput, setGrupa / GrupNameInput] = useState("");
+  const [copiedGrupa / Grup, setCopiedGrupa / Grup] = useState<string | null>(null);
+  const [optimizingGrupa / Grup, setOptimizingGrupa / Grup] = useState<string | null>(null);
   const [savingIds, setSavingIds] = useState<string[]>([]);
 
   async function fetchDispatchRows() {
@@ -430,7 +430,7 @@ export default function DispatchPage() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      alert("Sevkiyat kayıtları alınamadı / Failed to fetch dispatch rows");
+      alert("Sevkiyat kayıtları alınamadı / Failed to fetch dispatch zapisi / kayıt");
       setRows([]);
     } else {
       setRows((data || []) as DispatchRow[]);
@@ -445,15 +445,15 @@ export default function DispatchPage() {
 
   const cityOptions = useMemo(() => {
     return Array.from(
-      new Set(rows.map((row) => row.city?.trim()).filter(Boolean) as string[])
+      new Set(zapisi / kayıt.map((row) => row.city?.trim()).filter(Boolean) as string[])
     ).sort((a, b) => a.localeCompare(b));
-  }, [rows]);
+  }, [zapisi / kayıt]);
 
-  const existingGroups = useMemo(() => {
+  const existingGrupa / Grups = useMemo(() => {
     const counts = new Map<string, number>();
 
-    rows.forEach((row) => {
-      const value = normalizeGroupName(row.dispatch_group);
+    zapisi / kayıt.forEach((row) => {
+      const value = normalizeGrupa / GrupName(row.dispatch_group);
       if (!value) return;
       counts.set(value, (counts.get(value) || 0) + 1);
     });
@@ -461,18 +461,18 @@ export default function DispatchPage() {
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [rows]);
+  }, [zapisi / kayıt]);
 
   const filteredRows = useMemo(() => {
-    return rows.filter((row) => {
+    return zapisi / kayıt.filter((row) => {
       const cityValue = row.city?.trim() || "";
-      const methodLabel = getMethodLabel(row);
-      const groupValue = normalizeGroupName(row.dispatch_group);
-      const rowDate = row.shipment_date || "";
+      const methodLabel = getMetod / YöntemLabel(row);
+      const groupValue = normalizeGrupa / GrupName(row.dispatch_group);
+      const rowDatum / Tarih = row.shipment_date || "";
 
       const cityOk = cityFilter === "all" || cityValue === cityFilter;
       const methodOk = methodFilter === "all" || methodLabel === methodFilter;
-      const dateOk = !dateFilter || rowDate === dateFilter;
+      const dateOk = !dateFilter || rowDatum / Tarih === dateFilter;
 
       let groupOk = true;
       if (groupFilter === "ungrouped") {
@@ -483,21 +483,21 @@ export default function DispatchPage() {
 
       return cityOk && methodOk && dateOk && groupOk;
     });
-  }, [rows, cityFilter, methodFilter, groupFilter, dateFilter]);
+  }, [zapisi / kayıt, cityFilter, methodFilter, groupFilter, dateFilter]);
 
   const filteredIds = useMemo(() => filteredRows.map((row) => row.id), [filteredRows]);
 
-  const allFilteredSelected =
+  const allFilteredIzaberi / Seçed =
     filteredIds.length > 0 && filteredIds.every((id) => selectedIds.includes(id));
 
-  const groupSections = useMemo(() => buildGroupSections(filteredRows), [filteredRows]);
+  const groupSections = useMemo(() => buildGrupa / GrupSections(filteredRows), [filteredRows]);
 
   const ungroupedRows = useMemo(() => {
-    const result: DispatchRowWithDistance[] = filteredRows
-      .filter((row) => !normalizeGroupName(row.dispatch_group))
+    const result: DispatchRowWithUdaljenost / Mesafe[] = filteredRows
+      .filter((row) => !normalizeGrupa / GrupName(row.dispatch_group))
       .map((row) => ({
         ...row,
-        showroom_distance: getDistanceKm(
+        showroom_distance: getUdaljenost / MesafeKm(
           SHOWROOM_LAT,
           SHOWROOM_LNG,
           row.latitude,
@@ -534,65 +534,65 @@ export default function DispatchPage() {
   }, [filteredRows]);
 
   const selectedRows = useMemo(
-    () => rows.filter((row) => selectedIds.includes(row.id)),
-    [rows, selectedIds]
+    () => zapisi / kayıt.filter((row) => selectedIds.includes(row.id)),
+    [zapisi / kayıt, selectedIds]
   );
 
-  const selectedGroupNames = useMemo(() => {
+  const selectedGrupa / GrupNames = useMemo(() => {
     return Array.from(
       new Set(
         selectedRows
-          .map((row) => normalizeGroupName(row.dispatch_group))
+          .map((row) => normalizeGrupa / GrupName(row.dispatch_group))
           .filter(Boolean) as string[]
       )
     );
   }, [selectedRows]);
 
-  const activeGroupName = useMemo(() => {
-    if (selectedGroupNames.length === 1) return selectedGroupNames[0];
-    const ready = normalizeGroupName(groupNameInput);
+  const activeGrupa / GrupName = useMemo(() => {
+    if (selectedGrupa / GrupNames.length === 1) return selectedGrupa / GrupNames[0];
+    const ready = normalizeGrupa / GrupName(groupNameInput);
     return ready || null;
-  }, [selectedGroupNames, groupNameInput]);
+  }, [selectedGrupa / GrupNames, groupNameInput]);
 
-  const activeGroupRows = useMemo(() => {
-    if (!activeGroupName) return [];
-    return rows.filter(
-      (row) => normalizeGroupName(row.dispatch_group) === activeGroupName
+  const activeGrupa / GrupRows = useMemo(() => {
+    if (!activeGrupa / GrupName) return [];
+    return zapisi / kayıt.filter(
+      (row) => normalizeGrupa / GrupName(row.dispatch_group) === activeGrupa / GrupName
     );
-  }, [rows, activeGroupName]);
+  }, [zapisi / kayıt, activeGrupa / GrupName]);
 
-  const activeGroupSelectedCount = useMemo(() => {
-    if (!activeGroupName) return 0;
+  const activeGrupa / GrupIzaberi / SeçedCount = useMemo(() => {
+    if (!activeGrupa / GrupName) return 0;
     return selectedRows.filter(
-      (row) => normalizeGroupName(row.dispatch_group) === activeGroupName
+      (row) => normalizeGrupa / GrupName(row.dispatch_group) === activeGrupa / GrupName
     ).length;
-  }, [selectedRows, activeGroupName]);
+  }, [selectedRows, activeGrupa / GrupName]);
 
-  function toggleSelectAllFiltered() {
-    if (allFilteredSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+  function toggleIzaberi / SeçAllFiltered() {
+    if (allFilteredIzaberi / Seçed) {
+      setIzaberi / SeçedIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
       return;
     }
 
-    setSelectedIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+    setIzaberi / SeçedIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
   }
 
   function toggleRow(id: string) {
-    setSelectedIds((prev) =>
+    setIzaberi / SeçedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   }
 
-  function clearSelection() {
-    setSelectedIds([]);
+  function clearIzaberi / Seçion() {
+    setIzaberi / SeçedIds([]);
   }
   function shouldUngroupOnFieldChange(
     row: DispatchRow,
     field: keyof DispatchRow,
     value: any
   ) {
-    const currentGroup = normalizeGroupName(row.dispatch_group);
-    if (!currentGroup) return false;
+    const currentGrupa / Grup = normalizeGrupa / GrupName(row.dispatch_group);
+    if (!currentGrupa / Grup) return false;
 
     if (field === "delivery_method" && value !== row.delivery_method) return true;
     if (field === "shipment_date" && value !== (row.shipment_date || "")) return true;
@@ -607,7 +607,7 @@ export default function DispatchPage() {
     value: any,
     successMessage?: string
   ) {
-    const currentRow = rows.find((row) => row.id === id);
+    const currentRow = zapisi / kayıt.find((row) => row.id === id);
 
     const updatePayload: Partial<DispatchRow> & Record<string, any> = {
       [field]: value,
@@ -640,11 +640,11 @@ export default function DispatchPage() {
   }
 
 
-  function resetFilters() {
-    setCityFilter("all");
-    setMethodFilter("all");
-    setGroupFilter("all");
-    setDateFilter("");
+  function resetFilteri / Filtreler() {
+    setGrad / ŞehirFilter("all");
+    setMetod / YöntemFilter("all");
+    setGrupa / GrupFilter("all");
+    setDatum / TarihFilter("");
   }
 
   async function updateSingleRow(
@@ -671,9 +671,9 @@ export default function DispatchPage() {
     return true;
   }
 
-  async function optimizeSingleGroupRows(groupRows: DispatchRow[]) {
+  async function optimizeSingleGrupa / GrupRows(groupRows: DispatchRow[]) {
     if (groupRows.length === 0) {
-      alert("Bu grupta optimize edilecek kayıt yok / No rows to optimize");
+      alert("Bu grupta optimize edilecek kayıt yok / No zapisi / kayıt to optimize");
       return false;
     }
 
@@ -705,8 +705,8 @@ export default function DispatchPage() {
       return true;
     }
 
-    function optimizeNearestNeighbor(rowsToOptimize: DispatchRow[]) {
-      const validRows = rowsToOptimize.filter(
+    function optimizeNearestNeighbor(zapisi / kayıtToOptimizuj / Optimize Et: DispatchRow[]) {
+      const validRows = zapisi / kayıtToOptimizuj / Optimize Et.filter(
         (row) =>
           typeof row.latitude === "number" &&
           typeof row.longitude === "number" &&
@@ -714,7 +714,7 @@ export default function DispatchPage() {
           Number.isFinite(row.longitude)
       );
 
-      const invalidRows = rowsToOptimize.filter(
+      const invalidRows = zapisi / kayıtToOptimizuj / Optimize Et.filter(
         (row) =>
           !(
             typeof row.latitude === "number" &&
@@ -737,19 +737,19 @@ export default function DispatchPage() {
 
       while (remaining.length > 0) {
         let bestIndex = 0;
-        let bestDistance = Number.POSITIVE_INFINITY;
+        let bestUdaljenost / Mesafe = Number.POSITIVE_INFINITY;
 
         for (let index = 0; index < remaining.length; index++) {
           const candidate = remaining[index];
-          const distance = calculateDistance(
+          const distance = calculateUdaljenost / Mesafe(
             currentLat,
             currentLng,
             candidate.latitude as number,
             candidate.longitude as number
           );
 
-          if (distance < bestDistance) {
-            bestDistance = distance;
+          if (distance < bestUdaljenost / Mesafe) {
+            bestUdaljenost / Mesafe = distance;
             bestIndex = index;
           }
         }
@@ -782,26 +782,26 @@ export default function DispatchPage() {
     return true;
   }
 
-  async function optimizeGroup(groupName: string) {
-    const value = normalizeGroupName(groupName);
+  async function optimizeGrupa / Grup(groupName: string) {
+    const value = normalizeGrupa / GrupName(groupName);
 
     if (!value) {
-      alert("Prvo izaberi grupu / Önce grup seç");
+      alert("Önce grup seç / Izaberi / Seç group first");
       return;
     }
 
-    const groupRows = rows.filter(
-      (row) => normalizeGroupName(row.dispatch_group) === value
+    const groupRows = zapisi / kayıt.filter(
+      (row) => normalizeGrupa / GrupName(row.dispatch_group) === value
     );
 
     if (groupRows.length === 0) {
-      alert("Grupa nije pronađena / Grup bulunamadı");
+      alert("Grup bulunamadı / Grupa / Grup not found");
       return;
     }
 
-    setOptimizingGroup(value);
-    const ok = await optimizeSingleGroupRows(groupRows);
-    setOptimizingGroup(null);
+    setOptimizingGrupa / Grup(value);
+    const ok = await optimizeSingleGrupa / GrupRows(groupRows);
+    setOptimizingGrupa / Grup(null);
 
     if (ok) {
       await fetchDispatchRows();
@@ -809,15 +809,15 @@ export default function DispatchPage() {
     }
   }
 
-  async function optimizeSelectedGroup() {
-    const groupName = activeGroupName;
+  async function optimizeIzaberi / SeçedGrupa / Grup() {
+    const groupName = activeGrupa / GrupName;
 
     if (!groupName) {
-      alert("Optimize için aktif grup yok / No active group to optimize");
+      alert("Optimizuj / Optimize Et için aktif grup yok / No active group to optimize");
       return;
     }
 
-    await optimizeGroup(groupName);
+    await optimizeGrupa / Grup(groupName);
   }
 
   function buildNavigationUrl(row: DispatchRow) {
@@ -825,9 +825,9 @@ export default function DispatchPage() {
     return `https://www.google.com/maps/dir/?api=1&destination=${row.latitude},${row.longitude}`;
   }
 
-  async function copyGroupRoute(groupName: string) {
-    const groupRows = rows
-      .filter((row) => normalizeGroupName(row.dispatch_group) === groupName)
+  async function copyGrupa / GrupRoute(groupName: string) {
+    const groupRows = zapisi / kayıt
+      .filter((row) => normalizeGrupa / GrupName(row.dispatch_group) === groupName)
       .sort((a, b) => {
         const vehicleA = isVehicleRow(a);
         const vehicleB = isVehicleRow(b);
@@ -857,12 +857,12 @@ export default function DispatchPage() {
         `${index + 1}. ${row.customer_name || "-"}`,
         `Ürün / Product: ${row.product_name || "-"}`,
         `Adet / Quantity: ${row.quantity ?? "-"}`,
-        `Grad / Şehir: ${row.city || "-"}`,
+        `Şehir / Grad / Şehir: ${row.city || "-"}`,
         `Adres / Address: ${row.customer_address || "-"}`,
         `Telefon / Phone: ${row.customer_phone || "-"}`,
         `Araç / Vehicle: ${vehicle}`,
         `Kurye / Courier: ${courier}`,
-        `Grupa / Grup: ${groupName}`,
+        `Grup / Grupa / Grup: ${groupName}`,
         `Google Maps: ${navigationUrl || "-"}`,
       ].join("\n");
     });
@@ -871,53 +871,53 @@ export default function DispatchPage() {
 
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedGroup(groupName);
+      setCopiedGrupa / Grup(groupName);
       setTimeout(() => {
-        setCopiedGroup((current) => (current === groupName ? null : current));
+        setCopiedGrupa / Grup((current) => (current === groupName ? null : current));
       }, 2000);
     } catch {
-      alert("Kopiranje neuspješno / Kopyalama başarısız");
+      alert("Kopyalama başarısız / Failed to copy");
     }
   }
 
-  function openPrintPage(groupName: string) {
+  function openŠtampaj / YazdırPage(groupName: string) {
     const url = `/dispatch-print?group=${encodeURIComponent(groupName)}`;
     window.open(url, "_blank");
   }
 
-  async function optimizeAndPrintGroup(groupName: string) {
-    const value = normalizeGroupName(groupName);
+  async function optimizeAndŠtampaj / YazdırGrupa / Grup(groupName: string) {
+    const value = normalizeGrupa / GrupName(groupName);
 
     if (!value) {
-      alert("Prvo izaberi grupu / Önce grup seç");
+      alert("Önce grup seç / Izaberi / Seç group first");
       return;
     }
 
-    const groupRows = rows.filter(
-      (row) => normalizeGroupName(row.dispatch_group) === value
+    const groupRows = zapisi / kayıt.filter(
+      (row) => normalizeGrupa / GrupName(row.dispatch_group) === value
     );
 
     if (groupRows.length > 0) {
-      const ok = await optimizeSingleGroupRows(groupRows);
+      const ok = await optimizeSingleGrupa / GrupRows(groupRows);
       if (!ok) return;
       await fetchDispatchRows();
     }
 
-    openPrintPage(groupName);
+    openŠtampaj / YazdırPage(groupName);
   }
 
-  async function printActiveGroup() {
-    const groupName = activeGroupName;
+  async function printActiveGrupa / Grup() {
+    const groupName = activeGrupa / GrupName;
 
     if (!groupName) {
       alert("Yazdırmak için aktif grup yok / No active group to print");
       return;
     }
 
-    await optimizeAndPrintGroup(groupName);
+    await optimizeAndŠtampaj / YazdırGrupa / Grup(groupName);
   }
 
-  async function setGroupForIds(ids: string[], value: string | null) {
+  async function setGrupa / GrupForIds(ids: string[], value: string | null) {
     if (ids.length === 0) {
       alert("Lütfen kayıt seç / Please select records");
       return false;
@@ -937,7 +937,7 @@ export default function DispatchPage() {
     return true;
   }
 
-  function getManualGroupName() {
+  function getManualGrupa / GrupName() {
     const value = groupNameInput.trim();
 
     if (!value) {
@@ -945,8 +945,8 @@ export default function DispatchPage() {
       return null;
     }
 
-    const exists = rows.some(
-      (row) => normalizeGroupName(row.dispatch_group) === value
+    const exists = zapisi / kayıt.some(
+      (row) => normalizeGrupa / GrupName(row.dispatch_group) === value
     );
 
     if (exists) {
@@ -964,38 +964,38 @@ export default function DispatchPage() {
 
   async function groupAllFiltered() {
     const ids = filteredRows.map((row) => row.id);
-    const groupName = getManualGroupName();
+    const groupName = getManualGrupa / GrupName();
 
     if (!groupName) return;
 
-    const ok = await setGroupForIds(ids, groupName);
+    const ok = await setGrupa / GrupForIds(ids, groupName);
 
     if (ok) {
-      setGroupNameInput(groupName);
-      setSelectedIds([]);
+      setGrupa / GrupNameInput(groupName);
+      setIzaberi / SeçedIds([]);
       alert(
-        `Tüm görünen kayıtlar bu gruba alındı / Added all visible rows to this group: ${groupName}`
+        `Tüm görünen kayıtlar bu gruba alındı / Added all visible zapisi / kayıt to this group: ${groupName}`
       );
     }
   }
 
-  async function groupSelectedRows() {
-    const groupName = getManualGroupName();
+  async function groupIzaberi / SeçedRows() {
+    const groupName = getManualGrupa / GrupName();
 
     if (!groupName) return;
 
-    const ok = await setGroupForIds(selectedIds, groupName);
+    const ok = await setGrupa / GrupForIds(selectedIds, groupName);
 
     if (ok) {
-      setGroupNameInput(groupName);
-      setSelectedIds([]);
+      setGrupa / GrupNameInput(groupName);
+      setIzaberi / SeçedIds([]);
       alert(
-        `Seçili kayıtlar bu gruba alındı / Added selected rows to this group: ${groupName}`
+        `Seçili kayıtlar bu gruba alındı / Added selected zapisi / kayıt to this group: ${groupName}`
       );
     }
   }
 
-  async function addSelectedToGroup() {
+  async function addIzaberi / SeçedToGrupa / Grup() {
     const value = groupNameInput.trim();
 
     if (!value) {
@@ -1003,34 +1003,34 @@ export default function DispatchPage() {
       return;
     }
 
-    const ok = await setGroupForIds(selectedIds, value);
+    const ok = await setGrupa / GrupForIds(selectedIds, value);
 
     if (ok) {
-      setSelectedIds([]);
+      setIzaberi / SeçedIds([]);
       alert(
-        `Seçili kayıtlar gruba eklendi / Selected rows added to group: ${value}`
+        `Seçili kayıtlar gruba eklendi / Izaberi / Seçed zapisi / kayıt added to group: ${value}`
       );
     }
   }
 
-  async function removeSelectedFromGroup() {
-    const targetIds = rows
+  async function removeIzaberi / SeçedFromGrupa / Grup() {
+    const targetIds = zapisi / kayıt
       .filter((row) => selectedIds.includes(row.id))
       .map((row) => row.id);
 
-    const ok = await setGroupForIds(targetIds, null);
+    const ok = await setGrupa / GrupForIds(targetIds, null);
 
     if (ok) {
-      setSelectedIds([]);
+      setIzaberi / SeçedIds([]);
       alert(
-        "Seçili kayıtlar gruptan çıkarıldı / Selected rows removed from group"
+        "Seçili kayıtlar gruptan çıkarıldı / Izaberi / Seçed zapisi / kayıt removed from group"
       );
     }
   }
 
-  async function clearAllGroups() {
-    const groupIds = rows
-      .filter((row) => normalizeGroupName(row.dispatch_group))
+  async function clearAllGrupa / Grups() {
+    const groupIds = zapisi / kayıt
+      .filter((row) => normalizeGrupa / GrupName(row.dispatch_group))
       .map((row) => row.id);
 
     if (groupIds.length === 0) {
@@ -1044,11 +1044,11 @@ export default function DispatchPage() {
 
     if (!confirmed) return;
 
-    const ok = await setGroupForIds(groupIds, null);
+    const ok = await setGrupa / GrupForIds(groupIds, null);
 
     if (ok) {
-      setGroupNameInput("");
-      setSelectedIds([]);
+      setGrupa / GrupNameInput("");
+      setIzaberi / SeçedIds([]);
       alert("Tüm gruplar temizlendi / All groups cleared");
     }
   }
@@ -1062,57 +1062,58 @@ export default function DispatchPage() {
               BAUDECOR SEVKIYAT / BAUDECOR DISPATCH
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Operativni centar isporuke / Sevkiyat Operasyon Merkezi
+              Sevkiyat Operasyon Merkezi / Operativni centar isporuke / Sevkiyat Operasyon Merkezi
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-slate-400 sm:text-base">
-              Upravljaj isporukama kroz tok: izaberi → grupiši → optimizuj → štampaj / Seç → grupla → optimize et → yazdır
+              Seç → grupla → optimize et → yazdır akışına göre sevkiyatları yönet.
+              / Manage dispatches with the flow select → group → optimize → print.
             </p>
           </div>
 
           <div className="grid min-w-[280px] gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Ukupno / Toplam
+                Toplam / Total
               </div>
-              <div className="mt-2 text-3xl font-semibold text-white">{rows.length}</div>
+              <div className="mt-2 text-3xl font-semibold text-white">{zapisi / kayıt.length}</div>
               <div className="mt-1 text-xs text-slate-400">
-                Aktivni zapisi isporuke / Aktif sevkiyat kayıtları
+                Aktif sevkiyat kayıtları / Aktivni zapisi isporuke / Aktif sevkiyat kayıtları
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Filtrirano / Filtre Sonucu
+                Filtre Sonucu / Filtered
               </div>
               <div className="mt-2 text-3xl font-semibold text-white">
                 {filteredRows.length}
               </div>
               <div className="mt-1 text-xs text-slate-400">
-                Vidljivi zapisi / Görünen kayıt
+                Görünen kayıt / Vidljivi zapisi / Görünen kayıt
               </div>
             </div>
 
             <div className="rounded-2xl border border-emerald-700/40 bg-emerald-950/30 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-emerald-300/70">
-                Odabrano / Seçili
+                Seçili / Izaberi / Seçed
               </div>
               <div className="mt-2 text-3xl font-semibold text-white">
                 {selectedIds.length}
               </div>
               <div className="mt-1 text-xs text-emerald-200/70">
-                Spremno za obradu / İşleme hazır kayıt
+                İşleme hazır kayıt / Spremno za obradu / İşleme hazır
               </div>
             </div>
 
             <div className="rounded-2xl border border-blue-700/40 bg-blue-950/30 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-blue-300/70">
-                Aktivna grupa / Aktif Grup
+                Aktif Grup / Active Grupa / Grup
               </div>
               <div className="mt-2 truncate text-lg font-semibold text-white">
-                {activeGroupName || "-"}
+                {activeGrupa / GrupName || "-"}
               </div>
               <div className="mt-1 text-xs text-blue-200/70">
-                Gruptaki seçili: {activeGroupSelectedCount} / In selected group
+                Gruptaki seçili: {activeGrupa / GrupIzaberi / SeçedCount} / In selected group
               </div>
             </div>
           </div>
@@ -1121,7 +1122,7 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Filteri / Filtreler</h2>
+              <h2 className="text-lg font-semibold">Filtreler / Filteri / Filtreler</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Şehir, yöntem, grup ve tarihe göre görünümü daralt. / Narrow the
                 view by city, method, group and date.
@@ -1130,26 +1131,26 @@ export default function DispatchPage() {
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={toggleSelectAllFiltered}
+                onClick={toggleIzaberi / SeçAllFiltered}
                 className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
               >
-                {allFilteredSelected
+                {allFilteredIzaberi / Seçed
                   ? "Görünenleri Bırak / Unselect Visible"
-                  : "Görünenleri Seç / Select Visible"}
+                  : "Görünenleri Seç / Odaberi prikazane / Görünenleri Seç"}
               </button>
 
               <button
-                onClick={resetFilters}
+                onClick={resetFilteri / Filtreler}
                 className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
               >
-                Očisti filtre / Filtreleri Temizle
+                Filtreleri Temizle / Očisti filtre / Filtreleri Temizle
               </button>
 
               <button
                 onClick={fetchDispatchRows}
                 className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Osvježi / Yenile
+                Yenile / Osvježi / Yenile
               </button>
             </div>
           </div>
@@ -1157,11 +1158,11 @@ export default function DispatchPage() {
           <div className="grid gap-4 lg:grid-cols-4">
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Grad / Şehir
+                Şehir / Grad / Şehir
               </label>
               <select
                 value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
+                onChange={(e) => setGrad / ŞehirFilter(e.target.value)}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               >
                 <option value="all">Tümü / All</option>
@@ -1175,11 +1176,11 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Metod / Yöntem
+                Yöntem / Metod / Yöntem
               </label>
               <select
                 value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value as MethodFilter)}
+                onChange={(e) => setMetod / YöntemFilter(e.target.value as Metod / YöntemFilter)}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               >
                 <option value="all">Tümü / All</option>
@@ -1192,16 +1193,16 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Grupa / Grup
+                Grup / Grupa / Grup
               </label>
               <select
                 value={groupFilter}
-                onChange={(e) => setGroupFilter(e.target.value)}
+                onChange={(e) => setGrupa / GrupFilter(e.target.value)}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               >
                 <option value="all">Tümü / All</option>
                 <option value="ungrouped">Grupsuz / Ungrouped</option>
-                {existingGroups.map((group) => (
+                {existingGrupa / Grups.map((group) => (
                   <option key={group.name} value={group.name}>
                     {group.name}
                   </option>
@@ -1211,9 +1212,9 @@ export default function DispatchPage() {
 
             <div>
               <label className="mb-2 block text-sm text-slate-300">
-                Datum / Tarih
+                Tarih / Datum / Tarih
               </label>
-              <EnglishDatePicker value={dateFilter} onChange={setDateFilter} />
+              <EnglishDatum / TarihPicker value={dateFilter} onChange={setDatum / TarihFilter} />
             </div>
           </div>
         </section>
@@ -1222,31 +1223,31 @@ export default function DispatchPage() {
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold">
-                Tok operacije / Operasyon Akışı
+                Operasyon Akışı / Tok operacije / Operasyon Akışı
               </h2>
               <p className="mt-1 text-sm text-slate-400">
-                Seç → Grupla → Optimize Et → Yazdır / Select → Group → Optimize →
-                Print
+                Seç → Grupla → Optimizuj / Optimize Et Et → Yazdır / Izaberi / Seç → Grupa / Grup → Optimizuj / Optimize Et →
+                Štampaj / Yazdır
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={optimizeSelectedGroup}
-                disabled={!activeGroupName || optimizingGroup === activeGroupName}
+                onClick={optimizeIzaberi / SeçedGrupa / Grup}
+                disabled={!activeGrupa / GrupName || optimizingGrupa / Grup === activeGrupa / GrupName}
                 className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {optimizingGroup === activeGroupName
-                  ? "Rota Hesaplanıyor... / Optimizing..."
-                  : "Aktif Grubu Optimize Et / Optimize Active Group"}
+                {optimizingGrupa / Grup === activeGrupa / GrupName
+                  ? "Rota Hesaplanıyor... / Optimizacija... / Rota hesaplanıyor..."
+                  : "Aktif Grubu Optimizuj / Optimize Et Et / Optimizuj / Optimize Et Active Grupa / Grup"}
               </button>
 
               <button
-                onClick={printActiveGroup}
-                disabled={!activeGroupName}
+                onClick={printActiveGrupa / Grup}
+                disabled={!activeGrupa / GrupName}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Aktif Grubu Yazdır / Print Active Group
+                Aktif Grubu Yazdır / Štampaj / Yazdır Active Grupa / Grup
               </button>
             </div>
           </div>
@@ -1254,25 +1255,25 @@ export default function DispatchPage() {
           <div className="grid gap-4 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                1. Seç / Select
+                1. Seç / Izaberi / Seç
               </div>
               <div className="mt-3 text-sm text-slate-300">
-                Sevkiyat kayıtlarını listeden işaretle. / Select dispatch rows from the list.
+                Sevkiyat kayıtlarını listeden işaretle. / Izaberi / Seç dispatch zapisi / kayıt from the list.
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                2. Grupla / Group
+                2. Grupla / Grupa / Grup
               </div>
               <div className="mt-3 text-sm text-slate-300">
-                Seçilenleri bir grup altında topla veya mevcut gruba ekle. / Group selected rows or add them into an existing group.
+                Seçilenleri bir grup altında topla veya mevcut gruba ekle. / Grupa / Grup selected zapisi / kayıt or add them into an existing group.
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                3. Optimize / Optimize
+                3. Optimizuj / Optimize Et / Optimizuj / Optimize Et
               </div>
               <div className="mt-3 text-sm text-slate-300">
                 Aktif grubun rota ve yükleme sırasını güncelle. / Update route and loading order for the active group.
@@ -1281,7 +1282,7 @@ export default function DispatchPage() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                4. Yazdır / Print
+                4. Yazdır / Štampaj / Yazdır
               </div>
               <div className="mt-3 text-sm text-slate-300">
                 Aktif grubu yazdırma ekranına gönder. / Send the active group to the print screen.
@@ -1293,7 +1294,7 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Operacije grupisanja / Gruplama İşlemleri
+              Gruplama İşlemleri / Grupa / Grup Operations
             </h2>
             <p className="mt-1 text-sm text-slate-400">
               Grupları gör, seç, üstünde işlem yap, sevkiyat ekle veya çıkar. /
@@ -1304,11 +1305,11 @@ export default function DispatchPage() {
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <label className="mb-2 block text-sm text-slate-300">
-                Naziv grupe / Grup Adı
+                Grup Adı / Grupa / Grup Name
               </label>
               <input
                 value={groupNameInput}
-                onChange={(e) => setGroupNameInput(e.target.value)}
+                onChange={(e) => setGrupa / GrupNameInput(e.target.value)}
                 placeholder="Örn / Example: MONDAY-TRUCK-1"
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               />
@@ -1320,7 +1321,7 @@ export default function DispatchPage() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-sm text-slate-300">
-                Odabrani zapisi / Seçili Kayıtlar
+                Seçili Kayıtlar / Izaberi / Seçed Records
               </p>
               <p className="mt-2 text-3xl font-bold text-white">
                 {selectedIds.length}
@@ -1333,19 +1334,19 @@ export default function DispatchPage() {
 
           <div className="mt-6">
             <p className="mb-3 text-sm font-medium text-slate-300">
-              Postojeće grupe / Mevcut Gruplar
+              Mevcut Gruplar / Existing Grupa / Grups
             </p>
 
-            {existingGroups.length > 0 ? (
+            {existingGrupa / Grups.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {existingGroups.map((group) => {
+                {existingGrupa / Grups.map((group) => {
                   const isActive = groupNameInput === group.name;
 
                   return (
                     <button
                       key={group.name}
                       onClick={() => {
-                        setGroupNameInput(group.name);
+                        setGrupa / GrupNameInput(group.name);
                       }}
                       className={`rounded-2xl border px-4 py-4 text-left transition ${
                         isActive
@@ -1363,7 +1364,7 @@ export default function DispatchPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-                Još nema grupa / Henüz grup yok
+                Henüz grup yok / No groups yet
               </div>
             )}
           </div>
@@ -1373,35 +1374,35 @@ export default function DispatchPage() {
               onClick={groupAllFiltered}
               className="flex min-h-[58px] items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-center font-medium text-white"
             >
-              Tüm Görünenleri Bu Gruba Al / Add All Visible to This Group
+              Tüm Görünenleri Bu Gruba Al / Add All Visible to This Grupa / Grup
             </button>
 
             <button
-              onClick={groupSelectedRows}
+              onClick={groupIzaberi / SeçedRows}
               className="flex min-h-[58px] items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-center font-medium text-white"
             >
-              Seçilileri Bu Gruba Al / Add Selected to This Group
+              Seçilileri Bu Gruba Al / Add Izaberi / Seçed to This Grupa / Grup
             </button>
 
             <button
-              onClick={addSelectedToGroup}
+              onClick={addIzaberi / SeçedToGrupa / Grup}
               className="flex min-h-[58px] items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-center font-medium text-white"
             >
-              Seçileni Gruba Dahil Et / Add Selected to Group
+              Seçileni Gruba Dahil Et / Add Izaberi / Seçed to Grupa / Grup
             </button>
 
             <button
-              onClick={removeSelectedFromGroup}
+              onClick={removeIzaberi / SeçedFromGrupa / Grup}
               className="flex min-h-[58px] items-center justify-center rounded-2xl bg-amber-600 px-4 py-3 text-center font-medium text-white"
             >
-              Seçileni Gruptan Çıkar / Remove Selected from Group
+              Seçileni Gruptan Çıkar / Remove Izaberi / Seçed from Grupa / Grup
             </button>
 
             <button
-              onClick={clearAllGroups}
+              onClick={clearAllGrupa / Grups}
               className="flex min-h-[58px] items-center justify-center rounded-2xl bg-red-600 px-4 py-3 text-center font-medium text-white"
             >
-              Tüm Grupları İptal Et / Clear All Groups
+              Tüm Grupları İptal Et / Clear All Grupa / Grups
             </button>
           </div>
         </section>
@@ -1410,15 +1411,15 @@ export default function DispatchPage() {
           <section className="mb-8 rounded-3xl border border-emerald-700/40 bg-emerald-950/30 p-6 shadow-2xl shadow-black/20">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">
-                Odabrani zapisi / Seçili Kayıtlar: {selectedIds.length}
+                Seçili Kayıtlar / Izaberi / Seçed Records: {selectedIds.length}
               </h2>
 
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={clearSelection}
+                  onClick={clearIzaberi / Seçion}
                   className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-white"
                 >
-                  Seçimi Temizle / Clear Selection
+                  Seçimi Temizle / Clear Izaberi / Seçion
                 </button>
               </div>
             </div>
@@ -1426,7 +1427,7 @@ export default function DispatchPage() {
             <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {selectedRows.map((row) => {
                 const isSaving = savingIds.includes(row.id);
-                const groupValue = normalizeGroupName(row.dispatch_group);
+                const groupValue = normalizeGrupa / GrupName(row.dispatch_group);
 
                 return (
                   <div
@@ -1451,11 +1452,11 @@ export default function DispatchPage() {
                     </div>
 
                     <div className="mt-4 grid gap-2 text-xs text-slate-400">
-                      <div>Grupa / Grup: {groupValue || "-"}</div>
+                      <div>Grup / Grupa / Grup: {groupValue || "-"}</div>
                       <div>
-                        Metod / Yöntem: {getMethodLabel(row)}
+                        Yöntem / Metod / Yöntem: {getMetod / YöntemLabel(row)}
                       </div>
-                      <div>Datum / Tarih: {row.shipment_date || "-"}</div>
+                      <div>Tarih / Datum / Tarih: {row.shipment_date || "-"}</div>
                       <div>
                         Adres / Address: {row.customer_address || "-"}
                       </div>
@@ -1505,9 +1506,9 @@ export default function DispatchPage() {
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Grupe / Gruplar</h2>
+              <h2 className="text-lg font-semibold">Gruplar / Grupa / Grups</h2>
               <p className="mt-1 text-sm text-slate-400">
-                Grup bazlı sevkiyat düzeni, rota ve kopyalama araçları. / Group
+                Grup bazlı sevkiyat düzeni, rota ve kopyalama araçları. / Grupa / Grup
                 based dispatch sections, route and copy tools.
               </p>
             </div>
@@ -1516,7 +1517,7 @@ export default function DispatchPage() {
           <div className="space-y-6">
             {groupSections.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-8 text-center text-slate-400">
-                Filtreye uygun grup bulunamadı / No groups found for current filter
+                Filtreye uygun grup bulunamadı / Nema grupa za trenutni filter / Filtreye uygun grup yok
               </div>
             ) : (
               groupSections.map((section) => {
@@ -1524,8 +1525,8 @@ export default function DispatchPage() {
                 const totalCount = allRows.length;
                 const vehicleCount = section.vehicleRows.length;
                 const courierCount = section.courierRows.length;
-                const isOptimizing = optimizingGroup === section.groupName;
-                const isCopied = copiedGroup === section.groupName;
+                const isOptimizing = optimizingGrupa / Grup === section.groupName;
+                const isCopied = copiedGrupa / Grup === section.groupName;
 
                 return (
                   <div
@@ -1536,14 +1537,14 @@ export default function DispatchPage() {
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div>
                           <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                            Grupa / Grup
+                            Grup / Grupa / Grup
                           </div>
                           <h3 className="mt-2 text-xl font-semibold text-white">
                             {section.groupName}
                           </h3>
                           <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
                             <span className="rounded-full border border-slate-700 px-3 py-1">
-                              Ukupno / Toplam: {totalCount}
+                              Toplam / Total: {totalCount}
                             </span>
                             <span className="rounded-full border border-slate-700 px-3 py-1">
                               Araç / Vehicle: {vehicleCount}
@@ -1556,24 +1557,24 @@ export default function DispatchPage() {
 
                         <div className="flex flex-wrap gap-3">
                           <button
-                            onClick={() => setGroupNameInput(section.groupName)}
+                            onClick={() => setGrupa / GrupNameInput(section.groupName)}
                             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
                           >
-                            Grubu Hazırla / Load Group
+                            Grubu Hazırla / Load Grupa / Grup
                           </button>
 
                           <button
-                            onClick={() => optimizeGroup(section.groupName)}
+                            onClick={() => optimizeGrupa / Grup(section.groupName)}
                             disabled={isOptimizing}
                             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                           >
                             {isOptimizing
-                              ? "Optimize Ediliyor... / Optimizing..."
-                              : "Rota Optimize Et / Optimize Route"}
+                              ? "Optimizuj / Optimize Et Ediliyor... / Optimizacija... / Rota hesaplanıyor..."
+                              : "Rota Optimizuj / Optimize Et Et / Optimizuj / Optimize Et Route"}
                           </button>
 
                           <button
-                            onClick={() => copyGroupRoute(section.groupName)}
+                            onClick={() => copyGrupa / GrupRoute(section.groupName)}
                             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
                           >
                             {isCopied
@@ -1582,10 +1583,10 @@ export default function DispatchPage() {
                           </button>
 
                           <button
-                            onClick={() => optimizeAndPrintGroup(section.groupName)}
+                            onClick={() => optimizeAndŠtampaj / YazdırGrupa / Grup(section.groupName)}
                             className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
                           >
-                            Optimize + Yazdır / Optimize + Print
+                            Optimizuj / Optimize Et + Yazdır / Optimizuj / Optimize Et + Štampaj / Yazdır
                           </button>
                         </div>
                       </div>
@@ -1605,11 +1606,11 @@ export default function DispatchPage() {
                         <div className="space-y-3">
                           {section.vehicleRows.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-500">
-                              Araç kaydı yok / No vehicle rows
+                              Araç kaydı yok / No vehicle zapisi / kayıt
                             </div>
                           ) : (
                             section.vehicleRows.map((row) => {
-                              const isSelected = selectedIds.includes(row.id);
+                              const isIzaberi / Seçed = selectedIds.includes(row.id);
                               const isSaving = savingIds.includes(row.id);
 
                               return (
@@ -1617,7 +1618,7 @@ export default function DispatchPage() {
                                   key={row.id}
                                   onClick={() => toggleRow(row.id)}
                                   className={`cursor-pointer rounded-2xl border p-4 transition ${
-                                    isSelected
+                                    isIzaberi / Seçed
                                       ? "border-emerald-500 bg-emerald-600/10"
                                       : "border-slate-800 bg-slate-950/70 hover:border-slate-600"
                                   }`}
@@ -1646,10 +1647,10 @@ export default function DispatchPage() {
                                         Araç / Vehicle: {row.assigned_vehicle || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Datum / Tarih: {row.shipment_date || "-"}
+                                        Tarih / Datum / Tarih: {row.shipment_date || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Grad / Şehir: {row.city || "-"}
+                                        Şehir / Grad / Şehir: {row.city || "-"}
                                       </div>
                                     </div>
                                   </div>
@@ -1670,14 +1671,14 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Sevkiyat Tarihi / Shipment Date
+                                        Sevkiyat Tarihi / Shipment Datum / Tarih
                                       </div>
-                                      <EnglishDatePicker
-                                        value={formatDateForInput(row.shipment_date)}
+                                      <EnglishDatum / TarihPicker
+                                        value={formatDatum / TarihForInput(row.shipment_date)}
                                         onChange={(value) =>
                                           updateField(row.id, "shipment_date", value)
                                         }
-                                        placeholder="Tarih seç / Select date"
+                                        placeholder="Tarih seç / Izaberi / Seç date"
                                       />
                                     </div>
 
@@ -1686,7 +1687,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Metod / Yöntem
+                                        Yöntem / Metod / Yöntem
                                       </div>
                                       <select
                                         value={row.delivery_method || ""}
@@ -1705,7 +1706,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Rota Modu / Route Mode
+                                        Rota Modu / Režim rute / Rota Modu
                                       </div>
                                       <select
                                         value={row.route_mode || ""}
@@ -1779,11 +1780,11 @@ export default function DispatchPage() {
                         <div className="space-y-3">
                           {section.courierRows.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-500">
-                              Kurye kaydı yok / No courier rows
+                              Kurye kaydı yok / No courier zapisi / kayıt
                             </div>
                           ) : (
                             section.courierRows.map((row) => {
-                              const isSelected = selectedIds.includes(row.id);
+                              const isIzaberi / Seçed = selectedIds.includes(row.id);
                               const isSaving = savingIds.includes(row.id);
 
                               return (
@@ -1791,7 +1792,7 @@ export default function DispatchPage() {
                                   key={row.id}
                                   onClick={() => toggleRow(row.id)}
                                   className={`cursor-pointer rounded-2xl border p-4 transition ${
-                                    isSelected
+                                    isIzaberi / Seçed
                                       ? "border-emerald-500 bg-emerald-600/10"
                                       : "border-slate-800 bg-slate-950/70 hover:border-slate-600"
                                   }`}
@@ -1820,10 +1821,10 @@ export default function DispatchPage() {
                                         Kurye / Courier: {row.assigned_courier || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Datum / Tarih: {row.shipment_date || "-"}
+                                        Tarih / Datum / Tarih: {row.shipment_date || "-"}
                                       </div>
                                       <div className="mt-1">
-                                        Grad / Şehir: {row.city || "-"}
+                                        Şehir / Grad / Şehir: {row.city || "-"}
                                       </div>
                                     </div>
                                   </div>
@@ -1844,14 +1845,14 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Sevkiyat Tarihi / Shipment Date
+                                        Sevkiyat Tarihi / Shipment Datum / Tarih
                                       </div>
-                                      <EnglishDatePicker
-                                        value={formatDateForInput(row.shipment_date)}
+                                      <EnglishDatum / TarihPicker
+                                        value={formatDatum / TarihForInput(row.shipment_date)}
                                         onChange={(value) =>
                                           updateField(row.id, "shipment_date", value)
                                         }
-                                        placeholder="Tarih seç / Select date"
+                                        placeholder="Tarih seç / Izaberi / Seç date"
                                       />
                                     </div>
 
@@ -1860,7 +1861,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Metod / Yöntem
+                                        Yöntem / Metod / Yöntem
                                       </div>
                                       <select
                                         value={row.delivery_method || ""}
@@ -1879,7 +1880,7 @@ export default function DispatchPage() {
                                       onClick={(event) => event.stopPropagation()}
                                     >
                                       <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Rota Modu / Route Mode
+                                        Rota Modu / Režim rute / Rota Modu
                                       </div>
                                       <select
                                         value={row.route_mode || ""}
@@ -1950,7 +1951,7 @@ export default function DispatchPage() {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Zapisi bez grupe / Grupsuz Kayıtlar</h2>
+              <h2 className="text-lg font-semibold">Grupsuz Kayıtlar / Ungrouped Rows</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Grup dışındaki kayıtlar, araç öncelikli ve showroom mesafesine göre
                 sıralanır. / Rows outside groups are ordered by vehicle priority and
@@ -1959,7 +1960,7 @@ export default function DispatchPage() {
             </div>
 
             <div className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300">
-              {ungroupedRows.length} kayıt / rows
+              {ungroupedRows.length} kayıt / zapisi / kayıt
             </div>
           </div>
 
@@ -1968,27 +1969,27 @@ export default function DispatchPage() {
               <table className="min-w-full divide-y divide-slate-800 text-sm">
                 <thead className="bg-slate-950/80 text-left text-xs uppercase tracking-[0.2em] text-slate-500">
                   <tr>
-                    <th className="px-4 py-3">Seç / Select</th>
+                    <th className="px-4 py-3">Seç / Izaberi / Seç</th>
                     <th className="px-4 py-3">Müşteri / Customer</th>
                     <th className="px-4 py-3">Ürün / Product</th>
-                    <th className="px-4 py-3">Metod / Yöntem</th>
-                    <th className="px-4 py-3">Sevkiyat Tarihi / Shipment Date</th>
-                    <th className="px-4 py-3">Rota Modu / Route Mode</th>
-                    <th className="px-4 py-3">Mesafe / Distance</th>
-                    <th className="px-4 py-3">Durum / Status</th>
-                    <th className="px-4 py-3">İşlem / Action</th>
+                    <th className="px-4 py-3">Yöntem / Metod / Yöntem</th>
+                    <th className="px-4 py-3">Sevkiyat Tarihi / Shipment Datum / Tarih</th>
+                    <th className="px-4 py-3">Rota Modu / Režim rute / Rota Modu</th>
+                    <th className="px-4 py-3">Mesafe / Udaljenost / Mesafe</th>
+                    <th className="px-4 py-3">Durum / Status / Durum</th>
+                    <th className="px-4 py-3">İşlem / Akcija / İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 bg-slate-900/30">
                   {ungroupedRows.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                        Grupsuz kayıt yok / No ungrouped rows
+                        Grupsuz kayıt yok / No ungrouped zapisi / kayıt
                       </td>
                     </tr>
                   ) : (
                     ungroupedRows.map((row) => {
-                      const isSelected = selectedIds.includes(row.id);
+                      const isIzaberi / Seçed = selectedIds.includes(row.id);
                       const isSaving = savingIds.includes(row.id);
 
                       return (
@@ -1996,7 +1997,7 @@ export default function DispatchPage() {
                           key={row.id}
                           onClick={() => toggleRow(row.id)}
                           className={`cursor-pointer transition ${
-                            isSelected
+                            isIzaberi / Seçed
                               ? "bg-emerald-600/10"
                               : "hover:bg-slate-800/60"
                           }`}
@@ -2004,7 +2005,7 @@ export default function DispatchPage() {
                           <td className="px-4 py-4 align-middle">
                             <input
                               type="checkbox"
-                              checked={isSelected}
+                              checked={isIzaberi / Seçed}
                               onChange={() => toggleRow(row.id)}
                               onClick={(event) => event.stopPropagation()}
                               className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-emerald-500"
@@ -2047,12 +2048,12 @@ export default function DispatchPage() {
                           </td>
                           <td className="px-4 py-4 text-white">
                             <div onClick={(event) => event.stopPropagation()}>
-                              <EnglishDatePicker
-                                value={formatDateForInput(row.shipment_date)}
+                              <EnglishDatum / TarihPicker
+                                value={formatDatum / TarihForInput(row.shipment_date)}
                                 onChange={(value) =>
                                   updateField(row.id, "shipment_date", value)
                                 }
-                                placeholder="Tarih seç / Select date"
+                                placeholder="Tarih seç / Izaberi / Seç date"
                               />
                             </div>
                           </td>
@@ -2072,7 +2073,7 @@ export default function DispatchPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-white">
-                            {formatDistance(row.showroom_distance)}
+                            {formatUdaljenost / Mesafe(row.showroom_distance)}
                           </td>
                           <td className="px-4 py-4 align-middle">
                             <div className="text-white">
@@ -2133,7 +2134,7 @@ export default function DispatchPage() {
         {loading && (
           <div className="fixed inset-x-0 bottom-4 z-50 mx-auto flex w-fit items-center gap-3 rounded-full border border-slate-700 bg-slate-950/95 px-4 py-2 text-sm text-white shadow-2xl">
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-            Podaci o isporuci se učitavaju... / Sevkiyat verileri yükleniyor...
+            Sevkiyat verileri yükleniyor... / Dispatch data is loading...
           </div>
         )}
       </div>
