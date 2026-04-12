@@ -103,7 +103,7 @@ export default function StockEntryPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      alert("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı");
       return;
     }
 
@@ -120,7 +120,7 @@ export default function StockEntryPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
+      alert("Dobavljači nijesu učitani / Tedarikçiler alınamadı");
       setLoadingSuppliers(false);
       return;
     }
@@ -139,7 +139,7 @@ export default function StockEntryPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürünler alınamadı / Products could not be loaded");
+      alert("Proizvodi nijesu učitani / Ürünler alınamadı");
       return;
     }
 
@@ -162,7 +162,7 @@ export default function StockEntryPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Stok hareketleri alınamadı / Stock movements could not be loaded");
+      alert("Kretanja zaliha nijesu učitana / Stok hareketleri alınamadı");
       setLoadingMovements(false);
       return;
     }
@@ -233,44 +233,44 @@ export default function StockEntryPage() {
 
   async function handleSave() {
     if (!selectedGroupId) {
-      alert("Lütfen ürün grubu seç / Please select a product group");
+      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
       return;
     }
 
     if (!selectedProductId) {
-      alert("Lütfen ürün seç / Please select a product");
+      alert("Odaberi proizvod / Lütfen ürün seç");
       return;
     }
 
     if (!selectedSupplierId) {
-      alert("Lütfen tedarikçi seç / Please select a supplier");
+      alert("Odaberi dobavljača / Lütfen tedarikçi seç");
       return;
     }
 
     if (!quantity || quantity <= 0) {
-      alert("Lütfen geçerli adet gir / Please enter a valid quantity");
+      alert("Unesi ispravnu količinu / Lütfen geçerli adet gir");
       return;
     }
 
     if (!selectedProduct) {
-      alert("Ürün bulunamadı / Product not found");
+      alert("Proizvod nije pronađen / Ürün bulunamadı");
       return;
     }
 
     if (!selectedProduct.group_id) {
-      alert("Bu ürüne grup atanmadı / This product has no group assigned");
+      alert("Ovom proizvodu nije dodijeljena grupa / Bu ürüne grup atanmadı");
       return;
     }
 
     if (selectedProduct.group_id !== selectedGroupId) {
       alert(
-        "Seçilen ürün grup ile eşleşmiyor / Selected product does not match the selected group"
+        "Odabrani proizvod se ne poklapa sa grupom / Seçilen ürün grup ile eşleşmiyor"
       );
       return;
     }
 
     if (purchaseCost < 0) {
-      alert("Alış fiyatı 0 veya daha büyük olmalı / Purchase cost must be 0 or greater");
+      alert("Kupovna cijena mora biti 0 ili veća / Alış fiyatı 0 veya daha büyük olmalı");
       return;
     }
 
@@ -305,17 +305,17 @@ export default function StockEntryPage() {
 
     if (stockError) {
       setSaving(false);
-      alert("Stok güncellenemedi / Stock update failed: " + stockError.message);
+      alert("Ažuriranje zalihe nije uspjelo / Stok güncellenemedi: " + stockError.message);
       return;
     }
 
     const movementNoteParts = [
       note?.trim() || "",
-      `Tedarikçi / Supplier: ${selectedSupplier?.name || "-"}`,
-      `Alış fiyatı / Purchase cost: €${addedCostValue.toFixed(2)}`,
-      `Yeni ortalama maliyet / New average cost: €${roundedWeightedCost.toFixed(2)}`,
-      documentNo.trim() ? `Belge no / Document no: ${documentNo.trim()}` : "",
-      documentDate ? `Belge tarihi / Document date: ${documentDate}` : "",
+      `Dobavljač / Tedarikçi: ${selectedSupplier?.name || "-"}`,
+      `Kupovna cijena / Alış fiyatı: €${addedCostValue.toFixed(2)}`,
+      `Novi prosječni trošak / Yeni ortalama maliyet: €${roundedWeightedCost.toFixed(2)}`,
+      documentNo.trim() ? `Broj dokumenta / Belge no: ${documentNo.trim()}` : "",
+      documentDate ? `Datum dokumenta / Belge tarihi: ${documentDate}` : "",
     ].filter(Boolean);
 
     const { error: movementError } = await supabase
@@ -324,7 +324,7 @@ export default function StockEntryPage() {
         {
           product_id: selectedProduct.id,
           product_name: selectedProduct.name,
-          movement_type: "Stock Entry / Stok Girişi",
+          movement_type: "Unos zaliha / Stok Girişi",
           quantity: addedQuantityValue,
           note: movementNoteParts.join(" | "),
           supplier_id: Number(selectedSupplierId),
@@ -338,14 +338,14 @@ export default function StockEntryPage() {
 
     if (movementError) {
       alert(
-        "Stok hareket kaydı eklenemedi / Stock movement log failed: " +
+        "Zapis kretanja zaliha nije eklenemedi / Stok hareket kaydı eklenemedi: " +
           movementError.message
       );
       return;
     }
 
     alert(
-      "Stok eklendi, tedarikçi kaydedildi ve maliyet güncellendi / Stock added, supplier logged and cost updated ✅"
+      "Zaliha dodata, dobavljač zabilježen i trošak ažuriran / Stok eklendi, tedarikçi kaydedildi ve maliyet güncellendi ✅"
     );
 
     setSelectedGroupId("");
@@ -365,15 +365,13 @@ export default function StockEntryPage() {
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SYSTEM
+          BAUDECOR SISTEM / BAUDECOR SİSTEM
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Stok Girişi / Stock Entry
+          Unos zaliha / Stok Girişi
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Mevcut aktif ürünlere yeni stok ekle, tedarikçiyi zorunlu kaydet ve maliyet
-          geçmişini takip et. / Add new stock to active products, require supplier
-          logging and track purchase cost history.
+          Dodaj novu zalihu postojećim aktivnim proizvodima, obavezno zabilježi dobavljača i prati istoriju troškova. / Mevcut aktif ürünlere yeni stok ekle, tedarikçiyi zorunlu kaydet ve maliyet geçmişini takip et.
         </p>
       </div>
 
@@ -381,11 +379,10 @@ export default function StockEntryPage() {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Yeni Stok Girişi / New Stock Entry
+              Novi unos zaliha / Yeni Stok Girişi
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Önce grup, sonra ürün seç; ardından tedarikçi ve alış bilgileriyle stoğu artır. /
-              Select group first, then product, then increase stock with supplier and purchase details.
+              Prvo odaberi grupu, zatim proizvod; nakon toga povećaj zalihu uz dobavljača i podatke o kupovini. / Önce grup, sonra ürün seç; ardından tedarikçi ve alış bilgileriyle stoğu artır.
             </p>
           </div>
 
@@ -393,14 +390,14 @@ export default function StockEntryPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün Grubu / Product Group
+                  Grupa proizvoda / Ürün Grubu
                 </label>
                 <select
                   value={selectedGroupId}
                   onChange={(e) => handleGroupChange(e.target.value)}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 >
-                  <option value="">Grup seç / Select group</option>
+                  <option value="">Odaberi grupu / Grup seç</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -411,7 +408,7 @@ export default function StockEntryPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün / Product
+                  Proizvod / Ürün
                 </label>
                 <select
                   value={selectedProductId}
@@ -421,8 +418,8 @@ export default function StockEntryPage() {
                 >
                   <option value="">
                     {!selectedGroupId
-                      ? "Önce grup seç / Select group first"
-                      : "Ürün seç / Select product"}
+                      ? "Prvo odaberi grupu / Önce grup seç"
+                      : "Odaberi proizvod / Ürün seç"}
                   </option>
                   {filteredProductsByGroup.map((product) => (
                     <option key={product.id} value={product.id}>
@@ -435,7 +432,7 @@ export default function StockEntryPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Tedarikçi / Supplier
+                Dobavljač / Tedarikçi
               </label>
               <select
                 value={selectedSupplierId}
@@ -445,10 +442,10 @@ export default function StockEntryPage() {
               >
                 <option value="">
                   {!selectedProductId
-                    ? "Önce ürün seç / Select product first"
+                    ? "Prvo odaberi proizvod / Önce ürün seç"
                     : loadingSuppliers
-                    ? "Tedarikçiler yükleniyor... / Loading suppliers..."
-                    : "Tedarikçi seç / Select supplier"}
+                    ? "Dobavljači se učitavaju... / Tedarikçiler yükleniyor..."
+                    : "Odaberi dobavljača / Tedarikçi seç"}
                 </option>
                 {suppliers.map((supplier) => (
                   <option key={supplier.id} value={String(supplier.id)}>
@@ -457,15 +454,14 @@ export default function StockEntryPage() {
                 ))}
               </select>
               <p className="mt-2 text-xs text-slate-500">
-                Bu alan zorunludur. Geçmiş alım takibi için her stok girişinde firma kaydedilir. /
-                This field is required. Supplier is logged on every stock entry for historical purchase tracking.
+                Ovo polje je obavezno. Radi praćenja prethodnih kupovina, firma se bilježi pri svakom unosu zaliha. / Bu alan zorunludur. Geçmiş alım takibi için her stok girişinde firma kaydedilir.
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Eklenecek Adet / Quantity to Add
+                  Količina za dodavanje / Eklenecek Adet
                 </label>
                 <input
                   type="number"
@@ -478,7 +474,7 @@ export default function StockEntryPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Alış Fiyatı / Purchase Cost
+                  Kupovna cijena / Alış Fiyatı
                 </label>
                 <input
                   type="number"
@@ -494,7 +490,7 @@ export default function StockEntryPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Belge No / Document No
+                  Broj dokumenta / Belge No
                 </label>
                 <input
                   value={documentNo}
@@ -506,7 +502,7 @@ export default function StockEntryPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Belge Tarihi / Document Date
+                  Datum dokumenta / Belge Tarihi
                 </label>
                 <input
                   type="date"
@@ -519,12 +515,12 @@ export default function StockEntryPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
-                Not / Note
+                Napomena / Not
               </label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="İsteğe bağlı not / Optional note"
+                placeholder="Opciona napomena / İsteğe bağlı not"
                 rows={4}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
@@ -535,35 +531,34 @@ export default function StockEntryPage() {
               disabled={saving}
               className="mt-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Kaydediliyor... / Saving..." : "Stoğa Ekle / Add to Stock"}
+              {saving ? "Čuva se... / Kaydediliyor..." : "Dodaj u zalihu / Stoğa Ekle"}
             </button>
           </div>
         </section>
 
         <aside className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <h2 className="text-lg font-semibold">
-            Stok Özeti / Stock Summary
+            Sažetak zaliha / Stok Özeti
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Seçilen ürünün ve alım girişinin mevcut durumu. / Current status of the selected
-            product and purchase entry.
+            Trenutno stanje odabranog proizvoda i unosa kupovine. / Seçilen ürünün ve alım girişinin mevcut durumu.
           </p>
 
           <div className="mt-6 space-y-4">
-            <InfoCard title="Grup / Group" value={selectedGroupData?.name || "-"} />
-            <InfoCard title="Ürün / Product" value={selectedProduct?.name || "-"} />
-            <InfoCard title="Tedarikçi / Supplier" value={selectedSupplier?.name || "-"} />
+            <InfoCard title="Grupa / Grup" value={selectedGroupData?.name || "-"} />
+            <InfoCard title="Proizvod / Ürün" value={selectedProduct?.name || "-"} />
+            <InfoCard title="Dobavljač / Tedarikçi" value={selectedSupplier?.name || "-"} />
             <InfoCard
-              title="Mevcut Stok / Current Stock"
+              title="Trenutna zaliha / Mevcut Stok"
               value={selectedProduct ? String(selectedProduct.stock) : "-"}
             />
             <InfoCard
-              title="Yeni Stok / New Stock"
+              title="Nova zaliha / Yeni Stok"
               value={selectedProduct ? String(newStockPreview) : "-"}
               green
             />
             <InfoCard
-              title="Satış Fiyatı / Sale Price"
+              title="Prodajna cijena / Satış Fiyatı"
               value={
                 selectedProduct
                   ? `€${Number(selectedProduct.price || 0).toFixed(2)}`
@@ -571,7 +566,7 @@ export default function StockEntryPage() {
               }
             />
             <InfoCard
-              title="Mevcut Maliyet / Current Cost"
+              title="Trenutni trošak / Mevcut Maliyet"
               value={
                 selectedProduct
                   ? `€${Number(selectedProduct.cost || 0).toFixed(2)}`
@@ -579,15 +574,15 @@ export default function StockEntryPage() {
               }
             />
             <InfoCard
-              title="Açılış Stoku / Opening Stock"
+              title="Početna zaliha / Açılış Stoku"
               value={selectedProduct ? String(currentOpeningStock) : "-"}
             />
             <InfoCard
-              title="Yeni Alış / New Purchase Cost"
+              title="Nova kupovna cijena / Yeni Alış"
               value={`€${Number(purchaseCost || 0).toFixed(2)}`}
             />
             <InfoCard
-              title="Yeni Ortalama Maliyet / New Average Cost"
+              title="Novi prosječni trošak / Yeni Ortalama Maliyet"
               value={
                 selectedProduct
                   ? `€${Number(weightedAverageCostPreview || 0).toFixed(2)}`
@@ -596,11 +591,11 @@ export default function StockEntryPage() {
               green
             />
             <InfoCard
-              title="Belge No / Document No"
+              title="Broj dokumenta / Belge No"
               value={documentNo || "-"}
             />
             <InfoCard
-              title="Belge Tarihi / Document Date"
+              title="Datum dokumenta / Belge Tarihi"
               value={documentDate || "-"}
             />
           </div>
@@ -610,32 +605,31 @@ export default function StockEntryPage() {
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Maliyet Geçmişi / Cost History
+            Istorija troškova / Maliyet Geçmişi
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Son stok girişleri, tedarikçi ve alış maliyetleriyle birlikte gösterilir. /
-            Recent stock entries are shown together with supplier and purchase cost.
+            Posljednji unosi zaliha prikazuju se zajedno sa dobavljačem i kupovnim troškom. / Son stok girişleri, tedarikçi ve alış maliyetleriyle birlikte gösterilir.
           </p>
         </div>
 
         {loadingMovements ? (
           <div className="text-sm text-slate-400">
-            Yükleniyor / Loading...
+            Učitava se / Yükleniyor...
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1400px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Ürün / Product</th>
-                  <th className="py-3 text-left">İşlem / Movement</th>
-                  <th className="py-3 text-left">Tedarikçi / Supplier</th>
-                  <th className="py-3 text-center">Adet / Quantity</th>
-                  <th className="py-3 text-center">Alış / Purchase</th>
-                  <th className="py-3 text-left">Belge No / Doc No</th>
-                  <th className="py-3 text-center">Belge Tarihi / Doc Date</th>
-                  <th className="py-3 text-left">Not / Note</th>
-                  <th className="py-3 text-center">Kayıt Tarihi / Created</th>
+                  <th className="py-3 text-left">Proizvod / Ürün</th>
+                  <th className="py-3 text-left">Kretanje / İşlem</th>
+                  <th className="py-3 text-left">Dobavljač / Tedarikçi</th>
+                  <th className="py-3 text-center">Količina / Adet</th>
+                  <th className="py-3 text-center">Kupovina / Alış</th>
+                  <th className="py-3 text-left">Broj dok. / Belge No</th>
+                  <th className="py-3 text-center">Datum dok. / Belge Tarihi</th>
+                  <th className="py-3 text-left">Napomena / Not</th>
+                  <th className="py-3 text-center">Datum unosa / Kayıt Tarihi</th>
                 </tr>
               </thead>
 
@@ -669,7 +663,7 @@ export default function StockEntryPage() {
                 {movements.length === 0 && (
                   <tr>
                     <td colSpan={9} className="py-8 text-center text-slate-400">
-                      Kayıt yok / No stock movements found
+                      Nema zapisa / Kayıt yok
                     </td>
                   </tr>
                 )}
@@ -683,10 +677,10 @@ export default function StockEntryPage() {
         <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
             <h2 className="text-lg font-semibold">
-              Seçili Ürün Son Alımlar / Selected Product Recent Purchases
+              Posljednje kupovine odabranog proizvoda / Seçili Ürün Son Alımlar
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Seçili ürüne ait son girişler. / Recent entries for the selected product.
+              Posljednji unosi za odabrani proizvod. / Seçili ürüne ait son girişler.
             </p>
           </div>
 
@@ -694,12 +688,12 @@ export default function StockEntryPage() {
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="text-slate-400">
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Tedarikçi / Supplier</th>
-                  <th className="py-3 text-center">Adet / Quantity</th>
-                  <th className="py-3 text-center">Alış / Purchase</th>
-                  <th className="py-3 text-left">Belge No / Doc No</th>
-                  <th className="py-3 text-center">Belge Tarihi / Doc Date</th>
-                  <th className="py-3 text-center">Kayıt Tarihi / Created</th>
+                  <th className="py-3 text-left">Dobavljač / Tedarikçi</th>
+                  <th className="py-3 text-center">Količina / Adet</th>
+                  <th className="py-3 text-center">Kupovina / Alış</th>
+                  <th className="py-3 text-left">Broj dok. / Belge No</th>
+                  <th className="py-3 text-center">Datum dok. / Belge Tarihi</th>
+                  <th className="py-3 text-center">Datum unosa / Kayıt Tarihi</th>
                 </tr>
               </thead>
               <tbody>
