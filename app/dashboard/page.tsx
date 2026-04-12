@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -102,7 +101,7 @@ export default function DashboardPage() {
 
     if (error) {
       setLoggingOut(false);
-      alert("Çıkış yapılamadı / Logout failed: " + error.message);
+      alert("Odjava nije uspjela / Çıkış yapılamadı: " + error.message);
       return;
     }
 
@@ -431,7 +430,6 @@ export default function DashboardPage() {
     );
   }, [productProfitStats]);
 
-
   const stockAlerts = useMemo(() => {
     return activeProducts
       .map((product) => {
@@ -529,7 +527,8 @@ export default function DashboardPage() {
 
     if (deliveryBacklog > 20) {
       list.push({
-        text: "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
+        text:
+          "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
         type: "info",
       });
     }
@@ -596,9 +595,9 @@ export default function DashboardPage() {
     if (averageOrderValue > 0 && totalOrders > 0) {
       list.push({
         title: "Kvalitet korpe / Sepet Kalitesi",
-        text: `Ortalama sipariş değeri €${averageOrderValue.toFixed(
+        text: `Prosječna vrijednost narudžbe / Ortalama sipariş değeri: €${averageOrderValue.toFixed(
           2
-        )}. Üst segment satış performansı bu metrikten izlenebilir.`,
+        )}`,
         tone: "neutral",
       });
     }
@@ -648,7 +647,7 @@ export default function DashboardPage() {
       <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
         <div className="rounded-[32px] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-black/30">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-            BAUDECOR EXECUTIVE VIEW
+            PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
           </p>
           <h1 className="mt-4 text-4xl font-black tracking-tight">
             Kontrolna tabla / Kontrol Paneli
@@ -678,7 +677,7 @@ export default function DashboardPage() {
         <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
           <div>
             <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
-              BAUDECOR EXECUTIVE VIEW
+              PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
             </div>
 
             <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
@@ -686,9 +685,12 @@ export default function DashboardPage() {
             </h1>
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
+              Pogledajte prodajne rezultate, pritisak profitabilnosti, rizik naplate i
+              osjetljivost zaliha na jednom ekranu. Ova stranica je dizajnirana ne za
+              operativni rad, već za brzo donošenje odluka na nivou uprave /
               Şirketin satış performansını, kârlılık baskısını, tahsilat riskini ve
-              stok kırılganlığını tek ekranda gör. Bu sayfa operasyon yapmaktan çok,
-              yönetim seviyesinde hızlı karar aldırmak için tasarlandı.
+              stok kırılganlığını tek ekranda gör. Bu sayfa operasyon yapmak için değil,
+              yönetim seviyesinde hızlı karar almak için tasarlandı.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2">
@@ -757,7 +759,7 @@ export default function DashboardPage() {
             <ExecutiveMetric
               title="Plaćanje na čekanju / Bekleyen Ödeme"
               value={`€${pendingPaymentsTotal.toFixed(2)}`}
-              subtitle={`Prihodun %${pendingPaymentRate} / Cironun %${pendingPaymentRate}'i`}
+              subtitle={`Udio u prihodu / Ciro payı: %${pendingPaymentRate}`}
               tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
             />
             <ExecutiveMetric
@@ -787,14 +789,14 @@ export default function DashboardPage() {
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-200/80">
-                PRIORITY ALERTS
+                PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
                 Kritična upozorenja / Kritik Uyarılar
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              {alerts.length} aktif sinyal / active signals
+              {alerts.length} aktivnih signala / aktif sinyal
             </div>
           </div>
 
@@ -826,7 +828,7 @@ export default function DashboardPage() {
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
-                CEO INSIGHTS
+                UVIDI ZA UPRAVU / YÖNETİM İÇGÖRÜLERİ
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
                 Strateški uvidi / Stratejik Yorumlar
@@ -855,7 +857,7 @@ export default function DashboardPage() {
           <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
-                REVENUE INTELLIGENCE
+                ANALIZA PRIHODA / CİRO ANALİZİ
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white">
                 Trend prodaje i profita / Satış ve Kâr Trendi
@@ -910,7 +912,7 @@ export default function DashboardPage() {
         <div className="rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
           <div className="mb-5">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">
-              STOCK PRESSURE
+              PRITISAK ZALIHE / STOK BASKISI
             </p>
             <h2 className="mt-2 text-2xl font-bold text-white">
               Rizik zalihe / Stok Riski
@@ -928,7 +930,7 @@ export default function DashboardPage() {
               tone="amber"
             />
             <MiniRiskCard
-              title="Stoksuz / Out of Stock"
+              title="Bez zalihe / Stoksuz"
               value={String(outOfStockCount)}
               helper="Potrebna hitna intervencija / Acil müdahale gerekir"
               tone="red"
@@ -940,7 +942,7 @@ export default function DashboardPage() {
               tone="blue"
             />
             <MiniRiskCard
-              title="Stok Sağlığı"
+              title="Zdravlje zalihe / Stok Sağlığı"
               value={`%${stockHealthRate}`}
               helper="Opšte stanje proizvoda / Genel ürün sağlığı"
               tone={
@@ -991,11 +993,10 @@ export default function DashboardPage() {
         </div>
       </section>
 
-
       <section className="mb-8 grid gap-6 xl:grid-cols-3">
         <PanelCard
           title="Sažetak profitabilnosti / Kârlılık Özeti"
-          subtitle="Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
+          subtitle="Mevcut stok i struktura cijena prema prikazu profitabilnosti proizvoda / Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <MiniRiskCard
@@ -1374,7 +1375,7 @@ function RankRow({
 function EmptyState() {
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-6 text-sm text-slate-400">
-      Kayıt yok / No records
+      Nema zapisa / Kayıt yok
     </div>
   );
 }
