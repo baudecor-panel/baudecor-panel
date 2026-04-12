@@ -16,7 +16,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [type, setType] = useState("Kira / Rent");
+  const [type, setType] = useState("Kira / Kira");
   const [amount, setAmount] = useState(0);
   const [note, setNote] = useState("");
 
@@ -67,7 +67,7 @@ export default function ExpensesPage() {
 
     alert("Trošak je sačuvan / Gider kaydedildi ✅");
 
-    setType("Kira / Rent");
+    setType("Kira / Kira");
     setAmount(0);
     setNote("");
 
@@ -102,7 +102,8 @@ export default function ExpensesPage() {
           Troškovi / Giderler
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet ve takip et.
+          Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet
+          ve takip et.
         </p>
       </div>
 
@@ -127,7 +128,7 @@ export default function ExpensesPage() {
                 onChange={(e) => setType(e.target.value)}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
-                <option>Kira / Rent</option>
+                <option>Kira / Kira</option>
                 <option>Plata / Maaş</option>
                 <option>Struja / Elektrik</option>
                 <option>Internet / İnternet</option>
@@ -243,7 +244,10 @@ export default function ExpensesPage() {
 
               <tbody>
                 {expenses.slice(0, 15).map((expense) => (
-                  <tr key={expense.id} className="border-t border-slate-800 hover:bg-slate-800/30">
+                  <tr
+                    key={expense.id}
+                    className="border-t border-slate-800 transition hover:bg-slate-800/30"
+                  >
                     <td className="py-3">{expense.type}</td>
                     <td className="py-3 text-center text-red-300 font-medium">
                       €{Number(expense.amount).toFixed(2)}
