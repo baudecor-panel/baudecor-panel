@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 
-type ProductGroupRelation =
+type ProizvodGroupRelation =
   | {
       name?: string | null;
     }
@@ -14,7 +14,7 @@ type ProductGroupRelation =
   | null
   | undefined;
 
-type Product = {
+type Proizvod = {
   id: string;
   name: string;
   price: number;
@@ -25,17 +25,17 @@ type Product = {
   group_id?: string | null;
   group_name?: string;
   is_active?: boolean;
-  product_groups?: ProductGroupRelation;
+  product_groups?: ProizvodGroupRelation;
   default_supplier_id?: number | null;
   supplier_name?: string;
 };
 
-type ProductGroup = {
+type ProizvodGroup = {
   id: string;
   name: string;
 };
 
-type Supplier = {
+type Dobavljač = {
   id: number;
   name: string;
   is_active?: boolean | null;
@@ -51,61 +51,61 @@ type StockMovement = {
   created_at?: string | null;
 };
 
-type ProductStockMeta = {
+type ProizvodStockMeta = {
   movementCount: number;
-  movementBalance: number;
+  movementSaldo: number;
   lastMovementAt: string | null;
 };
 
 type ViewFilter = "active" | "inactive" | "all";
 type StockFilter = "all" | "normal" | "critical" | "out";
-type MarginFilter = "all" | "profit" | "loss";
+type MaržaFilter = "all" | "profit" | "loss";
 
-const EMPTY_STOCK_META: ProductStockMeta = {
+const EMPTY_STOCK_META: ProizvodStockMeta = {
   movementCount: 0,
-  movementBalance: 0,
+  movementSaldo: 0,
   lastMovementAt: null,
 };
 
-export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [groups, setGroups] = useState<ProductGroup[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [stockMetaMap, setStockMetaMap] = useState<Record<string, ProductStockMeta>>({});
+export default function ProizvodsPage() {
+  const [products, setProizvods] = useState<Proizvod[]>([]);
+  const [groups, setGroups] = useState<ProizvodGroup[]>([]);
+  const [suppliers, setDobavljačs] = useState<Dobavljač[]>([]);
+  const [stockMetaMap, setStockMetaMap] = useState<Record<string, ProizvodStockMeta>>({});
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(true);
-  const [loadingSuppliers, setLoadingSuppliers] = useState(true);
+  const [loadingDobavljačs, setLoadingDobavljačs] = useState(true);
 
   const [search, setSearch] = useState("");
   const [viewFilter, setViewFilter] = useState<ViewFilter>("active");
   const [groupFilter, setGroupFilter] = useState("all");
-  const [supplierFilter, setSupplierFilter] = useState("all");
+  const [supplierFilter, setDobavljačFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
-  const [marginFilter, setMarginFilter] = useState<MarginFilter>("all");
+  const [marginFilter, setMaržaFilter] = useState<MaržaFilter>("all");
 
-  const [editingProductId, setEditingProductId] = useState("");
+  const [editingProizvodId, setEditingProizvodId] = useState("");
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState(0);
-  const [editCost, setEditCost] = useState(0);
+  const [editTrošak, setEditTrošak] = useState(0);
   const [editGroupId, setEditGroupId] = useState("");
-  const [editSupplierId, setEditSupplierId] = useState("");
+  const [editDobavljačId, setEditDobavljačId] = useState("");
   const [editMinimumStock, setEditMinimumStock] = useState(5);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [actionLoadingId, setActionLoadingId] = useState("");
 
   const [movementModalOpen, setMovementModalOpen] = useState(false);
-  const [selectedMovementProduct, setSelectedMovementProduct] = useState<Product | null>(null);
+  const [selectedMovementProizvod, setSelectedMovementProizvod] = useState<Proizvod | null>(null);
   const [movementLoading, setMovementLoading] = useState(false);
-  const [selectedMovements, setSelectedMovements] = useState<StockMovement[]>([]);
+  const [selectedKretanja, setSelectedKretanja] = useState<StockMovement[]>([]);
 
   useEffect(() => {
     initializePage();
   }, []);
 
-  function getGroupNameFromRelation(relation?: ProductGroupRelation) {
+  function getGroupNameFromRelation(relation?: ProizvodGroupRelation) {
     if (!relation) return "-";
     if (Array.isArray(relation)) {
       return relation[0]?.name || "-";
@@ -113,20 +113,20 @@ export default function ProductsPage() {
     return relation.name || "-";
   }
 
-  function getSupplierNameById(supplierId?: number | null) {
+  function getDobavljačNameById(supplierId?: number | null) {
     if (!supplierId) return "-";
     return suppliers.find((supplier) => supplier.id === supplierId)?.name || "-";
   }
 
   async function initializePage() {
     setLoading(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchDobavljačs(), fetchProizvodsWithMeta()]);
     setLoading(false);
   }
 
   async function refreshAll() {
     setRefreshing(true);
-    await Promise.all([fetchGroups(), fetchSuppliers(), fetchProductsWithMeta()]);
+    await Promise.all([fetchGroups(), fetchDobavljačs(), fetchProizvodsWithMeta()]);
     setRefreshing(false);
   }
 
@@ -139,17 +139,17 @@ export default function ProductsPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Ürün grupları alınamadı / Product groups could not be loaded");
+      alert("Ürün grupları alınamadı / Proizvod groups could not be loaded");
       setLoadingGroups(false);
       return;
     }
 
-    setGroups((data || []) as ProductGroup[]);
+    setGroups((data || []) as ProizvodGroup[]);
     setLoadingGroups(false);
   }
 
-  async function fetchSuppliers() {
-    setLoadingSuppliers(true);
+  async function fetchDobavljačs() {
+    setLoadingDobavljačs(true);
 
     const { data, error } = await supabase
       .from("suppliers")
@@ -157,16 +157,16 @@ export default function ProductsPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Tedarikçiler alınamadı / Suppliers could not be loaded");
-      setLoadingSuppliers(false);
+      alert("Tedarikçiler alınamadı / Dobavljačs could not be loaded");
+      setLoadingDobavljačs(false);
       return;
     }
 
-    setSuppliers((data || []) as Supplier[]);
-    setLoadingSuppliers(false);
+    setDobavljačs((data || []) as Dobavljač[]);
+    setLoadingDobavljačs(false);
   }
 
-  async function fetchProductsWithMeta() {
+  async function fetchProizvodsWithMeta() {
     const [
       { data: productData, error: productError },
       { data: movementData, error: movementError },
@@ -181,25 +181,25 @@ export default function ProductsPage() {
     ]);
 
     if (productError) {
-      alert("Ürünler alınamadı / Products could not be loaded");
+      alert("Ürünler alınamadı / Proizvods could not be loaded");
       return;
     }
 
     if (movementError) {
-      alert("Stok hareketleri alınamadı / Stock movements could not be loaded");
+      alert("Kretanja zalihe nijesu učitana / Stok hareketleri alınamadı");
       return;
     }
 
-    const normalizedProducts = ((productData || []) as Product[]).map((product) => ({
+    const normalizedProizvods = ((productData || []) as Proizvod[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
-      supplier_name: getSupplierNameById(product.default_supplier_id),
+      supplier_name: getDobavljačNameById(product.default_supplier_id),
       is_active: product.is_active ?? true,
       opening_stock: Number(product.opening_stock ?? 0),
       minimum_stock: Number(product.minimum_stock ?? 5),
     }));
 
-    const nextStockMetaMap: Record<string, ProductStockMeta> = {};
+    const nextStockMetaMap: Record<string, ProizvodStockMeta> = {};
 
     ((movementData || []) as StockMovement[]).forEach((movement) => {
       const productId = movement.product_id || "";
@@ -209,7 +209,7 @@ export default function ProductsPage() {
       const quantity = Number(movement.quantity || 0);
       const createdAt = movement.created_at || null;
 
-      const nextLastMovementAt = !current.lastMovementAt
+      const nextZadnjeMovementAt = !current.lastMovementAt
         ? createdAt
         : createdAt && createdAt > current.lastMovementAt
           ? createdAt
@@ -217,60 +217,60 @@ export default function ProductsPage() {
 
       nextStockMetaMap[productId] = {
         movementCount: current.movementCount + 1,
-        movementBalance: current.movementBalance + quantity,
-        lastMovementAt: nextLastMovementAt,
+        movementSaldo: current.movementSaldo + quantity,
+        lastMovementAt: nextZadnjeMovementAt,
       };
     });
 
-    setProducts(normalizedProducts);
+    setProizvods(normalizedProizvods);
     setStockMetaMap(nextStockMetaMap);
   }
 
-  function startEdit(product: Product) {
-    setEditingProductId(product.id);
+  function startEdit(product: Proizvod) {
+    setEditingProizvodId(product.id);
     setEditName(product.name || "");
     setEditPrice(Number(product.price || 0));
-    setEditCost(Number(product.cost || 0));
+    setEditTrošak(Number(product.cost || 0));
     setEditGroupId(product.group_id || "");
-    setEditSupplierId(product.default_supplier_id ? String(product.default_supplier_id) : "");
+    setEditDobavljačId(product.default_supplier_id ? String(product.default_supplier_id) : "");
     setEditMinimumStock(Number(product.minimum_stock || 5));
   }
 
   function cancelEdit() {
-    setEditingProductId("");
+    setEditingProizvodId("");
     setEditName("");
     setEditPrice(0);
-    setEditCost(0);
+    setEditTrošak(0);
     setEditGroupId("");
-    setEditSupplierId("");
+    setEditDobavljačId("");
     setEditMinimumStock(5);
   }
 
   async function saveEdit() {
-    if (!editingProductId) return;
+    if (!editingProizvodId) return;
 
     if (!editName.trim()) {
-      alert("Lütfen ürün adı gir / Please enter product name");
+      alert("Unesi naziv proizvoda / Lütfen ürün adı gir");
       return;
     }
 
     if (!editGroupId) {
-      alert("Lütfen ürün grubu seç / Please select product group");
+      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
       return;
     }
 
     if (Number(editPrice) < 0) {
-      alert("Lütfen geçerli satış fiyatı gir / Please enter a valid sale price");
+      alert("Unesi važeću prodajnu cijenu / Lütfen geçerli satış fiyatı gir");
       return;
     }
 
-    if (Number(editCost) < 0) {
-      alert("Lütfen geçerli maliyet gir / Please enter a valid cost");
+    if (Number(editTrošak) < 0) {
+      alert("Unesi važeći trošak / Lütfen geçerli maliyet gir");
       return;
     }
 
     if (Number(editMinimumStock) < 0) {
-      alert("Lütfen geçerli minimum stok gir / Please enter a valid minimum stock");
+      alert("Unesi važeću minimalnu zalihu / Lütfen geçerli minimum stok gir");
       return;
     }
 
@@ -281,32 +281,32 @@ export default function ProductsPage() {
       .update({
         name: editName.trim(),
         price: Number(editPrice),
-        cost: Number(editCost),
+        cost: Number(editTrošak),
         group_id: editGroupId,
-        default_supplier_id: editSupplierId ? Number(editSupplierId) : null,
+        default_supplier_id: editDobavljačId ? Number(editDobavljačId) : null,
         minimum_stock: Number(editMinimumStock),
       })
-      .eq("id", editingProductId);
+      .eq("id", editingProizvodId);
 
     setSavingEdit(false);
 
     if (error) {
-      alert("Ürün güncellenemedi / Product update failed: " + error.message);
+      alert("Ürün güncellenemedi / Proizvod update failed: " + error.message);
       return;
     }
 
-    alert("Ürün güncellendi / Product updated ✅");
+    alert("Ürün güncellendi / Proizvod updated ✅");
 
     cancelEdit();
-    await fetchProductsWithMeta();
+    await fetchProizvodsWithMeta();
   }
 
-  async function toggleActive(product: Product) {
+  async function toggleAktivno(product: Proizvod) {
     const nextValue = !(product.is_active ?? true);
 
     const confirmText = nextValue
-      ? "Bu ürün tekrar aktif olacak. Devam edilsin mi? / This product will be activated again. Continue?"
-      : "Bu ürün pasife alınacak. Geçmiş kayıtlar korunur ama yeni işlemlerde kullanılmamalı. Devam edilsin mi? / This product will be archived. Historical records stay, but it should not be used in new operations. Continue?";
+      ? "Ovaj proizvod će ponovo biti aktivan. Nastaviti? / Bu ürün tekrar aktif olacak. Devam edilsin mi?"
+      : "Ovaj proizvod će biti pasiviziran. Stari zapisi ostaju, ali se ne bi trebalo koristiti u novim işlemler / Bu ürün pasife alınacak. Geçmiş kayıtlar korunur ama yeni işlemlerde kullanılmamalı. Devam edilsin mi?";
 
     const confirmed = window.confirm(confirmText);
     if (!confirmed) return;
@@ -321,14 +321,14 @@ export default function ProductsPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Durum güncellenemedi / Status update failed: " + error.message);
+      alert("Status nije ažuriran / Durum güncellenemedi: " + error.message);
       return;
     }
 
-    await fetchProductsWithMeta();
+    await fetchProizvodsWithMeta();
   }
 
-  async function canDeleteProduct(product: Product) {
+  async function canDeleteProizvod(product: Proizvod) {
     const { data: salesData, error: salesError } = await supabase
       .from("sales")
       .select("id")
@@ -338,7 +338,7 @@ export default function ProductsPage() {
     if (salesError) {
       return {
         ok: false,
-        reason: "Satış kontrolü yapılamadı / Sales check failed",
+        reason: "Satış kontrolü yapılamadı / Prodajas check failed",
       };
     }
 
@@ -346,7 +346,7 @@ export default function ProductsPage() {
       return {
         ok: false,
         reason:
-          "Bu ürün satış kayıtlarında kullanıldığı için silinemez. Pasife alın. / This product cannot be deleted because it is used in sales records. Archive it instead.",
+          "Ovaj proizvod se ne može obrisati jer se koristi u prodajnim zapisima. Pasiviziraj ga / Bu ürün satış kayıtlarında kullanıldığı için silinemez. Pasife alın.",
       };
     }
 
@@ -359,7 +359,7 @@ export default function ProductsPage() {
     if (movementError) {
       return {
         ok: false,
-        reason: "Stok hareket kontrolü yapılamadı / Stock movement check failed",
+        reason: "Provjera kretanja zalihe nije uspjela / Stok hareket kontrolü yapılamadı",
       };
     }
 
@@ -367,23 +367,23 @@ export default function ProductsPage() {
       return {
         ok: false,
         reason:
-          "Bu ürün stok hareketlerinde kullanıldığı için silinemez. Pasife alın. / This product cannot be deleted because it is used in stock movements. Archive it instead.",
+          "Ovaj proizvod se ne može obrisati jer se koristi u kretanjima zalihe. Pasiviziraj ga / Bu ürün stok hareketlerinde kullanıldığı için silinemez. Pasife alın.",
       };
     }
 
     return { ok: true, reason: "" };
   }
 
-  async function deleteProduct(product: Product) {
+  async function deleteProizvod(product: Proizvod) {
     const firstConfirm = window.confirm(
-      `Bu ürün silinecek: ${product.name}\n\nEmin misin? / This product will be deleted.\n\nAre you sure?`
+      `Ovaj proizvod će biti obrisan: ${product.name}\n\nDa li si siguran? / Bu ürün silinecek.\n\nAre you sure?`
     );
 
     if (!firstConfirm) return;
 
     setActionLoadingId(product.id);
 
-    const check = await canDeleteProduct(product);
+    const check = await canDeleteProizvod(product);
 
     if (!check.ok) {
       setActionLoadingId("");
@@ -392,7 +392,7 @@ export default function ProductsPage() {
     }
 
     const secondConfirm = window.confirm(
-      `Bu ürün hiç kullanılmamış görünüyor ve kalıcı olarak silinecek.\n\n${product.name}\n\nDevam edilsin mi? / This product appears unused and will be permanently deleted.\n\nContinue?`
+      `Izgleda da ovaj proizvod nikad nije korišćen i biće trajno obrisan.\n\n${product.name}\n\nNastaviti? / This product appears unused and will be permanently deleted.\n\nContinue?`
     );
 
     if (!secondConfirm) {
@@ -405,23 +405,23 @@ export default function ProductsPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Ürün silinemedi / Product delete failed: " + error.message);
+      alert("Ürün silinemedi / Proizvod delete failed: " + error.message);
       return;
     }
 
-    if (editingProductId === product.id) {
+    if (editingProizvodId === product.id) {
       cancelEdit();
     }
 
-    alert("Ürün silindi / Product deleted ✅");
-    await fetchProductsWithMeta();
+    alert("Ürün silindi / Proizvod deleted ✅");
+    await fetchProizvodsWithMeta();
   }
 
-  async function openMovementHistory(product: Product) {
-    setSelectedMovementProduct(product);
+  async function openMovementIstorija(product: Proizvod) {
+    setSelectedMovementProizvod(product);
     setMovementModalOpen(true);
     setMovementLoading(true);
-    setSelectedMovements([]);
+    setSelectedKretanja([]);
 
     const { data, error } = await supabase
       .from("stock_movements")
@@ -432,33 +432,33 @@ export default function ProductsPage() {
     setMovementLoading(false);
 
     if (error) {
-      alert("Hareket geçmişi alınamadı / Movement history could not be loaded");
+      alert("Istorija kretanja nije učitana / Hareket geçmişi alınamadı");
       return;
     }
 
-    setSelectedMovements((data || []) as StockMovement[]);
+    setSelectedKretanja((data || []) as StockMovement[]);
   }
 
-  function closeMovementHistory() {
+  function closeMovementIstorija() {
     setMovementModalOpen(false);
-    setSelectedMovementProduct(null);
-    setSelectedMovements([]);
+    setSelectedMovementProizvod(null);
+    setSelectedKretanja([]);
     setMovementLoading(false);
   }
 
-  function getProductStockMeta(productId: string) {
+  function getProizvodStockMeta(productId: string) {
     return stockMetaMap[productId] || EMPTY_STOCK_META;
   }
 
-  function getCalculatedStock(product: Product) {
+  function getIzračunatoStock(product: Proizvod) {
     const openingStock = Number(product.opening_stock ?? 0);
-    const movementBalance = getProductStockMeta(product.id).movementBalance;
-    return openingStock + movementBalance;
+    const movementSaldo = getProizvodStockMeta(product.id).movementSaldo;
+    return openingStock + movementSaldo;
   }
 
-  function getStockDiff(product: Product) {
+  function getStockRazlika(product: Proizvod) {
     const recorded = Number(product.stock || 0);
-    const calculated = getCalculatedStock(product);
+    const calculated = getIzračunatoStock(product);
     return recorded - calculated;
   }
 
@@ -485,7 +485,7 @@ export default function ProductsPage() {
     }).format(date);
   }
 
-  const filteredProducts = useMemo(() => {
+  const filteredProizvods = useMemo(() => {
     const q = search.trim().toLowerCase();
 
     return products
@@ -507,7 +507,7 @@ export default function ProductsPage() {
       .filter((product) => {
         if (stockFilter === "all") return true;
         return getStockStatus(
-          getCalculatedStock(product),
+          getIzračunatoStock(product),
           Number(product.minimum_stock || 5)
         ) === stockFilter;
       })
@@ -526,15 +526,15 @@ export default function ProductsPage() {
   }, [products, search, viewFilter, groupFilter, supplierFilter, stockFilter, marginFilter, stockMetaMap, suppliers]);
 
 function exportFilteredStock() {
-  const rows = filteredProducts.map((p) => {
+  const rows = filteredProizvods.map((p) => {
     const recordedStock = Number(p.stock || 0);
-    const calculatedStock = getCalculatedStock(p);
+    const calculatedStock = getIzračunatoStock(p);
     const openingStock = Number(p.opening_stock ?? 0);
     const cost = Number(p.cost || 0);
     const price = Number(p.price || 0);
     const margin = price - cost;
     const diff = recordedStock - calculatedStock;
-    const stockMeta = getProductStockMeta(p.id);
+    const stockMeta = getProizvodStockMeta(p.id);
 
     return {
       "Grup": p.group_name || "-",
@@ -558,41 +558,41 @@ function exportFilteredStock() {
       "Satış Değeri (€)": calculatedStock * price,
       "Potansiyel Kâr (€)": calculatedStock * margin,
       "Hareket Sayısı": stockMeta.movementCount,
-      "Hareket Bakiyesi": stockMeta.movementBalance,
+      "Hareket Bakiyesi": stockMeta.movementSaldo,
       "Son Hareket": formatDateTime(stockMeta.lastMovementAt),
       "Aktiflik": (p.is_active ?? true) ? "Aktif" : "Pasif",
     };
   });
 
-  const totalOpening = rows.reduce((sum, row) => sum + Number(row["Açılış Stok"] || 0), 0);
-  const totalRecorded = rows.reduce((sum, row) => sum + Number(row["Kayıtlı Stok"] || 0), 0);
-  const totalCalculated = rows.reduce((sum, row) => sum + Number(row["Hesaplanan Stok"] || 0), 0);
+  const totalPočetna = rows.reduce((sum, row) => sum + Number(row["Açılış Stok"] || 0), 0);
+  const totalZabilježeno = rows.reduce((sum, row) => sum + Number(row["Kayıtlı Stok"] || 0), 0);
+  const totalIzračunato = rows.reduce((sum, row) => sum + Number(row["Hesaplanan Stok"] || 0), 0);
   const totalMinimum = rows.reduce((sum, row) => sum + Number(row["Minimum Stok"] || 0), 0);
-  const totalDiff = rows.reduce((sum, row) => sum + Number(row["Fark"] || 0), 0);
-  const totalStockCost = rows.reduce((sum, row) => sum + Number(row["Stok Maliyeti (€)"] || 0), 0);
-  const totalSaleValue = rows.reduce((sum, row) => sum + Number(row["Satış Değeri (€)"] || 0), 0);
+  const totalRazlika = rows.reduce((sum, row) => sum + Number(row["Fark"] || 0), 0);
+  const totalStockTrošak = rows.reduce((sum, row) => sum + Number(row["Stok Maliyeti (€)"] || 0), 0);
+  const totalProdajaValue = rows.reduce((sum, row) => sum + Number(row["Satış Değeri (€)"] || 0), 0);
   const totalProfit = rows.reduce((sum, row) => sum + Number(row["Potansiyel Kâr (€)"] || 0), 0);
-  const totalMovements = rows.reduce((sum, row) => sum + Number(row["Hareket Sayısı"] || 0), 0);
-  const totalMovementBalance = rows.reduce((sum, row) => sum + Number(row["Hareket Bakiyesi"] || 0), 0);
+  const totalKretanja = rows.reduce((sum, row) => sum + Number(row["Hareket Sayısı"] || 0), 0);
+  const totalMovementSaldo = rows.reduce((sum, row) => sum + Number(row["Hareket Bakiyesi"] || 0), 0);
 
   rows.push({
     "Grup": "",
     "Ürün": "TOPLAM",
     "Tedarikçi": "",
-    "Açılış Stok": totalOpening,
-    "Kayıtlı Stok": totalRecorded,
-    "Hesaplanan Stok": totalCalculated,
+    "Açılış Stok": totalPočetna,
+    "Kayıtlı Stok": totalZabilježeno,
+    "Hesaplanan Stok": totalIzračunato,
     "Minimum Stok": totalMinimum,
-    "Fark": totalDiff,
+    "Fark": totalRazlika,
     "Durum": "-",
     "Satış Fiyatı (€)": "",
     "Maliyet (€)": "",
     "Marj (€)": "",
-    "Stok Maliyeti (€)": totalStockCost,
-    "Satış Değeri (€)": totalSaleValue,
+    "Stok Maliyeti (€)": totalStockTrošak,
+    "Satış Değeri (€)": totalProdajaValue,
     "Potansiyel Kâr (€)": totalProfit,
-    "Hareket Sayısı": totalMovements,
-    "Hareket Bakiyesi": totalMovementBalance,
+    "Hareket Sayısı": totalKretanja,
+    "Hareket Bakiyesi": totalMovementSaldo,
     "Son Hareket": "",
     "Aktiflik": "",
   } as any);
@@ -677,7 +677,7 @@ function exportFilteredStock() {
     }
   }
 
-  XLSX.utils.book_append_sheet(wb, ws, "Gerçek Stok");
+  XLSX.utils.book_append_sheet(wb, ws, "Stvarna Zaliha");
 
   const viewSuffix =
     viewFilter === "active" ? "aktif" : viewFilter === "inactive" ? "pasif" : "tum";
@@ -689,32 +689,32 @@ function exportFilteredStock() {
           .toLowerCase()
           .replaceAll(" ", "-");
 
-  XLSX.writeFile(wb, `gercek-stok-${viewSuffix}-${groupSuffix}.xlsx`);
+  XLSX.writeFile(wb, `stvarna-zaliha-${viewSuffix}-${groupSuffix}.xlsx`);
 }
 
-  const totalProducts = products.length;
+  const totalProizvods = products.length;
 
-  const activeProductsCount = useMemo(() => {
+  const activeProizvodsCount = useMemo(() => {
     return products.filter((product) => (product.is_active ?? true) === true).length;
   }, [products]);
 
-  const inactiveProductsCount = useMemo(() => {
+  const inactiveProizvodsCount = useMemo(() => {
     return products.filter((product) => (product.is_active ?? true) === false).length;
   }, [products]);
 
-  const productsWithSupplierCount = useMemo(() => {
+  const productsWithDobavljačCount = useMemo(() => {
     return products.filter((product) => !!product.default_supplier_id).length;
   }, [products]);
 
-  const totalCalculatedStock = useMemo(() => {
+  const totalIzračunatoStock = useMemo(() => {
     return products
       .filter((product) => (product.is_active ?? true) === true)
-      .reduce((sum, product) => sum + getCalculatedStock(product), 0);
+      .reduce((sum, product) => sum + getIzračunatoStock(product), 0);
   }, [products, stockMetaMap]);
 
   const criticalStockCount = useMemo(() => {
     return products.filter((product) => {
-      const calculatedStock = getCalculatedStock(product);
+      const calculatedStock = getIzračunatoStock(product);
       const minimumStock = Number(product.minimum_stock || 5);
       return (
         (product.is_active ?? true) === true &&
@@ -726,52 +726,52 @@ function exportFilteredStock() {
 
   const outOfStockCount = useMemo(() => {
     return products.filter(
-      (product) => (product.is_active ?? true) === true && getCalculatedStock(product) <= 0
+      (product) => (product.is_active ?? true) === true && getIzračunatoStock(product) <= 0
     ).length;
   }, [products, stockMetaMap]);
 
-  const totalInventoryCost = useMemo(() => {
+  const totalInventoryTrošak = useMemo(() => {
     return products
       .filter((product) => (product.is_active ?? true) === true)
-      .reduce((sum, product) => sum + getCalculatedStock(product) * Number(product.cost || 0), 0);
+      .reduce((sum, product) => sum + getIzračunatoStock(product) * Number(product.cost || 0), 0);
   }, [products, stockMetaMap]);
 
-  const totalInventorySaleValue = useMemo(() => {
+  const totalInventoryProdajaValue = useMemo(() => {
     return products
       .filter((product) => (product.is_active ?? true) === true)
-      .reduce((sum, product) => sum + getCalculatedStock(product) * Number(product.price || 0), 0);
+      .reduce((sum, product) => sum + getIzračunatoStock(product) * Number(product.price || 0), 0);
   }, [products, stockMetaMap]);
 
-  const noMovementHistoryCount = useMemo(() => {
-    return products.filter((product) => getProductStockMeta(product.id).movementCount === 0).length;
+  const noMovementIstorijaCount = useMemo(() => {
+    return products.filter((product) => getProizvodStockMeta(product.id).movementCount === 0).length;
   }, [products, stockMetaMap]);
 
   const mismatchCount = useMemo(() => {
-    return products.filter((product) => getStockDiff(product) !== 0).length;
+    return products.filter((product) => getStockRazlika(product) !== 0).length;
   }, [products, stockMetaMap]);
 
   const filteredStockTotal = useMemo(() => {
-    return filteredProducts.reduce((sum, product) => sum + getCalculatedStock(product), 0);
-  }, [filteredProducts, stockMetaMap]);
+    return filteredProizvods.reduce((sum, product) => sum + getIzračunatoStock(product), 0);
+  }, [filteredProizvods, stockMetaMap]);
 
   const filteredPotentialProfit = useMemo(() => {
-    return filteredProducts.reduce((sum, product) => {
-      const stock = getCalculatedStock(product);
+    return filteredProizvods.reduce((sum, product) => {
+      const stock = getIzračunatoStock(product);
       const margin = Number(product.price || 0) - Number(product.cost || 0);
       return sum + stock * margin;
     }, 0);
-  }, [filteredProducts, stockMetaMap]);
+  }, [filteredProizvods, stockMetaMap]);
 
   const filteredInventoryValue = useMemo(() => {
-    return filteredProducts.reduce((sum, product) => {
-      return sum + getCalculatedStock(product) * Number(product.price || 0);
+    return filteredProizvods.reduce((sum, product) => {
+      return sum + getIzračunatoStock(product) * Number(product.price || 0);
     }, 0);
-  }, [filteredProducts, stockMetaMap]);
+  }, [filteredProizvods, stockMetaMap]);
 
-  const criticalProducts = useMemo(() => {
+  const criticalProizvods = useMemo(() => {
     return products
       .filter((product) => {
-        const calculatedStock = getCalculatedStock(product);
+        const calculatedStock = getIzračunatoStock(product);
         const minimumStock = Number(product.minimum_stock || 5);
         return (
           (product.is_active ?? true) === true &&
@@ -779,35 +779,35 @@ function exportFilteredStock() {
           calculatedStock <= minimumStock
         );
       })
-      .sort((a, b) => getCalculatedStock(a) - getCalculatedStock(b));
+      .sort((a, b) => getIzračunatoStock(a) - getIzračunatoStock(b));
   }, [products, stockMetaMap]);
 
-  const outOfStockProducts = useMemo(() => {
+  const outOfStockProizvods = useMemo(() => {
     return products
-      .filter((product) => (product.is_active ?? true) === true && getCalculatedStock(product) <= 0)
+      .filter((product) => (product.is_active ?? true) === true && getIzračunatoStock(product) <= 0)
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   }, [products, stockMetaMap]);
 
-  const movementModalBalance = useMemo(() => {
-    return selectedMovements.reduce((sum, movement) => sum + Number(movement.quantity || 0), 0);
-  }, [selectedMovements]);
+  const movementModalSaldo = useMemo(() => {
+    return selectedKretanja.reduce((sum, movement) => sum + Number(movement.quantity || 0), 0);
+  }, [selectedKretanja]);
 
-  const editingMargin = Number(editPrice || 0) - Number(editCost || 0);
+  const editingMarža = Number(editPrice || 0) - Number(editTrošak || 0);
   const selectedGroupName = groups.find((group) => group.id === editGroupId)?.name || "-";
-  const selectedSupplierName =
-    suppliers.find((supplier) => String(supplier.id) === editSupplierId)?.name || "-";
+  const selectedDobavljačName =
+    suppliers.find((supplier) => String(supplier.id) === editDobavljačId)?.name || "-";
 
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
       <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-            BAUDECOR SYSTEM
+            BAUDECOR SISTEM / BAUDECOR SİSTEM
           </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">Ürünler / Products</h1>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight">Proizvodi / Ürünler</h1>
           <p className="mt-3 max-w-3xl text-sm text-slate-400">
             Ürünleri, gerçek stok görünümünü, marj yapısını, grup yapısını ve aktif/pasif durumunu yönet. /
-            Manage products, real stock visibility, margin structure, group structure, and active/inactive status.
+            Upravljaj proizvodima, stvarnim stanjem zaliha, maržom, strukturom grupa i aktivnim/pasivnim statusom.
           </p>
         </div>
 
@@ -817,68 +817,68 @@ function exportFilteredStock() {
             disabled={refreshing || loading}
             className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {refreshing ? "Yenileniyor... / Refreshing..." : "Verileri Yenile / Refresh Data"}
+            {refreshing ? "Osvježava se... / Yenileniyor..." : "Osvježi podatke / Verileri Yenile"}
           </button>
           <button
             onClick={exportFilteredStock}
             className="rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
           >
-            Gerçek Stok İndir / Export Real Stock
+            Preuzmi stvarni stok / Gerçek Stok İndir
           </button>
         </div>
       </div>
 
-      {(criticalProducts.length > 0 || outOfStockProducts.length > 0) && (
+      {(criticalProizvods.length > 0 || outOfStockProizvods.length > 0) && (
         <section className="mb-8 rounded-3xl border border-red-500/20 bg-red-500/5 p-6 shadow-2xl shadow-black/20">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-red-200">Kritik Stok Uyarısı / Critical Stock Alert</h2>
+              <h2 className="text-lg font-semibold text-red-200">Upozorenje kritične zalihe / Kritik Stok Uyarısı</h2>
               <p className="mt-1 text-sm text-slate-300">
                 Hesaplanan stok seviyesi düşük veya tükenmiş ürünler burada özetlenir. /
-                Low-stock and out-of-stock products based on calculated stock are summarized here.
+                Ovdje su sažeto prikazani proizvodi sa niskom zalihom i bez zalihe prema izračunatom stanju.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <AlertPill label="Kritik / Critical" value={String(criticalProducts.length)} amber />
-              <AlertPill label="Stok Yok / Out" value={String(outOfStockProducts.length)} red />
+              <AlertPill label="Kritično / Kritik" value={String(criticalProizvods.length)} amber />
+              <AlertPill label="Nema zalihe / Stok Yok" value={String(outOfStockProizvods.length)} red />
             </div>
           </div>
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-sm font-semibold text-amber-300">Kritik Ürünler / Critical Products</p>
+              <p className="text-sm font-semibold text-amber-300">Kritični proizvodi / Kritik Ürünler</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {criticalProducts.length > 0 ? (
-                  criticalProducts.map((product) => (
+                {criticalProizvods.length > 0 ? (
+                  criticalProizvods.map((product) => (
                     <button
                       key={product.id}
-                      onClick={() => openMovementHistory(product)}
+                      onClick={() => openMovementIstorija(product)}
                       className="rounded-xl border border-amber-400/20 bg-slate-950 px-3 py-2 text-sm text-white transition hover:bg-slate-900"
                     >
-                      {product.name} · {getCalculatedStock(product)} / Min {Number(product.minimum_stock || 5)}
+                      {product.name} · {getIzračunatoStock(product)} / Min {Number(product.minimum_stock || 5)}
                     </button>
                   ))
                 ) : (
-                  <span className="text-sm text-slate-300">Kritik ürün yok / No critical products</span>
+                  <span className="text-sm text-slate-300">Nema kritičnih proizvoda / Kritik ürün yok</span>
                 )}
               </div>
             </div>
 
             <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
-              <p className="text-sm font-semibold text-red-300">Stoksuz Ürünler / Out of Stock Products</p>
+              <p className="text-sm font-semibold text-red-300">Proizvodi bez zalihe / Stoksuz Ürünler</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {outOfStockProducts.length > 0 ? (
-                  outOfStockProducts.map((product) => (
+                {outOfStockProizvods.length > 0 ? (
+                  outOfStockProizvods.map((product) => (
                     <button
                       key={product.id}
-                      onClick={() => openMovementHistory(product)}
+                      onClick={() => openMovementIstorija(product)}
                       className="rounded-xl border border-red-400/20 bg-slate-950 px-3 py-2 text-sm text-white transition hover:bg-slate-900"
                     >
-                      {product.name} · {getCalculatedStock(product)}
+                      {product.name} · {getIzračunatoStock(product)}
                     </button>
                   ))
                 ) : (
-                  <span className="text-sm text-slate-300">Stoksuz ürün yok / No out-of-stock products</span>
+                  <span className="text-sm text-slate-300">Nema proizvoda bez zalihe / Stoksuz ürün yok</span>
                 )}
               </div>
             </div>
@@ -887,24 +887,24 @@ function exportFilteredStock() {
       )}
 
       <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-10">
-        <SummaryCard title="Toplam Ürün / Total Products" value={String(totalProducts)} />
-        <SummaryCard title="Aktif Ürün / Active Products" value={String(activeProductsCount)} />
-        <SummaryCard title="Pasif Ürün / Inactive Products" value={String(inactiveProductsCount)} />
-        <SummaryCard title="Tedarikçili Ürün / With Supplier" value={String(productsWithSupplierCount)} />
-        <SummaryCard title="Gerçek Stok / Real Stock" value={String(totalCalculatedStock)} />
-        <SummaryCard title="Kritik Stok / Critical Stock" value={String(criticalStockCount)} amber />
-        <SummaryCard title="Stoksuz / Out of Stock" value={String(outOfStockCount)} red />
+        <SummaryCard title="Ukupno proizvoda / Toplam Ürün" value={String(totalProizvods)} />
+        <SummaryCard title="Aktivni proizvodi / Aktif Ürün" value={String(activeProizvodsCount)} />
+        <SummaryCard title="Pasivni proizvodi / Pasif Ürün" value={String(inactiveProizvodsCount)} />
+        <SummaryCard title="Proizvodi sa dobavljačem / Tedarikçili Ürün" value={String(productsWithDobavljačCount)} />
+        <SummaryCard title="Stvarna zaliha / Gerçek Stok" value={String(totalIzračunatoStock)} />
+        <SummaryCard title="Kritična zaliha / Kritik Stok" value={String(criticalStockCount)} amber />
+        <SummaryCard title="Bez zalihe / Stoksuz" value={String(outOfStockCount)} red />
         <SummaryCard
-          title="Envanter Maliyeti / Inventory Cost"
-          value={`€${totalInventoryCost.toFixed(2)}`}
+          title="Trošak inventara / Envanter Maliyeti"
+          value={`€${totalInventoryTrošak.toFixed(2)}`}
         />
         <SummaryCard
-          title="Potansiyel Kâr / Potential Profit"
+          title="Potencijalna dobit / Potansiyel Kâr"
           value={`€${filteredPotentialProfit.toFixed(2)}`}
           amber={filteredPotentialProfit < 0}
         />
         <SummaryCard
-          title="Uyumsuz Kayıt / Mismatch"
+          title="Neusklađen zapis / Uyumsuz Kayıt"
           value={String(mismatchCount)}
           amber={mismatchCount > 0}
         />
@@ -915,34 +915,34 @@ function exportFilteredStock() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Arama / Search
+                Pretraga / Arama
               </label>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Ürün, grup veya tedarikçi ara / Search product, group or supplier"
+                placeholder="Pretraži proizvod, grupu ili dobavljača / Ürün, grup veya tedarikçi ara"
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
               />
             </div>
 
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Durum / Status
+                Status / Durum
               </label>
               <select
                 value={viewFilter}
                 onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
               >
-                <option value="active">Aktif / Active</option>
-                <option value="inactive">Pasif / Inactive</option>
-                <option value="all">Tümü / All</option>
+                <option value="active">Aktivno / Aktif</option>
+                <option value="inactive">Pasivno / Pasif</option>
+                <option value="all">Sve / Tümü</option>
               </select>
             </div>
 
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Grup Filtresi / Group Filter
+                Filter grupe / Grup Filtresi
               </label>
               <select
                 value={groupFilter}
@@ -951,7 +951,7 @@ function exportFilteredStock() {
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="all">
-                  {loadingGroups ? "Gruplar yükleniyor..." : "Tüm gruplar / All groups"}
+                  {loadingGroups ? "Grupe se učitavaju... / Grupe se učitavaju... / Gruplar yükleniyor..." : "Sve grupe / Tüm Gruplar"}
                 </option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
@@ -963,20 +963,20 @@ function exportFilteredStock() {
 
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Tedarikçi Filtresi / Supplier Filter
+                Filter dobavljača / Tedarikçi Filtresi
               </label>
               <select
                 value={supplierFilter}
-                onChange={(e) => setSupplierFilter(e.target.value)}
-                disabled={loadingSuppliers}
+                onChange={(e) => setDobavljačFilter(e.target.value)}
+                disabled={loadingDobavljačs}
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="all">
-                  {loadingSuppliers
-                    ? "Tedarikçiler yükleniyor..."
-                    : "Tüm tedarikçiler / All suppliers"}
+                  {loadingDobavljačs
+                    ? "Dobavljači se učitavaju... / Tedarikçiler yükleniyor..."
+                    : "Svi dobavljači / Tüm Tedarikçiler"}
                 </option>
-                <option value="none">Tedarikçisiz / No supplier</option>
+                <option value="none">Bez dobavljača / Tedarikçisiz</option>
                 {suppliers.map((supplier) => (
                   <option key={supplier.id} value={String(supplier.id)}>
                     {supplier.name}
@@ -987,79 +987,79 @@ function exportFilteredStock() {
 
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Stok Filtresi / Stock Filter
+                Filter zalihe / Stok Filtresi
               </label>
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value as StockFilter)}
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
               >
-                <option value="all">Tümü / All</option>
-                <option value="normal">Normal</option>
-                <option value="critical">Kritik / Critical</option>
-                <option value="out">Stok Yok / Out of Stock</option>
+                <option value="all">Sve / Tümü</option>
+                <option value="normal">Normalno / Normal</option>
+                <option value="critical">Kritično / Kritik</option>
+                <option value="out">Nema zalihe / Stok Yok of Stock</option>
               </select>
             </div>
 
             <div className="min-w-0">
               <label className="mb-2 flex min-h-[48px] items-end text-sm font-medium leading-5 text-slate-300">
-                Marj Filtresi / Margin Filter
+                Filter marže / Marj Filtresi
               </label>
               <select
                 value={marginFilter}
-                onChange={(e) => setMarginFilter(e.target.value as MarginFilter)}
+                onChange={(e) => setMaržaFilter(e.target.value as MaržaFilter)}
                 className="h-[56px] w-full min-w-0 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
               >
-                <option value="all">Tümü / All</option>
-                <option value="profit">Kârda / Profitable</option>
-                <option value="loss">Ekside / Negative Margin</option>
+                <option value="all">Sve / Tümü</option>
+                <option value="profit">U dobiti / Kârda</option>
+                <option value="loss">U minusu / Ekside</option>
               </select>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <InfoCard
-              title="Filtreli Ürün / Filtered Products"
-              value={String(filteredProducts.length)}
+              title="Filtrirani proizvodi / Filtreli Ürün"
+              value={String(filteredProizvods.length)}
             />
             <InfoCard
-              title="Filtreli Gerçek Stok / Filtered Real Stock"
+              title="Filtrirana stvarna zaliha / Filtreli Gerçek Stok"
               value={String(filteredStockTotal)}
             />
             <InfoCard
-              title="Filtreli Satış Değeri / Filtered Sale Value"
+              title="Filtrirana prodajna vrijednost / Filtreli Satış Değeri"
               value={`€${filteredInventoryValue.toFixed(2)}`}
             />
             <InfoCard
-              title="Potansiyel Kâr / Potential Profit"
+              title="Potencijalna dobit / Potansiyel Kâr"
               value={`€${filteredPotentialProfit.toFixed(2)}`}
               green={filteredPotentialProfit >= 0}
               red={filteredPotentialProfit < 0}
             />
             <InfoCard
-              title="Toplam Satış Değeri / Total Sale Value"
-              value={`€${totalInventorySaleValue.toFixed(2)}`}
+              title="Ukupna prodajna vrijednost / Toplam Satış Değeri"
+              value={`€${totalInventoryProdajaValue.toFixed(2)}`}
             />
             <InfoCard
-              title="Not / Note"
-              value="Gerçek stok = opening_stock + stock_movements"
+              title="Napomena / Not"
+              value="Stvarna zaliha = opening_stock + stock_movements"
             />
           </div>
         </div>
       </section>
 
-{editingProductId && (
+{editingProizvodId && (
         <section className="mb-8 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6 shadow-2xl shadow-black/20">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold">Ürün Düzenle / Edit Product</h2>
-            <p className="mt-1 text-sm text-slate-400">Seçili ürünü güncelle. / Update the selected product.</p>
+            <h2 className="text-lg font-semibold">Uredi proizvod / Ürün Düzenle</h2>
+            <p className="mt-1 text-sm text-slate-400">Ažuriraj odabrani proizvod / Seçili ürünü güncelle.</p>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="grid gap-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün Adı / Product Name
+                  Naziv proizvoda / Ürün Adı
                 </label>
                 <input
                   value={editName}
@@ -1070,7 +1070,7 @@ function exportFilteredStock() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Ürün Grubu / Product Group
+                  Grupa proizvoda / Ürün Grubu
                 </label>
                 <select
                   value={editGroupId}
@@ -1078,7 +1078,7 @@ function exportFilteredStock() {
                   disabled={loadingGroups}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <option value="">{loadingGroups ? "Gruplar yükleniyor..." : "Grup seç / Select group"}</option>
+                  <option value="">{loadingGroups ? "Grupe se učitavaju... / Grupe se učitavaju... / Gruplar yükleniyor..." : "Odaberi grupu / Grup seç"}</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -1089,18 +1089,18 @@ function exportFilteredStock() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Varsayılan Tedarikçi / Default Supplier
+                  Podrazumijevani dobavljač / Varsayılan Tedarikçi
                 </label>
                 <select
-                  value={editSupplierId}
-                  onChange={(e) => setEditSupplierId(e.target.value)}
-                  disabled={loadingSuppliers}
+                  value={editDobavljačId}
+                  onChange={(e) => setEditDobavljačId(e.target.value)}
+                  disabled={loadingDobavljačs}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">
-                    {loadingSuppliers
-                      ? "Tedarikçiler yükleniyor..."
-                      : "Tedarikçi seç (opsiyonel) / Select supplier (optional)"}
+                    {loadingDobavljačs
+                      ? "Dobavljači se učitavaju... / Tedarikçiler yükleniyor..."
+                      : "Odaberi dobavljača (opciono) / Tedarikçi seç (opsiyonel)"}
                   </option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={String(supplier.id)}>
@@ -1113,7 +1113,7 @@ function exportFilteredStock() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Satış Fiyatı / Sale Price
+                    Prodajna cijena / Satış Fiyatı
                   </label>
                   <input
                     type="number"
@@ -1125,18 +1125,18 @@ function exportFilteredStock() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Maliyet / Cost</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">Trošak / Maliyet</label>
                   <input
                     type="number"
                     min={0}
-                    value={editCost}
-                    onChange={(e) => setEditCost(Number(e.target.value))}
+                    value={editTrošak}
+                    onChange={(e) => setEditTrošak(Number(e.target.value))}
                     className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Minimum Stok / Minimum Stock</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">Minimalna zaliha / Minimum Stok</label>
                   <input
                     type="number"
                     min={0}
@@ -1153,37 +1153,37 @@ function exportFilteredStock() {
                   disabled={savingEdit}
                   className="rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {savingEdit ? "Kaydediliyor... / Saving..." : "Güncelle / Update"}
+                  {savingEdit ? "Sačuvava se... / Kaydediliyor..." : "Ažuriraj / Güncelle"}
                 </button>
 
                 <button
                   onClick={cancelEdit}
                   className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
                 >
-                  İptal / Cancel
+                  Otkaži / İptal
                 </button>
               </div>
             </div>
 
             <div className="space-y-4">
-              <InfoCard title="Yeni Ürün Adı / New Product Name" value={editName || "-"} />
-              <InfoCard title="Yeni Grup / New Group" value={selectedGroupName} />
+              <InfoCard title="Novi naziv proizvoda / Yeni Ürün Adı" value={editName || "-"} />
+              <InfoCard title="Nova grupa / Yeni Grup" value={selectedGroupName} />
               <InfoCard
-                title="Yeni Satış Fiyatı / New Sale Price"
+                title="Nova prodajna cijena / Yeni Satış Fiyatı"
                 value={`€${Number(editPrice || 0).toFixed(2)}`}
               />
               <InfoCard
-                title="Yeni Maliyet / New Cost"
-                value={`€${Number(editCost || 0).toFixed(2)}`}
+                title="Novi trošak / Yeni Maliyet"
+                value={`€${Number(editTrošak || 0).toFixed(2)}`}
               />
               <InfoCard
-                title="Yeni Marj / New Margin"
-                value={`€${Number(editingMargin).toFixed(2)}`}
-                green={editingMargin >= 0}
-                red={editingMargin < 0}
+                title="Nova marža / Yeni Marj"
+                value={`€${Number(editingMarža).toFixed(2)}`}
+                green={editingMarža >= 0}
+                red={editingMarža < 0}
               />
               <InfoCard
-                title="Yeni Minimum / New Minimum"
+                title="Novi minimum / Yeni Minimum"
                 value={String(Number(editMinimumStock || 0))}
               />
             </div>
@@ -1194,10 +1194,10 @@ function exportFilteredStock() {
       <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Ürün Listesi / Product List</h2>
+            <h2 className="text-lg font-semibold">Lista proizvoda / Ürün Listesi</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Açılış stok + hareket toplamına göre gerçek stok görünümü. /
-              Real stock view based on opening stock + movement balance.
+              Prikaz stvarne zalihe prema početnoj zalihi + zbiru kretanja. /
+              Stvarna zaliha prema početnoj zalihi i saldu kretanja.
             </p>
           </div>
           <div className="text-xs text-slate-500">
@@ -1223,21 +1223,21 @@ function exportFilteredStock() {
     <th className="px-4 py-4 text-left">
       <div className="min-w-[180px]">
         <div className="text-sm font-semibold text-slate-300">Ürün</div>
-        <div className="text-xs text-slate-500">Product</div>
+        <div className="text-xs text-slate-500">Proizvod</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-left">
       <div className="min-w-[180px]">
         <div className="text-sm font-semibold text-slate-300">Tedarikçi</div>
-        <div className="text-xs text-slate-500">Supplier</div>
+        <div className="text-xs text-slate-500">Dobavljač</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[110px]">
         <div className="text-sm font-semibold text-slate-300">Hesaplanan</div>
-        <div className="text-xs text-slate-500">Calculated</div>
+        <div className="text-xs text-slate-500">Izračunato</div>
       </div>
     </th>
 
@@ -1251,49 +1251,49 @@ function exportFilteredStock() {
     <th className="px-4 py-4 text-center">
       <div className="min-w-[100px]">
         <div className="text-sm font-semibold text-slate-300">Satış</div>
-        <div className="text-xs text-slate-500">Sale</div>
+        <div className="text-xs text-slate-500">Prodaja</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[100px]">
         <div className="text-sm font-semibold text-slate-300">Maliyet</div>
-        <div className="text-xs text-slate-500">Cost</div>
+        <div className="text-xs text-slate-500">Trošak</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[90px]">
         <div className="text-sm font-semibold text-slate-300">Marj</div>
-        <div className="text-xs text-slate-500">Margin</div>
+        <div className="text-xs text-slate-500">Marža</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[100px]">
         <div className="text-sm font-semibold text-slate-300">Marj %</div>
-        <div className="text-xs text-slate-500">Margin %</div>
+        <div className="text-xs text-slate-500">Marža %</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[120px]">
         <div className="text-sm font-semibold text-slate-300">Stok Kârı</div>
-        <div className="text-xs text-slate-500">Stock Profit</div>
+        <div className="text-xs text-slate-500">Dobit iz zalihe</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[90px]">
         <div className="text-sm font-semibold text-slate-300">Açılış</div>
-        <div className="text-xs text-slate-500">Opening</div>
+        <div className="text-xs text-slate-500">Početna</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[90px]">
         <div className="text-sm font-semibold text-slate-300">Kayıtlı</div>
-        <div className="text-xs text-slate-500">Recorded</div>
+        <div className="text-xs text-slate-500">Zabilježeno</div>
       </div>
     </th>
 
@@ -1302,7 +1302,7 @@ function exportFilteredStock() {
     <th className="px-4 py-4 text-center">
       <div className="min-w-[90px]">
         <div className="text-sm font-semibold text-slate-300">Fark</div>
-        <div className="text-xs text-slate-500">Diff</div>
+        <div className="text-xs text-slate-500">Razlika</div>
       </div>
     </th>
 
@@ -1316,56 +1316,56 @@ function exportFilteredStock() {
     <th className="px-4 py-4 text-center">
       <div className="min-w-[120px]">
         <div className="text-sm font-semibold text-slate-300">Stok Maliyeti</div>
-        <div className="text-xs text-slate-500">Stock Cost</div>
+        <div className="text-xs text-slate-500">Stock Trošak</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[120px]">
         <div className="text-sm font-semibold text-slate-300">Satış Değeri</div>
-        <div className="text-xs text-slate-500">Sale Value</div>
+        <div className="text-xs text-slate-500">Prodaja Value</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[110px]">
         <div className="text-sm font-semibold text-slate-300">Hareket</div>
-        <div className="text-xs text-slate-500">Movements</div>
+        <div className="text-xs text-slate-500">Kretanja</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[130px]">
         <div className="text-sm font-semibold text-slate-300">Bakiye</div>
-        <div className="text-xs text-slate-500">Balance</div>
+        <div className="text-xs text-slate-500">Saldo</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[130px]">
         <div className="text-sm font-semibold text-slate-300">Son Hareket</div>
-        <div className="text-xs text-slate-500">Last</div>
+        <div className="text-xs text-slate-500">Zadnje</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[120px]">
         <div className="text-sm font-semibold text-slate-300">Geçmiş</div>
-        <div className="text-xs text-slate-500">History</div>
+        <div className="text-xs text-slate-500">Istorija</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[100px]">
         <div className="text-sm font-semibold text-slate-300">Durum</div>
-        <div className="text-xs text-slate-500">Active</div>
+        <div className="text-xs text-slate-500">Aktivno</div>
       </div>
     </th>
 
     <th className="px-4 py-4 text-center">
       <div className="min-w-[150px]">
         <div className="text-sm font-semibold text-slate-300">İşlemler</div>
-        <div className="text-xs text-slate-500">Actions</div>
+        <div className="text-xs text-slate-500">Akcije</div>
       </div>
     </th>
 
@@ -1373,21 +1373,21 @@ function exportFilteredStock() {
 </thead>
 
               <tbody>
-                {filteredProducts.map((product) => {
+                {filteredProizvods.map((product) => {
                   const price = Number(product.price || 0);
                   const cost = Number(product.cost || 0);
                   const recordedStock = Number(product.stock || 0);
                   const openingStock = Number(product.opening_stock ?? 0);
-                  const calculatedStock = getCalculatedStock(product);
-                  const diff = getStockDiff(product);
+                  const calculatedStock = getIzračunatoStock(product);
+                  const diff = getStockRazlika(product);
                   const margin = price - cost;
                   const marginPercent = price > 0 ? (margin / price) * 100 : 0;
                   const stockProfit = calculatedStock * margin;
-                  const isActive = product.is_active ?? true;
+                  const isAktivno = product.is_active ?? true;
                   const busy = actionLoadingId === product.id;
-                  const stockMeta = getProductStockMeta(product.id);
-                  const stockCostValue = calculatedStock * cost;
-                  const stockSaleValue = calculatedStock * price;
+                  const stockMeta = getProizvodStockMeta(product.id);
+                  const stockTrošakValue = calculatedStock * cost;
+                  const stockProdajaValue = calculatedStock * price;
                   const minimumStock = Number(product.minimum_stock || 5);
                   const isCritical = calculatedStock > 0 && calculatedStock <= minimumStock;
                   const isOut = calculatedStock <= 0;
@@ -1439,23 +1439,23 @@ function exportFilteredStock() {
                       <td className="py-3 text-center">
                         <StockBadge stock={calculatedStock} min={minimumStock} />
                       </td>
-                      <td className="py-3 text-center text-base">€{stockCostValue.toFixed(2)}</td>
-                      <td className="py-3 text-center text-base">€{stockSaleValue.toFixed(2)}</td>
+                      <td className="py-3 text-center text-base">€{stockTrošakValue.toFixed(2)}</td>
+                      <td className="py-3 text-center text-base">€{stockProdajaValue.toFixed(2)}</td>
                       <td className="py-3 text-center text-base font-semibold">{stockMeta.movementCount}</td>
-                      <td className="py-3 text-center text-base">{stockMeta.movementBalance}</td>
+                      <td className="py-3 text-center text-base">{stockMeta.movementSaldo}</td>
                       <td className="py-3 text-center text-base text-slate-300">
                         {formatDateTime(stockMeta.lastMovementAt)}
                       </td>
                       <td className="py-3 text-center">
                         <button
-                          onClick={() => openMovementHistory(product)}
+                          onClick={() => openMovementIstorija(product)}
                           className="rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-base font-medium text-violet-300 transition hover:bg-violet-500/20"
                         >
-                          Hareketler / Movements
+                          Hareketler / Kretanja
                         </button>
                       </td>
                       <td className="py-3 text-center">
-                        <ActivityBadge isActive={isActive} />
+                        <ActivityBadge isAktivno={isAktivno} />
                       </td>
                       <td className="py-3 text-center">
                         <div className="flex flex-nowrap justify-center gap-2 whitespace-nowrap">
@@ -1463,31 +1463,31 @@ function exportFilteredStock() {
                             onClick={() => startEdit(product)}
                             className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-300 transition hover:bg-blue-500/20"
                           >
-                            Düzenle / Edit
+                            Uredi / Düzenle
                           </button>
 
                           <button
-                            onClick={() => toggleActive(product)}
+                            onClick={() => toggleAktivno(product)}
                             disabled={busy}
                             className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
-                              isActive
+                              isAktivno
                                 ? "border border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
                                 : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
                             } disabled:cursor-not-allowed disabled:opacity-60`}
                           >
                             {busy
-                              ? "Bekle... / Wait..."
-                              : isActive
-                                ? "Pasife Al / Archive"
-                                : "Aktif Yap / Activate"}
+                              ? "Sačekaj... / Bekle..."
+                              : isAktivno
+                                ? "Pasiviziraj / Pasife Al"
+                                : "Aktiviraj / Aktif Yap"}
                           </button>
 
                           <button
-                            onClick={() => deleteProduct(product)}
+                            onClick={() => deleteProizvod(product)}
                             disabled={busy}
                             className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {busy ? "Bekle... / Wait..." : "Sil / Delete"}
+                            {busy ? "Sačekaj... / Bekle..." : "Obriši / Sil"}
                           </button>
                         </div>
                       </td>
@@ -1495,10 +1495,10 @@ function exportFilteredStock() {
                   );
                 })}
 
-                {filteredProducts.length === 0 && (
+                {filteredProizvods.length === 0 && (
                   <tr>
                     <td colSpan={22} className="py-8 text-center text-slate-400">
-                      Kayıt yok / No products found
+                      Nema zapisa / Kayıt yok
                     </td>
                   </tr>
                 )}
@@ -1513,61 +1513,61 @@ function exportFilteredStock() {
           <div className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40">
             <div className="flex flex-col gap-4 border-b border-slate-800 px-6 py-5 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Stock Movements</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Stock Kretanja</p>
                 <h3 className="mt-2 text-2xl font-bold text-white">
-                  {selectedMovementProduct?.name || "-"}
+                  {selectedMovementProizvod?.name || "-"}
                 </h3>
                 <p className="mt-2 text-sm text-slate-400">
-                  Grup / Group: {selectedMovementProduct?.group_name || "-"}
+                  Grupa / Grup: {selectedMovementProizvod?.group_name || "-"}
                 </p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-5">
                 <InfoCard
-                  title="Açılış / Opening"
-                  value={String(Number(selectedMovementProduct?.opening_stock ?? 0))}
+                  title="Açılış / Početna"
+                  value={String(Number(selectedMovementProizvod?.opening_stock ?? 0))}
                 />
                 <InfoCard
-                  title="Kayıtlı / Recorded"
-                  value={String(Number(selectedMovementProduct?.stock || 0))}
+                  title="Kayıtlı / Zabilježeno"
+                  value={String(Number(selectedMovementProizvod?.stock || 0))}
                 />
                 <InfoCard
-                  title="Hareket / Movement"
-                  value={String(movementModalBalance)}
+                  title="Kretanje / Hareket"
+                  value={String(movementModalSaldo)}
                 />
                 <InfoCard
-                  title="Hesaplanan / Calculated"
+                  title="Hesaplanan / Izračunato"
                   value={String(
-                    Number(selectedMovementProduct?.opening_stock ?? 0) + movementModalBalance
+                    Number(selectedMovementProizvod?.opening_stock ?? 0) + movementModalSaldo
                   )}
                 />
                 <InfoCard
                   title="Minimum / Minimum"
-                  value={String(Number(selectedMovementProduct?.minimum_stock ?? 5))}
+                  value={String(Number(selectedMovementProizvod?.minimum_stock ?? 5))}
                 />
               </div>
             </div>
 
             <div className="max-h-[60vh] overflow-auto px-6 py-5">
               {movementLoading ? (
-                <div className="text-sm text-slate-400">Hareketler yükleniyor / Loading movements...</div>
-              ) : selectedMovements.length === 0 ? (
+                <div className="text-sm text-slate-400">Kretanja se učitavaju / Hareketler yükleniyor...</div>
+              ) : selectedKretanja.length === 0 ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/50 py-10 text-center text-slate-400">
-                  Hareket kaydı yok / No movement history found
+                  Nema istorije kretanja / Hareket kaydı yok
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[980px] text-sm">
                     <thead className="text-slate-400">
                       <tr className="border-b border-slate-800">
-                        <th className="py-3 text-left">Tarih / Date</th>
-                        <th className="py-3 text-left">Tür / Type</th>
-                        <th className="py-3 text-center">Miktar / Quantity</th>
-                        <th className="py-3 text-left">Not / Note</th>
+                        <th className="py-3 text-left">Datum / Tarih</th>
+                        <th className="py-3 text-left">Tip / Tür</th>
+                        <th className="py-3 text-center">Količina / Miktar</th>
+                        <th className="py-3 text-left">Napomena / Not</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedMovements.map((movement) => {
+                      {selectedKretanja.map((movement) => {
                         const quantity = Number(movement.quantity || 0);
                         const positive = quantity > 0;
                         return (
@@ -1589,10 +1589,10 @@ function exportFilteredStock() {
 
             <div className="flex justify-end border-t border-slate-800 px-6 py-4">
               <button
-                onClick={closeMovementHistory}
+                onClick={closeMovementIstorija}
                 className="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
               >
-                Kapat / Close
+                Zatvori / Kapat
               </button>
             </div>
           </div>
@@ -1648,7 +1648,7 @@ function StockBadge({ stock, min }: { stock: number; min: number }) {
   if (stock <= 0) {
     return (
       <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300">
-        Stok Yok / Out
+        Nema zalihe / Stok Yok
       </span>
     );
   }
@@ -1656,26 +1656,26 @@ function StockBadge({ stock, min }: { stock: number; min: number }) {
   if (stock <= min) {
     return (
       <span className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">
-        Kritik / Critical
+        Kritično / Kritik
       </span>
     );
   }
 
   return (
     <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-      Normal
+      Normalno / Normal
     </span>
   );
 }
 
-function ActivityBadge({ isActive }: { isActive: boolean }) {
-  return isActive ? (
+function ActivityBadge({ isAktivno }: { isAktivno: boolean }) {
+  return isAktivno ? (
     <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-      Aktif / Active
+      Aktif / Aktivno
     </span>
   ) : (
     <span className="inline-flex rounded-full border border-slate-600 bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-300">
-      Pasif / Inactive
+      Pasivno / Pasif
     </span>
   );
 }
