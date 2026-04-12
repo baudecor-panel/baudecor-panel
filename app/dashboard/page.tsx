@@ -322,6 +322,35 @@ export default function DashboardPage() {
   }, [filteredSales]);
 
   const customerStats = useMemo(() => {
+  const customerProfitStats = useMemo(() => {
+    const map = new Map<string, { revenue: number; cost: number; profit: number }>();
+
+    filteredSales.forEach((sale) => {
+      const key = sale.customer_name || "Bilinmiyor / Unknown";
+      if (!map.has(key)) {
+        map.set(key, { revenue: 0, cost: 0, profit: 0 });
+      }
+      const curr = map.get(key)!;
+
+      const productName = sale.product_name || "";
+      const costPerUnit = productCostMap.get(productName) || 0;
+      const totalCost = costPerUnit * Number(sale.quantity || 0);
+      const profit = Number(sale.total || 0) - totalCost;
+
+      curr.revenue += Number(sale.total || 0);
+      curr.cost += totalCost;
+      curr.profit += profit;
+    });
+
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.profit - a.profit);
+  }, [filteredSales, productCostMap]);
+
+  const topCustomersByProfit = useMemo(() => customerProfitStats.slice(0,5), [customerProfitStats]);
+  const worstCustomersByProfit = useMemo(() => [...customerProfitStats].sort((a,b)=>a.profit-b.profit).slice(0,5), [customerProfitStats]);
+
+
     const map = new Map<string, { total: number; orderSet: Set<string> }>();
 
     filteredSales.forEach((sale) => {
@@ -1035,6 +1064,44 @@ export default function DashboardPage() {
                 />
               ))
             )}
+          </div>
+        </PanelCard>
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-2">
+        <PanelCard
+          title="Müşteri Kârlılığı / Customer Profitability"
+          subtitle="Müşteri bazlı toplam kâr analizi."
+        >
+          <div className="space-y-3">
+            {topCustomersByProfit.map((c, i) => (
+              <RankRow
+                key={i}
+                rank={i+1}
+                title={c.name}
+                subtitle={`Ciro €${c.revenue.toFixed(2)} • Maliyet €${c.cost.toFixed(2)}`}
+                value={`€${c.profit.toFixed(2)}`}
+                valueClassName={c.profit >= 0 ? "text-emerald-300" : "text-red-300"}
+              />
+            ))}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Riskli Müşteriler / Risky Customers"
+          subtitle="Kârı düşük veya negatif müşteriler."
+        >
+          <div className="space-y-3">
+            {worstCustomersByProfit.map((c, i) => (
+              <RankRow
+                key={i}
+                rank={i+1}
+                title={c.name}
+                subtitle={`Ciro €${c.revenue.toFixed(2)}`}
+                value={`€${c.profit.toFixed(2)}`}
+                valueClassName={c.profit >= 0 ? "text-amber-300" : "text-red-300"}
+              />
+            ))}
           </div>
         </PanelCard>
       </section>
