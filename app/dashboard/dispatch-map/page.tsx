@@ -29,7 +29,7 @@ const DispatchMapClient = dynamic(() => import("./DispatchMapClient"), {
   ssr: false,
   loading: () => (
     <main className="flex h-full items-center justify-center bg-slate-950 text-white">
-      Harita yükleniyor / Loading map...
+      Harita yükleniyor / Mapa se učitava...
     </main>
   ),
 });
@@ -282,11 +282,11 @@ export default function DispatchMapPage() {
         return `${order} - ${customer}
 Ürün / Product: ${product}
 Adet / Qty: ${quantity}
-Şehir / City: ${city}
+Grad / Şehir: ${city}
 Adres / Address: ${address}
-Telefon / Phone: ${phone}
-Araç / Vehicle: ${vehicle}
-Kurye / Courier: ${courier}
+Telefon / Telefon: ${phone}
+Vozilo / Araç: ${vehicle}
+Kurir / Kurye: ${courier}
 Grup / Group: ${group}
 Konum / Navigation: ${navLink}`;
       })
@@ -294,16 +294,16 @@ Konum / Navigation: ${navLink}`;
 
     try {
       await navigator.clipboard.writeText(text);
-      alert("Rota kopyalandı / Route copied");
+      alert("Ruta kopirana / Rota kopyalandı");
     } catch {
-      alert("Kopyalama başarısız / Copy failed");
+      alert("Kopiranje neuspješno / Kopyalama başarısız");
     }
   }
 
   if (loading) {
     return (
       <main className="flex h-screen items-center justify-center bg-slate-950 text-white">
-        Yükleniyor / Loading...
+        Yükleniyor / Učitava se...
       </main>
     );
   }
@@ -324,43 +324,43 @@ Konum / Navigation: ${navLink}`;
             onChange={(e) => setMethodFilter(e.target.value)}
             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
           >
-            <option value="all">Tümü / All</option>
+            <option value="all">Sve / Tümü</option>
             <option>Kendi Araç / Own Vehicle</option>
-            <option>Kurye / Courier</option>
+            <option>Kurir / Kurye</option>
           </select>
 
           <input
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            placeholder="Şehir / City"
+            placeholder="Grad / Şehir"
             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
           />
 
           <input
             value={vehicleFilter}
             onChange={(e) => setVehicleFilter(e.target.value)}
-            placeholder="Araç / Vehicle"
+            placeholder="Vozilo / Araç"
             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
           />
 
           <input
             value={courierFilter}
             onChange={(e) => setCourierFilter(e.target.value)}
-            placeholder="Kurye / Courier"
+            placeholder="Kurir / Kurye"
             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
           />
 
           <input
             value={groupFilter}
             onChange={(e) => setGroupFilter(e.target.value)}
-            placeholder="Grup / Dispatch Group"
+            placeholder="Grupa / Sevkiyat Grubu"
             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
           />
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-400">
-            Toplam kayıt / Total records: {filteredRows.length}
+            Ukupno zapisa / Toplam kayıt: {filteredRows.length}
           </p>
 
           <label className="flex items-center gap-2 text-sm text-slate-300">
@@ -370,7 +370,7 @@ Konum / Navigation: ${navLink}`;
               onChange={(e) => setOnlyActiveGroup(e.target.checked)}
               className="h-4 w-4"
             />
-            Sadece aktif grup / Only active group
+            Samo aktivna grupa / Sadece aktif grup
           </label>
         </div>
       </div>
@@ -378,9 +378,9 @@ Konum / Navigation: ${navLink}`;
       <div className="flex h-[calc(100vh-109px)]">
         <aside className="w-[430px] shrink-0 overflow-y-auto border-r border-slate-800 bg-slate-900/60">
           <div className="border-b border-slate-800 p-4">
-            <h2 className="text-lg font-semibold">Rota Grupları / Route Groups</h2>
+            <h2 className="text-lg font-semibold">Grupe ruta / Rota Grupları</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Grup sayısı / Total groups: {groups.length}
+              Ukupno grupa / Grup sayısı: {groups.length}
             </p>
           </div>
 
@@ -403,10 +403,10 @@ Konum / Navigation: ${navLink}`;
                 >
                   <div className="font-semibold text-white">{groupName}</div>
                   <div className="mt-2 text-sm text-slate-400">
-                    {items.length} sipariş / orders
+                    {items.length} narudžbi / sipariş
                   </div>
                   <div className="mt-2 text-xs text-slate-400 break-words">
-                    Sıralar / Orders: {orderList || "-"}
+                    Redoslijed / Sıralar: {orderList || "-"}
                   </div>
                 </button>
               );
@@ -414,7 +414,7 @@ Konum / Navigation: ${navLink}`;
 
             {groups.length === 0 && (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-400">
-                Grup bulunamadı / No groups found
+                Grup bulunamadı / Nema grupa
               </div>
             )}
           </div>
@@ -422,14 +422,14 @@ Konum / Navigation: ${navLink}`;
           <div className="border-t border-slate-800 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-slate-300">
-                Aktif Liste / Active List
+                Aktivna lista / Aktif Liste
               </h3>
 
               <button
                 onClick={copyRouteList}
                 className="rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
               >
-                ROTA KOPYALA
+                KOPIRAJ RUTU
               </button>
             </div>
 
@@ -462,19 +462,19 @@ Konum / Navigation: ${navLink}`;
                         {row.customer_address || "-"}
                       </div>
                       <div className="mt-2 text-xs text-slate-400">
-                        Durum / Status: {row.shipment_status || "-"}
+                        Status / Durum: {row.shipment_status || "-"}
                       </div>
                       <div className="text-xs text-slate-500">
-                        Ödeme / Payment: {row.payment_status || "-"}
+                        Plaćanje / Ödeme: {row.payment_status || "-"}
                       </div>
                       <div className="text-xs text-slate-500">
-                        Telefon / Phone: {row.customer_phone || "-"}
+                        Telefon / Telefon: {row.customer_phone || "-"}
                       </div>
                       <div className="text-xs text-slate-500">
-                        Koordinat / Coordinates:{" "}
+                        Koordinate / Koordinat:{" "}
                         {hasCoords
                           ? `${row.latitude}, ${row.longitude}`
-                          : "YOK / MISSING"}
+                          : "NEMA / YOK"}
                       </div>
                     </div>
                   );
@@ -482,7 +482,7 @@ Konum / Navigation: ${navLink}`;
 
               {mapRows.length === 0 && (
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-400">
-                  Kayıt yok / No records
+                  Nema zapisa / Kayıt yok
                 </div>
               )}
             </div>
@@ -490,7 +490,7 @@ Konum / Navigation: ${navLink}`;
             {rowsWithoutCoords.length > 0 && (
               <div className="mt-6 rounded-2xl border border-red-900/50 bg-red-950/20 p-4">
                 <h4 className="text-sm font-semibold text-red-300">
-                  Koordinatı Eksik Kayıtlar / Missing Coordinates
+                  Nedostaju koordinate / Koordinatı Eksik Kayıtlar
                 </h4>
                 <div className="mt-3 space-y-2">
                   {rowsWithoutCoords.map((row, index) => (
