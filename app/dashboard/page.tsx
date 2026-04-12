@@ -102,7 +102,7 @@ export default function DashboardPage() {
 
     if (error) {
       setLoggingOut(false);
-      alert("Çıkış yapılamadı: " + error.message);
+      alert("Çıkış yapılamadı / Logout failed: " + error.message);
       return;
     }
 
@@ -347,6 +347,60 @@ export default function DashboardPage() {
       .slice(0, 5);
   }, [filteredSales]);
 
+  const productProfitStats = useMemo(() => {
+    return activeProducts
+      .map((product) => {
+        const price = Number(product.price ?? 0);
+        const cost = Number(product.cost ?? 0);
+        const stock = Number(product.stock ?? 0);
+        const unitProfit = price - cost;
+        const marginPercent = price > 0 ? (unitProfit / price) * 100 : 0;
+        const stockProfit = unitProfit * stock;
+
+        return {
+          name: product.name || "Bilinmiyor / Unknown",
+          price,
+          cost,
+          stock,
+          unitProfit,
+          marginPercent,
+          stockProfit,
+        };
+      })
+      .sort((a, b) => b.stockProfit - a.stockProfit);
+  }, [activeProducts]);
+
+  const profitableProductCount = useMemo(() => {
+    return productProfitStats.filter((item) => item.unitProfit > 0).length;
+  }, [productProfitStats]);
+
+  const losingProductCount = useMemo(() => {
+    return productProfitStats.filter((item) => item.unitProfit < 0).length;
+  }, [productProfitStats]);
+
+  const totalPotentialProfit = useMemo(() => {
+    return productProfitStats.reduce((sum, item) => sum + item.stockProfit, 0);
+  }, [productProfitStats]);
+
+  const topProfitableProducts = useMemo(() => {
+    return productProfitStats.slice(0, 5);
+  }, [productProfitStats]);
+
+  const worstMarginProducts = useMemo(() => {
+    return [...productProfitStats]
+      .sort((a, b) => a.marginPercent - b.marginPercent)
+      .slice(0, 5);
+  }, [productProfitStats]);
+
+  const averageMarginPercent = useMemo(() => {
+    if (productProfitStats.length === 0) return 0;
+    return (
+      productProfitStats.reduce((sum, item) => sum + item.marginPercent, 0) /
+      productProfitStats.length
+    );
+  }, [productProfitStats]);
+
+
   const stockAlerts = useMemo(() => {
     return activeProducts
       .map((product) => {
@@ -584,7 +638,7 @@ export default function DashboardPage() {
           disabled={loggingOut}
           className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}
+          {loggingOut ? "Çıkış yapılıyor... / Logging out..." : "Çıkış Yap / Logout"}
         </button>
       </div>
 
@@ -624,27 +678,27 @@ export default function DashboardPage() {
 
             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <HeroStatCard
-                label="Toplam Ciro"
+                label="Toplam Ciro / Total Revenue"
                 value={`€${totalRevenue.toFixed(2)}`}
-                helper="Seçili dönem gelir"
+                helper="Seçili dönem geliri / Revenue for selected period"
                 tone="blue"
               />
               <HeroStatCard
-                label="Toplam Kâr"
+                label="Toplam Kâr / Total Profit"
                 value={`€${totalProfit.toFixed(2)}`}
-                helper="Brüt kârlılık görünümü"
+                helper="Brüt kârlılık görünümü / Gross profit view"
                 tone={totalProfit >= 0 ? "green" : "red"}
               />
               <HeroStatCard
-                label="Sipariş"
+                label="Sipariş / Orders"
                 value={String(totalOrders)}
-                helper="Benzersiz order toplamı"
+                helper="Benzersiz sipariş toplamı / Unique order count"
                 tone="slate"
               />
               <HeroStatCard
-                label="Stok Sağlığı"
+                label="Stok Sağlığı / Stock Health"
                 value={`%${stockHealthRate}`}
-                helper="Minimum stok üstü ürün oranı"
+                helper="Minimum stok üstü ürün oranı / Share of products above minimum stock"
                 tone={
                   stockHealthRate >= 75
                     ? "green"
@@ -658,39 +712,39 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <ExecutiveMetric
-              title="Tamamlanma Oranı"
+              title="Tamamlanma Oranı / Completion Rate"
               value={`%${completionRate}`}
-              subtitle="Teslim + ödeme tamamlanan siparişler"
+              subtitle="Teslim + ödeme tamamlanan siparişler / Delivered and paid orders"
               tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="İptal Oranı"
+              title="İptal Oranı / Cancellation Rate"
               value={`%${cancellationRate}`}
-              subtitle="Dönem içi iptal baskısı"
+              subtitle="Dönem içi iptal baskısı / Cancellation pressure in period"
               tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Bekleyen Ödeme"
+              title="Bekleyen Ödeme / Pending Payment"
               value={`€${pendingPaymentsTotal.toFixed(2)}`}
               subtitle={`Cironun %${pendingPaymentRate}'i`}
               tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Teslimat Backlog"
+              title="Teslimat Backlog / Delivery Backlog"
               value={String(deliveryBacklog)}
-              subtitle="Kapanmamış teslimatlar"
+              subtitle="Kapanmamış teslimatlar / Undelivered orders"
               tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Kritik Stok"
+              title="Kritik Stok / Critical Stock"
               value={String(criticalStockCount)}
-              subtitle="Minimum stok seviyesinde"
+              subtitle="Minimum stok seviyesinde / At minimum stock"
               tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
             />
             <ExecutiveMetric
-              title="Stoksuz Ürün"
+              title="Stoksuz Ürün / Out of Stock"
               value={String(outOfStockCount)}
-              subtitle="Doğrudan satış kaybı riski"
+              subtitle="Doğrudan satış kaybı riski / Immediate lost-sales risk"
               tone={outOfStockCount === 0 ? "green" : "red"}
             />
           </div>
@@ -709,7 +763,7 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              {alerts.length} aktif sinyal
+              {alerts.length} aktif sinyal / active signals
             </div>
           </div>
 
@@ -748,7 +802,7 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Yönetim özeti
+              Yönetim özeti / Executive summary
             </div>
           </div>
 
@@ -776,12 +830,12 @@ export default function DashboardPage() {
                 Satış ve Kâr Trendi / Sales & Profit Trend
               </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir.
+                Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir. / Shows how sales volume and profitability move together in the selected period.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Ortalama sipariş: €{averageOrderValue.toFixed(2)}
+              Ortalama sipariş / Average order: €{averageOrderValue.toFixed(2)}
             </div>
           </div>
 
@@ -831,33 +885,33 @@ export default function DashboardPage() {
               Stok Riski / Stock Risk
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar.
+              Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar. / Products that may create lost-sales risk based on minimum stock are highlighted here.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <MiniRiskCard
-              title="Kritik Ürün"
+              title="Kritik Ürün / Critical Items"
               value={String(criticalStockCount)}
-              helper="Minimum stok seviyesinde"
+              helper="Minimum stok seviyesinde / At minimum stock"
               tone="amber"
             />
             <MiniRiskCard
-              title="Stoksuz"
+              title="Stoksuz / Out of Stock"
               value={String(outOfStockCount)}
-              helper="Acil müdahale gerekir"
+              helper="Acil müdahale gerekir / Immediate action needed"
               tone="red"
             />
             <MiniRiskCard
-              title="Düşük Stok"
+              title="Düşük Stok / Low Stock"
               value={String(lowStockCount)}
-              helper="Yakın risk alanı"
+              helper="Yakın risk alanı / Near-risk zone"
               tone="blue"
             />
             <MiniRiskCard
               title="Stok Sağlığı"
               value={`%${stockHealthRate}`}
-              helper="Genel ürün sağlığı"
+              helper="Genel ürün sağlığı / Overall product health"
               tone={
                 stockHealthRate >= 75
                   ? "green"
@@ -895,15 +949,94 @@ export default function DashboardPage() {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <ValueStrip
-              label="Envanter Maliyeti"
+              label="Envanter Maliyeti / Inventory Cost"
               value={`€${inventoryCostValue.toFixed(2)}`}
             />
             <ValueStrip
-              label="Satış Değeri"
+              label="Satış Değeri / Sale Value"
               value={`€${inventorySaleValue.toFixed(2)}`}
             />
           </div>
         </div>
+      </section>
+
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-3">
+        <PanelCard
+          title="Kârlılık Özeti / Profitability Summary"
+          subtitle="Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MiniRiskCard
+              title="Potansiyel Kâr / Potential Profit"
+              value={`€${totalPotentialProfit.toFixed(2)}`}
+              helper="Stoktaki ürünlerden beklenen kâr / Expected profit from current stock"
+              tone={totalPotentialProfit >= 0 ? "green" : "red"}
+            />
+            <MiniRiskCard
+              title="Ortalama Marj / Average Margin"
+              value={`%${averageMarginPercent.toFixed(1)}`}
+              helper="Aktif ürünlerin ortalama marjı / Average margin across active products"
+              tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
+            />
+            <MiniRiskCard
+              title="Kârlı Ürün / Profitable Products"
+              value={String(profitableProductCount)}
+              helper="Birim kârı pozitif ürünler / Products with positive unit profit"
+              tone="green"
+            />
+            <MiniRiskCard
+              title="Zarardaki Ürün / Loss-making Products"
+              value={String(losingProductCount)}
+              helper="Birim kârı negatif ürünler / Products with negative unit profit"
+              tone={losingProductCount === 0 ? "green" : "red"}
+            />
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="En Kârlı Ürünler / Most Profitable Products"
+          subtitle="Stok kâr potansiyeline göre en güçlü ürünler."
+        >
+          <div className="space-y-3">
+            {topProfitableProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topProfitableProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
+                  value={`€${item.stockProfit.toFixed(2)}`}
+                  valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="En Zayıf Marj / Weakest Margins"
+          subtitle="Marj yüzdesi en düşük ürünler."
+        >
+          <div className="space-y-3">
+            {worstMarginProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              worstMarginProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Birim kâr / Unit profit: €${item.unitProfit.toFixed(2)}`}
+                  value={`%${item.marginPercent.toFixed(1)}`}
+                  valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-4">
