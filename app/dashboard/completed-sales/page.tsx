@@ -266,56 +266,58 @@ export default function CompletedSalesPage() {
       </div>
 
       <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Pretraga / Arama
             </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sipariş, kupac, telefon, proizvod... / Sipariş, müşteri, telefon, ürün..."
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              placeholder="Müşteri, ürün, sipariş..."
+              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-slate-500 focus:outline-none"
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Grad / Şehir
             </label>
             <input
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              placeholder="Grad... / Şehir..."
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              placeholder="Şehir..."
+              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-slate-500 focus:outline-none"
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Početni datum / Başlangıç Tarihi
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Početni datum / Başlangıç
             </label>
             <DatePicker
               selected={dateFrom}
               onChange={(date: Date | null) => setDateFrom(date)}
               dateFormat="dd.MM.yyyy"
-              placeholderText="Odaberite datum / Tarih seçin"
+              placeholderText="Tarih seçin..."
               isClearable
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              wrapperClassName="w-full"
+              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-slate-500 focus:outline-none"
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Završni datum / Bitiş Tarihi
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Završni datum / Bitiş
             </label>
             <DatePicker
               selected={dateTo}
               onChange={(date: Date | null) => setDateTo(date)}
               dateFormat="dd.MM.yyyy"
-              placeholderText="Odaberite datum / Tarih seçin"
+              placeholderText="Tarih seçin..."
               isClearable
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              wrapperClassName="w-full"
+              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-slate-500 focus:outline-none"
             />
           </div>
         </div>
