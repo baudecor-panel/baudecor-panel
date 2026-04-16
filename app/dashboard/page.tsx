@@ -512,7 +512,8 @@ export default function DashboardPage() {
 
     if (deliveryBacklog > 20) {
       list.push({
-        text: "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
+        text:
+          "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
         type: "info",
       });
     }
@@ -579,7 +580,9 @@ export default function DashboardPage() {
     if (averageOrderValue > 0 && totalOrders > 0) {
       list.push({
         title: "Kvalitet korpe / Sepet Kalitesi",
-        text: `Prosječna vrijednost narudžbe / Ortalama sipariş değeri: €${averageOrderValue.toFixed(2)}`,
+        text: `Prosječna vrijednost narudžbe / Ortalama sipariş değeri: €${averageOrderValue.toFixed(
+          2
+        )}`,
         tone: "neutral",
       });
     }
@@ -640,468 +643,757 @@ export default function DashboardPage() {
     return "Ove godine / Bu Yıl";
   }
 
-  function getStockDot(level: StockAlertItem["level"]) {
-    if (level === "out") return "bg-red-400";
-    if (level === "critical") return "bg-amber-400";
-    return "bg-cyan-400";
-  }
-
-  function getStockText(level: StockAlertItem["level"]) {
-    if (level === "out") return "text-red-300";
-    if (level === "critical") return "text-amber-300";
-    return "text-cyan-300";
-  }
-
   function getStockLabel(level: StockAlertItem["level"]) {
     if (level === "out") return "Nema na stanju / Stok Yok";
     if (level === "critical") return "Kritično / Kritik";
     return "Nisko / Düşük";
   }
 
+  function getStockClass(level: StockAlertItem["level"]) {
+    if (level === "out") return "text-red-300";
+    if (level === "critical") return "text-amber-300";
+    return "text-cyan-300";
+  }
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#030712] p-8 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.4em] text-amber-500/60">BAUDECOR</div>
-          <div className="text-2xl font-black tracking-tight text-white">Učitava se / Yükleniyor...</div>
+      <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
+        <div className="rounded-[32px] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-black/30">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+            PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
+          </p>
+          <h1 className="mt-4 text-4xl font-black tracking-tight">
+            Kontrolna tabla / Kontrol Paneli
+          </h1>
+          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-slate-400">
+            Učitava se / Yükleniyor
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#030712] px-6 py-8 text-white md:px-10">
+    <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
+      <div className="mb-4 flex justify-end gap-3">
+        <button
+          onClick={exportToExcel}
+          className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/20"
+        >
+          Excel İndir / Export ({filteredSales.length} kayıt)
+        </button>
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
+        </button>
+      </div>
 
-      {/* ── HEADER ── */}
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.45em] text-amber-500/70">
-            BAUDECOR · UPRAVLJAČKI PANEL / YÖNETİM PANELİ
-          </p>
-          <h1 className="mt-1.5 text-3xl font-black tracking-tight text-white md:text-4xl">
-            Kontrolna tabla / Kontrol Paneli
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1.5 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-1">
-            {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
-              <button
-                key={item}
-                onClick={() => setRange(item)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                  range === item
-                    ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {getRangeLabel(item)}
-              </button>
-            ))}
+      <section className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-2xl shadow-black/40 md:p-8">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
+        <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
+              PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
+            </div>
+
+            <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
+              Kontrolna tabla / Kontrol Paneli
+            </h1>
+
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
+              Pogledajte prodajne rezultate, pritisak profitabilnosti, rizik naplate i
+              osjetljivost zaliha na jednom ekranu. Ova stranica je dizajnirana ne za
+              operativni rad, već za brzo donošenje odluka na nivou uprave /
+              Şirketin satış performansını, kârlılık baskısını, tahsilat riskini ve
+              stok kırılganlığını tek ekranda gör. Bu sayfa operasyon yapmak için değil,
+              yönetim seviyesinde hızlı karar almak için tasarlandı.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setRange(item)}
+                  className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
+                    range === item
+                      ? "bg-white text-slate-950 shadow-lg shadow-white/10"
+                      : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                  }`}
+                >
+                  {getRangeLabel(item)}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <HeroStatCard
+                label="Ukupan prihod / Toplam Ciro"
+                value={`€${totalRevenue.toFixed(2)}`}
+                helper="Prihod izabranog perioda / Seçili dönem geliri"
+                tone="blue"
+              />
+              <HeroStatCard
+                label="Ukupan profit / Toplam Kâr"
+                value={`€${totalProfit.toFixed(2)}`}
+                helper="Pregled bruto profitabilnosti / Brüt kârlılık görünümü"
+                tone={totalProfit >= 0 ? "green" : "red"}
+              />
+              <HeroStatCard
+                label="Narudžbe / Sipariş"
+                value={String(totalOrders)}
+                helper="Ukupan broj jedinstvenih narudžbi / Benzersiz sipariş toplamı"
+                tone="slate"
+              />
+              <HeroStatCard
+                label="Zdravlje zalihe / Stok Sağlığı"
+                value={`%${stockHealthRate}`}
+                helper="Udio proizvoda iznad minimalne zalihe / Minimum stok üstü ürün oranı"
+                tone={
+                  stockHealthRate >= 75
+                    ? "green"
+                    : stockHealthRate >= 50
+                    ? "amber"
+                    : "red"
+                }
+              />
+            </div>
           </div>
-          <button
-            onClick={exportToExcel}
-            className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20"
-          >
-            Excel ({filteredSales.length})
-          </button>
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-slate-400 transition hover:text-white disabled:opacity-50"
-          >
-            {loggingOut ? "Odjava... / Çıkılıyor..." : "Odjava / Çıkış"}
-          </button>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ExecutiveMetric
+              title="Stopa završetka / Tamamlanma Oranı"
+              value={`%${completionRate}`}
+              subtitle="Isporučene i plaćene narudžbe / Teslim + ödeme tamamlanan siparişler"
+              tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Stopa otkazivanja / İptal Oranı"
+              value={`%${cancellationRate}`}
+              subtitle="Pritisak otkazivanja u periodu / Dönem içi iptal baskısı"
+              tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Plaćanje na čekanju / Bekleyen Ödeme"
+              value={`€${pendingPaymentsTotal.toFixed(2)}`}
+              subtitle={`Udio u prihodu / Ciro payı: %${pendingPaymentRate}`}
+              tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Zaostale isporuke / Teslimat Backlog"
+              value={String(deliveryBacklog)}
+              subtitle="Nezatvorene isporuke / Kapanmamış teslimatlar"
+              tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Kritična zaliha / Kritik Stok"
+              value={String(criticalStockCount)}
+              subtitle="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
+              tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              title="Proizvod bez zalihe / Stoksuz Ürün"
+              value={String(outOfStockCount)}
+              subtitle="Neposredan rizik gubitka prodaje / Doğrudan satış kaybı riski"
+              tone={outOfStockCount === 0 ? "green" : "red"}
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── KPI KARTI SATIRI ── */}
-      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <KpiCard
-          label="Ukupan prihod / Toplam Ciro"
-          value={`€${totalRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="Prihod perioda / Dönem geliri"
-          accent="amber"
-        />
-        <KpiCard
-          label="Ukupan profit / Toplam Kâr"
-          value={`€${totalProfit.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="Bruto profitabilnost / Brüt kârlılık"
-          accent={totalProfit >= 0 ? "green" : "red"}
-        />
-        <KpiCard
-          label="Narudžbe / Sipariş"
-          value={String(totalOrders)}
-          sub={`${activeOrders} aktivnih / aktif · ${completedOrders} završenih / tamamlandı`}
-          accent="blue"
-        />
-        <KpiCard
-          label="Zdravlje zalihe / Stok Sağlığı"
-          value={`%${stockHealthRate}`}
-          sub="Udio iznad min. zalihe / Min. stok üstü oran"
-          accent={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
-        />
-      </div>
+      <section className="mb-8 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="rounded-[28px] border border-red-500/20 bg-gradient-to-br from-red-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-200/80">
+                PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Kritična upozorenja / Kritik Uyarılar
+              </h2>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              {alerts.length} aktivnih signala / aktif sinyal
+            </div>
+          </div>
 
-      {/* ── OPERASYON METRİKLERİ ── */}
-      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-6">
-        <MetricPill label="Završenost / Tamamlanma" value={`%${completionRate}`} tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"} />
-        <MetricPill label="Stopa otkazivanja / İptal" value={`%${cancellationRate}`} tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"} />
-        <MetricPill label="Plaćanje na čekanju / Bekleyen" value={`€${pendingPaymentsTotal.toFixed(0)}`} tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"} />
-        <MetricPill label="Zaostale isporuke / Backlog" value={String(deliveryBacklog)} tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"} />
-        <MetricPill label="Kritična zaliha / Kritik Stok" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"} />
-        <MetricPill label="Bez zalihe / Stoksuz Ürün" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
-      </div>
-
-      {/* ── UYARILAR + İÇGÖRÜLER ── */}
-      <div className="mb-5 grid gap-4 xl:grid-cols-2">
-        <LuxCard label="PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR" title="Kritična upozorenja / Kritik Uyarılar" badge={`${alerts.length} signala / sinyal`}>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {alerts.length === 0 ? (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3 text-sm font-semibold text-emerald-300">
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
                 Sve je u redu / Her şey normal
               </div>
             ) : (
-              alerts.map((alert, i) => (
+              alerts.map((alert, index) => (
                 <div
-                  key={i}
-                  className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-medium ${
+                  key={index}
+                  className={`rounded-2xl border px-4 py-4 text-sm font-semibold ${
                     alert.type === "danger"
-                      ? "border-red-500/20 bg-red-500/[0.07] text-red-300"
+                      ? "border-red-500/20 bg-red-500/10 text-red-300"
                       : alert.type === "warning"
-                      ? "border-amber-500/20 bg-amber-500/[0.07] text-amber-300"
-                      : "border-cyan-500/20 bg-cyan-500/[0.07] text-cyan-300"
+                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                      : "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
                   }`}
                 >
-                  <span className={`mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                    alert.type === "danger" ? "bg-red-400" : alert.type === "warning" ? "bg-amber-400" : "bg-cyan-400"
-                  }`} />
                   {alert.text}
                 </div>
               ))
             )}
           </div>
-        </LuxCard>
+        </div>
 
-        <LuxCard label="STRATEŠKI UVIDI / STRATEJİK YORUMLAR" title="Uvidi za upravu / Yönetim İçgörüleri" badge="Sažetak / Özet">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {insights.map((insight, i) => (
-              <div
-                key={i}
-                className={`rounded-xl border p-4 ${
-                  insight.tone === "danger"
-                    ? "border-red-500/20 bg-red-500/[0.07]"
-                    : insight.tone === "warning"
-                    ? "border-amber-500/20 bg-amber-500/[0.07]"
-                    : insight.tone === "positive"
-                    ? "border-emerald-500/20 bg-emerald-500/[0.07]"
-                    : "border-cyan-500/20 bg-cyan-500/[0.07]"
-                }`}
-              >
-                <p className={`text-xs font-bold ${
-                  insight.tone === "danger" ? "text-red-400" : insight.tone === "warning" ? "text-amber-400" : insight.tone === "positive" ? "text-emerald-400" : "text-cyan-400"
-                }`}>{insight.title}</p>
-                <p className="mt-1.5 text-xs leading-5 text-slate-300">{insight.text}</p>
-              </div>
+        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
+                UVIDI ZA UPRAVU / YÖNETİM İÇGÖRÜLERİ
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Strateški uvidi / Stratejik Yorumlar
+              </h2>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              Sažetak za upravu / Yönetim özeti
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {insights.map((insight, index) => (
+              <InsightPanel
+                key={`${insight.title}-${index}`}
+                title={insight.title}
+                text={insight.text}
+                tone={insight.tone}
+              />
             ))}
-          </div>
-        </LuxCard>
-      </div>
-
-      {/* ── GRAFİK (TAM GENİŞLİK) ── */}
-      <div className="mb-5 rounded-3xl border border-white/[0.07] bg-slate-900/40 p-6">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-500/70">ANALIZA PRIHODA / CİRO ANALİZİ</p>
-            <h2 className="mt-1 text-xl font-bold text-white">Trend prodaje i profita / Satış ve Kâr Trendi</h2>
-          </div>
-          <div className="flex items-center gap-5 text-xs text-slate-400">
-            <span className="flex items-center gap-2">
-              <span className="h-[3px] w-6 rounded-full bg-blue-400" />
-              Prihod / Ciro
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-[3px] w-6 rounded-full bg-emerald-400" />
-              Profit / Kâr
-            </span>
-            <span className="rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 font-semibold text-slate-300">
-              Prosječna narudžba / Ort. sipariş: €{averageOrderValue.toFixed(2)}
-            </span>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={280}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" strokeOpacity={0.6} />
-            <XAxis dataKey="date" stroke="#475569" tick={{ fontSize: 11 }} />
-            <YAxis stroke="#475569" tick={{ fontSize: 11 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#0d1117",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "12px",
-                color: "#fff",
-                fontSize: "12px",
-              }}
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-[1.35fr_0.65fr] xl:items-start">
+        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
+                ANALIZA PRIHODA / CİRO ANALİZİ
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white">
+                Trend prodaje i profita / Satış ve Kâr Trendi
+              </h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Prikazuje kako se obim prodaje i profitabilnost zajedno kreću u izabranom periodu / Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+              Prosječna narudžba / Ortalama sipariş: €{averageOrderValue.toFixed(2)}
+            </div>
+          </div>
+
+          <ResponsiveContainer width="100%" height={360}>
+            <ComposedChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="date" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#020617",
+                  border: "1px solid #334155",
+                  borderRadius: "16px",
+                  color: "#fff",
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="sales"
+                fill="rgba(59,130,246,0.18)"
+                stroke="transparent"
+              />
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#60a5fa"
+                strokeWidth={3}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#34d399"
+                strokeWidth={3}
+                dot={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
+          <div className="mb-5">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">
+              PRITISAK ZALIHE / STOK BASKISI
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-white">
+              Rizik zalihe / Stok Riski
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Ovdje su istaknuti proizvodi koji mogu izazvati gubitak prodaje prema minimalnoj zalihi / Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MiniRiskCard
+              title="Kritični proizvodi / Kritik Ürün"
+              value={String(criticalStockCount)}
+              helper="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
+              tone="amber"
             />
-            <Area type="monotone" dataKey="sales" fill="rgba(96,165,250,0.08)" stroke="transparent" />
-            <Line type="monotone" dataKey="sales" stroke="#60a5fa" strokeWidth={2.5} dot={false} />
-            <Line type="monotone" dataKey="profit" stroke="#34d399" strokeWidth={2.5} dot={false} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ── STOK RİSKİ ── */}
-      <div className="mb-5 grid gap-4 xl:grid-cols-[1fr_1.4fr]">
-        <LuxCard label="PRITISAK ZALIHE / STOK BASKISI" title="Rizik zalihe / Stok Riski">
-          <div className="grid grid-cols-2 gap-3">
-            <MiniStat label="Kritični proizvod / Kritik Ürün" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : "amber"} />
-            <MiniStat label="Bez zalihe / Stoksuz" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
-            <MiniStat label="Niska zaliha / Düşük Stok" value={String(lowStockCount)} tone="blue" />
-            <MiniStat label="Zdravlje zalihe / Stok Sağlığı" value={`%${stockHealthRate}`} tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"} />
+            <MiniRiskCard
+              title="Bez zalihe / Stoksuz"
+              value={String(outOfStockCount)}
+              helper="Potrebna hitna intervencija / Acil müdahale gerekir"
+              tone="red"
+            />
+            <MiniRiskCard
+              title="Niska zaliha / Düşük Stok"
+              value={String(lowStockCount)}
+              helper="Zona bliskog rizika / Yakın risk alanı"
+              tone="blue"
+            />
+            <MiniRiskCard
+              title="Zdravlje zalihe / Stok Sağlığı"
+              value={`%${stockHealthRate}`}
+              helper="Opšte stanje proizvoda / Genel ürün sağlığı"
+              tone={
+                stockHealthRate >= 75
+                  ? "green"
+                  : stockHealthRate >= 50
+                  ? "amber"
+                  : "red"
+              }
+            />
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Trošak inventara / Envanter Maliyeti</p>
-              <p className="mt-1.5 text-base font-black text-white">€{inventoryCostValue.toFixed(0)}</p>
-            </div>
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Vrijednost prodaje / Satış Değeri</p>
-              <p className="mt-1.5 text-base font-black text-white">€{inventorySaleValue.toFixed(0)}</p>
-            </div>
-          </div>
-        </LuxCard>
 
-        <LuxCard label="ALARM ZALIHE / STOK ALARMASI" title="Status zalihe proizvoda / Ürün Stok Durumu">
-          {stockAlerts.length === 0 ? (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3 text-sm font-semibold text-emerald-300">
-              Nivo zalihe je zdrav / Stok seviyeleri normal
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {stockAlerts.map((item, i) => (
-                <div key={i} className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${getStockDot(item.level)}`} />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white">{item.name}</p>
-                      <p className={`text-xs ${getStockText(item.level)}`}>{getStockLabel(item.level)} · Min {item.minimumStock}</p>
-                    </div>
-                  </div>
-                  <p className={`ml-4 text-lg font-black ${getStockText(item.level)}`}>{item.stock}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </LuxCard>
-      </div>
-
-      {/* ── KÂRLILIK PANELLERİ ── */}
-      <div className="mb-5 grid gap-4 xl:grid-cols-3">
-        <LuxCard label="PROFITABILNOST / KÂRLILIK" title="Sažetak profitabilnosti / Kârlılık Özeti">
-          <div className="grid grid-cols-2 gap-3">
-            <MiniStat label="Potencijalni profit / Potansiyel Kâr" value={`€${totalPotentialProfit.toFixed(0)}`} tone={totalPotentialProfit >= 0 ? "green" : "red"} />
-            <MiniStat label="Prosječna marža / Ort. Marj" value={`%${averageMarginPercent.toFixed(1)}`} tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"} />
-            <MiniStat label="Profitabilni proizvodi / Kârlı Ürün" value={String(profitableProductCount)} tone="green" />
-            <MiniStat label="Proizvodi u gubitku / Zararlı Ürün" value={String(losingProductCount)} tone={losingProductCount === 0 ? "green" : "red"} />
-          </div>
-        </LuxCard>
-
-        <LuxCard label="NAJPROFITABILNIJI PROIZVODI / EN KÂRLI ÜRÜNLER" title="Profit potencijal zalihe / Stok Kâr Potansiyeli">
-          <div className="space-y-2">
-            {topProfitableProducts.length === 0 ? <EmptyRow /> : topProfitableProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Marža / Marj %${item.marginPercent.toFixed(1)} · Zaliha / Stok ${item.stock}`} value={`€${item.stockProfit.toFixed(0)}`} valueClass={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"} />
-            ))}
-          </div>
-        </LuxCard>
-
-        <LuxCard label="NAJSLABIJA MARŽA / EN ZAYIF MARJ" title="Upozorenje na maržu / Marj Uyarısı">
-          <div className="space-y-2">
-            {worstMarginProducts.length === 0 ? <EmptyRow /> : worstMarginProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`} value={`%${item.marginPercent.toFixed(1)}`} valueClass={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"} />
-            ))}
-          </div>
-        </LuxCard>
-      </div>
-
-      {/* ── ALT PANELLER ── */}
-      <div className="grid gap-4 xl:grid-cols-5">
-        <LuxCard label="NAJBOLJI PROIZVODI / EN İYİ ÜRÜNLER" title="Doprinos prihodu / Ciro Katkısı">
-          <div className="space-y-2">
-            {topProducts.length === 0 ? <EmptyRow /> : topProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub="Doprinos prihodu / Ciro katkısı" value={`€${item.total.toFixed(0)}`} valueClass="text-emerald-300" />
-            ))}
-          </div>
-        </LuxCard>
-
-        <LuxCard label="UČINAK PO GRADU / ŞEHİR PERFORMANSI" title="Prihod po gradu / Şehre Göre Ciro">
-          <div className="space-y-2">
-            {cityStats.length === 0 ? <EmptyRow /> : cityStats.map((item, i) => (
-              <RankItem key={item.city} rank={i + 1} name={item.city} sub={`${item.count} narudžba / sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-violet-300" />
-            ))}
-          </div>
-        </LuxCard>
-
-        <LuxCard label="NAJBOLJI KUPCI / EN İYİ MÜŞTERİLER" title="Prema prihodu / Ciro Bazında">
-          <div className="space-y-2">
-            {customerStats.length === 0 ? <EmptyRow /> : customerStats.map((item, i) => (
-              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} narudžba / sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-cyan-300" />
-            ))}
-          </div>
-        </LuxCard>
-
-        <LuxCard label="NAJPROFITABILNIJI KUPCI / EN KÂRLI MÜŞTERİLER" title="Prema profitu / Kâr Bazında">
-          <div className="space-y-2">
-            {topCustomersByProfit.length === 0 ? <EmptyRow /> : topCustomersByProfit.map((item, i) => (
-              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} narudžba / sipariş`} value={`€${item.profit.toFixed(0)}`} valueClass={item.profit >= 0 ? "text-emerald-300" : "text-red-300"} />
-            ))}
-          </div>
-        </LuxCard>
-
-        <LuxCard label="NEDAVNE PRODAJE / SON SATIŞLAR" title="Najnoviji zapisi / Güncel Kayıtlar">
-          <div className="space-y-2">
-            {recentSales.length === 0 ? <EmptyRow /> : recentSales.map((sale) => (
-              <div key={sale.id} className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">{sale.product_name || "—"}</p>
-                  <p className="truncate text-xs text-slate-500">{sale.customer_name || "—"} · {sale.sale_date || sale.created_at?.slice(0, 10) || "—"}</p>
-                </div>
-                <p className="ml-3 shrink-0 text-sm font-bold text-blue-300">€{Number(sale.total || 0).toFixed(0)}</p>
+          <div className="mt-5 space-y-3">
+            {stockAlerts.length === 0 ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
+                Nivo zalihe je zdrav / Stoklar normal
               </div>
-            ))}
+            ) : (
+              stockAlerts.map((item, index) => (
+                <div
+                  key={`${item.name}-${index}`}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">{item.name}</p>
+                    <p className={`mt-1 text-sm ${getStockClass(item.level)}`}>
+                      {getStockLabel(item.level)} • Min {item.minimumStock}
+                    </p>
+                  </div>
+                  <p className={`ml-4 text-xl font-black ${getStockClass(item.level)}`}>
+                    {item.stock}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
-        </LuxCard>
-      </div>
 
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <ValueStrip
+              label="Trošak inventara / Envanter Maliyeti"
+              value={`€${inventoryCostValue.toFixed(2)}`}
+            />
+            <ValueStrip
+              label="Vrijednost prodaje / Satış Değeri"
+              value={`€${inventorySaleValue.toFixed(2)}`}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-3">
+        <PanelCard
+          title="Sažetak profitabilnosti / Kârlılık Özeti"
+          subtitle="Mevcut stok i struktura cijena prema prikazu profitabilnosti proizvoda / Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MiniRiskCard
+              title="Potencijalni profit / Potansiyel Kâr"
+              value={`€${totalPotentialProfit.toFixed(2)}`}
+              helper="Očekivani profit iz postojeće zalihe / Stoktaki ürünlerden beklenen kâr"
+              tone={totalPotentialProfit >= 0 ? "green" : "red"}
+            />
+            <MiniRiskCard
+              title="Prosječna marža / Ortalama Marj"
+              value={`%${averageMarginPercent.toFixed(1)}`}
+              helper="Prosječna marža aktivnih proizvoda / Aktif ürünlerin ortalama marjı"
+              tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
+            />
+            <MiniRiskCard
+              title="Profitabilni proizvodi / Kârlı Ürün"
+              value={String(profitableProductCount)}
+              helper="Proizvodi sa pozitivnim jediničnim profitom / Birim kârı pozitif ürünler"
+              tone="green"
+            />
+            <MiniRiskCard
+              title="Proizvodi u gubitku / Zarardaki Ürün"
+              value={String(losingProductCount)}
+              helper="Proizvodi sa negativnim jediničnim profitom / Birim kârı negatif ürünler"
+              tone={losingProductCount === 0 ? "green" : "red"}
+            />
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
+          subtitle="Najjači proizvodi prema profitnom potencijalu zalihe / Stok kâr potansiyeline göre en güçlü ürünler."
+        >
+          <div className="space-y-3">
+            {topProfitableProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topProfitableProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Marža %${item.marginPercent.toFixed(1)} • Zaliha ${item.stock} / Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
+                  value={`€${item.stockProfit.toFixed(2)}`}
+                  valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najslabija marža / En Zayıf Marj"
+          subtitle="Proizvodi sa najnižim procentom marže / Marj yüzdesi en düşük ürünler."
+        >
+          <div className="space-y-3">
+            {worstMarginProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              worstMarginProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`}
+                  value={`%${item.marginPercent.toFixed(1)}`}
+                  valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
+        <PanelCard
+          title="Najbolji proizvodi / En İyi Ürünler"
+          subtitle="Proizvodi koji u izabranom periodu donose najviše prihoda / Seçili dönemde en fazla ciro üreten ürünler."
+        >
+          <div className="space-y-3">
+            {topProducts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topProducts.map((item, index) => (
+                <RankRow
+                  key={item.name}
+                  rank={index + 1}
+                  title={item.name}
+                  subtitle="Doprinos prihodu / Ciro katkısı"
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-emerald-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Učinak po gradu / Şehir Performansı"
+          subtitle="Gradovi sa najvećim prihodom / En yüksek ciroya sahip şehirler."
+        >
+          <div className="space-y-3">
+            {cityStats.length === 0 ? (
+              <EmptyState />
+            ) : (
+              cityStats.map((item, index) => (
+                <RankRow
+                  key={item.city}
+                  rank={index + 1}
+                  title={item.city}
+                  subtitle={`${item.count} narudžba / sipariş`}
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-violet-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najbolji kupci / En İyi Müşteriler"
+          subtitle="Kupci koji ostavljaju najviše prihoda / En fazla ciro bırakan müşteriler."
+        >
+          <div className="space-y-3">
+            {customerStats.length === 0 ? (
+              <EmptyState />
+            ) : (
+              customerStats.map((item, index) => (
+                <RankRow
+                  key={item.customer}
+                  rank={index + 1}
+                  title={item.customer}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
+                  value={`€${item.total.toFixed(2)}`}
+                  valueClassName="text-cyan-300"
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Najprofitabilniji kupci / En Karlı Müşteriler"
+          subtitle="Poredano prema ukupnom profitu / Toplam kâra göre sıralama."
+        >
+          <div className="space-y-3">
+            {topCustomersByProfit.length === 0 ? (
+              <EmptyState />
+            ) : (
+              topCustomersByProfit.map((item, index) => (
+                <RankRow
+                  key={item.customer}
+                  rank={index + 1}
+                  title={item.customer}
+                  subtitle={`${item.orderCount} narudžba / sipariş`}
+                  value={`€${item.profit.toFixed(2)}`}
+                  valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-red-300"}
+                />
+              ))
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard
+          title="Nedavne prodaje / Son Satışlar"
+          subtitle="Najnoviji zapisi prodaje u izabranom periodu / Seçili dönemdeki en son satış kayıtları."
+        >
+          <div className="space-y-3">
+            {recentSales.length === 0 ? (
+              <EmptyState />
+            ) : (
+              recentSales.map((sale) => (
+                <div
+                  key={sale.id}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">
+                      {sale.product_name || "Nepoznato / Bilinmiyor"}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-slate-400">
+                      {sale.customer_name || "-"} •{" "}
+                      {sale.sale_date || sale.created_at?.slice(0, 10) || "-"}
+                    </p>
+                  </div>
+                  <p className="ml-4 text-base font-bold text-blue-300">
+                    €{Number(sale.total || 0).toFixed(2)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </PanelCard>
+      </section>
     </main>
   );
 }
 
-// ── SUB-COMPONENTS ──────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub, accent }: {
+function HeroStatCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
   label: string;
   value: string;
-  sub: string;
-  accent: "amber" | "green" | "red" | "blue";
+  helper: string;
+  tone: "blue" | "green" | "amber" | "red" | "slate";
 }) {
-  const ring = {
-    amber: "border-amber-500/20 bg-amber-500/[0.06]",
-    green: "border-emerald-500/20 bg-emerald-500/[0.06]",
-    red:   "border-red-500/20 bg-red-500/[0.06]",
-    blue:  "border-blue-500/20 bg-blue-500/[0.06]",
-  };
-  const dot = {
-    amber: "bg-amber-400",
-    green: "bg-emerald-400",
-    red:   "bg-red-400",
-    blue:  "bg-blue-400",
-  };
-  const val = {
-    amber: "text-amber-300",
-    green: "text-emerald-300",
-    red:   "text-red-300",
-    blue:  "text-blue-300",
+  const styles = {
+    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
+    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
+    slate: "border-white/10 bg-white/5 text-slate-200",
   };
 
   return (
-    <div className={`rounded-2xl border p-5 ${ring[accent]}`}>
-      <div className="flex items-center gap-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot[accent]}`} />
-        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">{label}</p>
-      </div>
-      <p className={`mt-3 text-3xl font-black tracking-tight ${val[accent]}`}>{value}</p>
-      <p className="mt-1.5 text-xs text-slate-500">{sub}</p>
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
+        {label}
+      </p>
+      <p className="mt-3 text-2xl font-black">{value}</p>
+      <p className="mt-1 text-sm opacity-80">{helper}</p>
     </div>
   );
 }
 
-function MetricPill({ label, value, tone }: {
-  label: string;
+function ExecutiveMetric({
+  title,
+  value,
+  subtitle,
+  tone,
+}: {
+  title: string;
   value: string;
+  subtitle: string;
+  tone: "green" | "amber" | "red" | "blue" | "slate";
+}) {
+  const styles = {
+    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
+    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
+    slate: "border-white/10 bg-white/5 text-slate-200",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
+        {title}
+      </p>
+      <p className="mt-3 text-3xl font-black">{value}</p>
+      <p className="mt-1 text-sm opacity-80">{subtitle}</p>
+    </div>
+  );
+}
+
+function InsightPanel({
+  title,
+  text,
+  tone,
+}: {
+  title: string;
+  text: string;
+  tone: "danger" | "warning" | "positive" | "neutral";
+}) {
+  const styles = {
+    danger: "border-red-500/20 bg-red-500/10 text-red-200",
+    warning: "border-amber-500/20 bg-amber-500/10 text-amber-200",
+    positive: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+    neutral: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-sm font-bold">{title}</p>
+      <p className="mt-2 text-sm leading-6 opacity-90">{text}</p>
+    </div>
+  );
+}
+
+function MiniRiskCard({
+  title,
+  value,
+  helper,
+  tone,
+}: {
+  title: string;
+  value: string;
+  helper: string;
   tone: "green" | "amber" | "red" | "blue";
 }) {
   const styles = {
-    green: "border-emerald-500/15 bg-emerald-500/[0.05] text-emerald-300",
-    amber: "border-amber-500/15 bg-amber-500/[0.05] text-amber-300",
-    red:   "border-red-500/15 bg-red-500/[0.05] text-red-300",
-    blue:  "border-blue-500/15 bg-blue-500/[0.05] text-blue-300",
+    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
+    red: "border-red-500/20 bg-red-500/10 text-red-200",
+    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
   };
 
   return (
-    <div className={`rounded-xl border px-4 py-3 ${styles[tone]}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60">{label}</p>
-      <p className="mt-1.5 text-xl font-black">{value}</p>
+    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
+        {title}
+      </p>
+      <p className="mt-2 text-2xl font-black">{value}</p>
+      <p className="mt-1 text-sm opacity-80">{helper}</p>
     </div>
   );
 }
 
-function LuxCard({ label, title, badge, children }: {
+function ValueStrip({
+  label,
+  value,
+}: {
   label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 text-lg font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function PanelCard({
+  title,
+  subtitle,
+  children,
+}: {
   title: string;
-  badge?: string;
+  subtitle: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-white/[0.07] bg-slate-900/40 p-5">
-      <div className="mb-4 flex items-start justify-between gap-2">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-amber-500/60">{label}</p>
-          <h2 className="mt-1 text-base font-bold text-white">{title}</h2>
-        </div>
-        {badge && (
-          <span className="shrink-0 rounded-lg border border-white/[0.07] bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold text-slate-400">
-            {badge}
-          </span>
-        )}
-      </div>
+    <section className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
+      <h2 className="text-2xl font-bold text-white">{title}</h2>
+      <p className="mt-2 mb-5 text-sm text-slate-400">{subtitle}</p>
       {children}
-    </div>
+    </section>
   );
 }
 
-function MiniStat({ label, value, tone }: {
-  label: string;
-  value: string;
-  tone: "green" | "amber" | "red" | "blue";
-}) {
-  const styles = {
-    green: "text-emerald-300",
-    amber: "text-amber-300",
-    red:   "text-red-300",
-    blue:  "text-blue-300",
-  };
-
-  return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className={`mt-1.5 text-xl font-black ${styles[tone]}`}>{value}</p>
-    </div>
-  );
-}
-
-function RankItem({ rank, name, sub, value, valueClass }: {
+function RankRow({
+  rank,
+  title,
+  subtitle,
+  value,
+  valueClassName,
+}: {
   rank: number;
-  name: string;
-  sub: string;
+  title: string;
+  subtitle: string;
   value: string;
-  valueClass?: string;
+  valueClassName?: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3">
-      <div className="min-w-0 flex items-center gap-3">
-        <span className="shrink-0 text-[10px] font-black text-slate-600">#{rank}</span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">{name}</p>
-          <p className="text-xs text-slate-500">{sub}</p>
-        </div>
+    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4">
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+          #{rank}
+        </p>
+        <p className="truncate font-semibold text-white">{title}</p>
+        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
       </div>
-      <p className={`ml-3 shrink-0 text-sm font-bold ${valueClass || "text-white"}`}>{value}</p>
+      <p className={`ml-4 text-base font-bold ${valueClassName || "text-white"}`}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function EmptyRow() {
+function EmptyState() {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-xs text-slate-500">
+    <div className="rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-6 text-sm text-slate-400">
       Nema zapisa / Kayıt yok
     </div>
   );
