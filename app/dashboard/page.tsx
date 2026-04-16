@@ -819,7 +819,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="max-h-[260px] overflow-y-auto space-y-3 pr-1">
             {alerts.length === 0 ? (
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
                 Sve je u redu / Her şey normal
@@ -858,7 +858,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="max-h-[260px] overflow-y-auto grid gap-4 md:grid-cols-2 pr-1">
             {insights.map((insight, index) => (
               <InsightPanel
                 key={`${insight.title}-${index}`}
@@ -974,7 +974,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 max-h-[260px] overflow-y-auto space-y-3 pr-1">
             {stockAlerts.length === 0 ? (
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
                 Nivo zalihe je zdrav / Stoklar normal
@@ -1354,10 +1354,12 @@ function PanelCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
-      <h2 className="text-2xl font-bold text-white">{title}</h2>
-      <p className="mt-2 mb-5 text-sm text-slate-400">{subtitle}</p>
-      {children}
+    <section className="flex flex-col rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20" style={{ height: "420px" }}>
+      <h2 className="shrink-0 text-2xl font-bold text-white">{title}</h2>
+      <p className="mt-2 mb-5 shrink-0 text-sm text-slate-400">{subtitle}</p>
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        {children}
+      </div>
     </section>
   );
 }
