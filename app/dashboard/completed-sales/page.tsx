@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { supabase } from "../../../lib/supabase";
 
 type Row = {
@@ -44,8 +46,8 @@ export default function CompletedSalesPage() {
 
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
 
   useEffect(() => {
     initializePage();
@@ -218,11 +220,17 @@ export default function CompletedSalesPage() {
     }
 
     if (dateFrom) {
-      result = result.filter((row) => (row.sale_date || row.created_at.slice(0, 10)) >= dateFrom);
+      result = result.filter((row) => {
+        const d = row.sale_date || row.created_at.slice(0, 10);
+        return new Date(d) >= dateFrom;
+      });
     }
 
     if (dateTo) {
-      result = result.filter((row) => (row.sale_date || row.created_at.slice(0, 10)) <= dateTo);
+      result = result.filter((row) => {
+        const d = row.sale_date || row.created_at.slice(0, 10);
+        return new Date(d) <= dateTo;
+      });
     }
 
     const q = search.trim().toLowerCase();
@@ -287,10 +295,12 @@ export default function CompletedSalesPage() {
             <label className="mb-2 block text-sm text-slate-300">
               Početni datum / Başlangıç Tarihi
             </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+            <DatePicker
+              selected={dateFrom}
+              onChange={(date: Date | null) => setDateFrom(date)}
+              dateFormat="dd.MM.yyyy"
+              placeholderText="Odaberite datum / Tarih seçin"
+              isClearable
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
           </div>
@@ -299,10 +309,12 @@ export default function CompletedSalesPage() {
             <label className="mb-2 block text-sm text-slate-300">
               Završni datum / Bitiş Tarihi
             </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+            <DatePicker
+              selected={dateTo}
+              onChange={(date: Date | null) => setDateTo(date)}
+              dateFormat="dd.MM.yyyy"
+              placeholderText="Odaberite datum / Tarih seçin"
+              isClearable
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
           </div>
