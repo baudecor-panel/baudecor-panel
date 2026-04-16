@@ -662,6 +662,7 @@ export default function DispatchPage() {
     const vehicleRows = groupRows.filter((row) => isVehicleRow(row));
     const courierRows = groupRows.filter((row) => isCourierRow(row));
 
+
     async function updateOrders(
       targetRows: DispatchRow[],
       optimizedRows: DispatchRow[]
@@ -710,43 +711,29 @@ export default function DispatchPage() {
         return [...validRows, ...invalidRows];
       }
 
-      const routeMode = normalizeText(validRows[0]?.route_mode);
-      const remaining = [...validRows];
-      const ordered: DispatchRow[] = [];
+      const routeMode = normalizeText(validRows[0]?.route_mode) || "Daleko → Blizu / Uzak → Yakın";
 
-      let currentLat = SHOWROOM_LAT;
-      let currentLng = SHOWROOM_LNG;
-
-      while (remaining.length > 0) {
-        let bestIndex = 0;
-        let bestDistance = Number.POSITIVE_INFINITY;
-
-        for (let index = 0; index < remaining.length; index++) {
-          const candidate = remaining[index];
-          const distance = getDistanceKm(
-            currentLat,
-            currentLng,
-            candidate.latitude as number,
-            candidate.longitude as number
-          );
-
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            bestIndex = index;
-          }
-        }
-
-        const nextRow = remaining.splice(bestIndex, 1)[0];
-        ordered.push(nextRow);
-        currentLat = nextRow.latitude as number;
-        currentLng = nextRow.longitude as number;
+      if (routeMode === "Ručno / Manuel") {
+        return [...validRows, ...invalidRows];
       }
 
-      if (routeMode === "Daleko → Blizu / Uzak → Yakın") {
-        ordered.reverse();
-      }
+      const withDistances = validRows.map((row) => ({
+        row,
+        distance: getDistanceKm(
+          SHOWROOM_LAT,
+          SHOWROOM_LNG,
+          row.latitude as number,
+          row.longitude as number
+        ),
+      }));
 
-      return [...ordered, ...invalidRows];
+      withDistances.sort((a, b) =>
+        routeMode === "Daleko → Blizu / Uzak → Yakın"
+          ? b.distance - a.distance
+          : a.distance - b.distance
+      );
+
+      return [...withDistances.map((x) => x.row), ...invalidRows];
     }
 
     if (vehicleRows.length > 0) {
@@ -1701,7 +1688,7 @@ export default function DispatchPage() {
                                         Režim rute / Rota Modu
                                       </div>
                                       <select
-                                        value={row.route_mode || ""}
+                                        value={row.route_mode || "Daleko → Blizu / Uzak → Yakın"}
                                         onChange={(e) =>
                                           updateField(row.id, "route_mode", e.target.value)
                                         }
@@ -1875,7 +1862,7 @@ export default function DispatchPage() {
                                         Režim rute / Rota Modu
                                       </div>
                                       <select
-                                        value={row.route_mode || ""}
+                                        value={row.route_mode || "Daleko → Blizu / Uzak → Yakın"}
                                         onChange={(e) =>
                                           updateField(row.id, "route_mode", e.target.value)
                                         }

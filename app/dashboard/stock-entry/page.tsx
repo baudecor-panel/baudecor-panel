@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { supabase } from "../../../lib/supabase";
 
 type ProductGroupRelation =
@@ -25,6 +27,9 @@ type Product = {
   is_active?: boolean;
   product_groups?: ProductGroupRelation;
   default_supplier_id?: number | null;
+  parent_product_id?: string | null;
+  accessory_type?: string | null;
+  parent_name?: string;
 };
 
 type ProductGroup = {
@@ -64,7 +69,7 @@ export default function StockEntryPage() {
   const [quantity, setQuantity] = useState(1);
   const [purchaseCost, setPurchaseCost] = useState(0);
   const [documentNo, setDocumentNo] = useState("");
-  const [documentDate, setDocumentDate] = useState("");
+  const [documentDate, setDocumentDate] = useState<Date | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingMovements, setLoadingMovements] = useState(true);
@@ -134,7 +139,7 @@ export default function StockEntryPage() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, stock, price, cost, opening_stock, is_active, group_id, default_supplier_id, product_groups(name)"
+        "id, name, stock, price, cost, opening_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, product_groups(name)"
       )
       .eq("is_active", true)
       .order("name", { ascending: true });
@@ -144,9 +149,16 @@ export default function StockEntryPage() {
       return;
     }
 
-    const normalized = ((data || []) as Product[]).map((product) => ({
+    const raw = ((data || []) as Product[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
+    }));
+
+    const normalized = raw.map((product) => ({
+      ...product,
+      parent_name: product.parent_product_id
+        ? raw.find((p) => p.id === product.parent_product_id)?.name || "-"
+        : undefined,
     }));
 
     setProducts(normalized);
@@ -375,7 +387,7 @@ export default function StockEntryPage() {
       `Kupovna cijena / Alış fiyatı: €${addedCostValue.toFixed(2)}`,
       `Novi prosječni trošak / Yeni ortalama maliyet: €${roundedWeightedCost.toFixed(2)}`,
       documentNo.trim() ? `Broj dokumenta / Belge no: ${documentNo.trim()}` : "",
-      documentDate ? `Datum dokumenta / Belge tarihi: ${documentDate}` : "",
+      documentDate ? `Datum dokumenta / Belge tarihi: ${documentDate.toISOString().slice(0, 10)}` : "",
     ].filter(Boolean);
 
     try {
@@ -431,7 +443,7 @@ export default function StockEntryPage() {
     setQuantity(1);
     setPurchaseCost(0);
     setDocumentNo("");
-    setDocumentDate("");
+    setDocumentDate(null);
     setNote("");
 
     await fetchProducts();
@@ -581,10 +593,13 @@ export default function StockEntryPage() {
                 <label className="mb-2 block text-sm font-medium text-slate-300">
                   Datum dokumenta / Belge Tarihi
                 </label>
-                <input
-                  type="date"
-                  value={documentDate}
-                  onChange={(e) => setDocumentDate(e.target.value)}
+                <DatePicker
+                  selected={documentDate}
+                  onChange={(date: Date | null) => setDocumentDate(date)}
+                  dateFormat="dd.MM.yyyy"
+                  placeholderText="Tarih seçin..."
+                  isClearable
+                  wrapperClassName="w-full"
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
                 />
               </div>
@@ -624,6 +639,19 @@ export default function StockEntryPage() {
           <div className="mt-6 space-y-4">
             <InfoCard title="Grupa / Grup" value={selectedGroupData?.name || "-"} />
             <InfoCard title="Proizvod / Ürün" value={selectedProduct?.name || "-"} />
+            {selectedProduct?.parent_product_id && (
+              <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
+                <p className="text-xs uppercase tracking-wide text-violet-400">
+                  Aksesuar / Accessory
+                </p>
+                <p className="mt-1 text-sm font-medium text-white">
+                  ↳ {selectedProduct.parent_name || "-"}
+                </p>
+                {selectedProduct.accessory_type && (
+                  <p className="mt-0.5 text-xs text-violet-300">{selectedProduct.accessory_type}</p>
+                )}
+              </div>
+            )}
             <InfoCard title="Dobavljač / Tedarikçi" value={selectedSupplier?.name || "-"} />
             <InfoCard
               title="Trenutna zaliha / Mevcut Stok"
@@ -673,7 +701,7 @@ export default function StockEntryPage() {
             />
             <InfoCard
               title="Datum dokumenta / Belge Tarihi"
-              value={documentDate || "-"}
+              value={documentDate ? documentDate.toLocaleDateString("tr-TR") : "-"}
             />
           </div>
         </aside>

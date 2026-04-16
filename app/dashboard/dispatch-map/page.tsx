@@ -366,15 +366,24 @@ Konum / Navigation: ${navLink}`;
             Ukupno zapisa / Toplam kayıt: {filteredRows.length}
           </p>
 
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={onlyActiveGroup}
-              onChange={(e) => setOnlyActiveGroup(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Samo aktivna grupa / Sadece aktif grup
-          </label>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={onlyActiveGroup}
+                onChange={(e) => setOnlyActiveGroup(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Samo aktivna grupa / Sadece aktif grup
+            </label>
+
+            <button
+              onClick={fetchData}
+              className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
+            >
+              Yenile / Refresh
+            </button>
+          </div>
         </div>
       </div>
 

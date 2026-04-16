@@ -28,6 +28,8 @@ type Sale = {
   city?: string | null;
   delivery_status?: string | null;
   payment_status?: string | null;
+  payment_method?: string | null;
+  commission_amount?: number | null;
 };
 
 type Product = {
@@ -82,7 +84,7 @@ export default function DashboardPage() {
       supabase
         .from("sales")
         .select(
-          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status"
+          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, payment_method, commission_amount"
         ),
       supabase
         .from("products")
@@ -194,6 +196,24 @@ export default function DashboardPage() {
         )
         .map((sale) => sale.order_id || `fallback_${sale.id}`)
     ).size;
+  }, [filteredSales]);
+
+  const paymentMethodStats = useMemo(() => {
+    const methods = [
+      { key: "Nakit / Cash", label: "Nakit / Gotovina", color: "emerald" },
+      { key: "Kredi Kartı / Credit Card", label: "Kredi Kartı / Kartica", color: "amber" },
+      { key: "Banka Transferi / Bank Transfer", label: "Banka Havalesi / Transfer", color: "blue" },
+    ];
+
+    return methods.map(({ key, label, color }) => {
+      const rows = filteredSales.filter(
+        (s) => (s.payment_method || "Nakit / Cash") === key
+      );
+      const total = rows.reduce((sum, s) => sum + Number(s.total || 0), 0);
+      const commission = rows.reduce((sum, s) => sum + Number(s.commission_amount || 0), 0);
+      const count = rows.length;
+      return { key, label, color, total, commission, count };
+    });
   }, [filteredSales]);
 
   const pendingPaymentsTotal = useMemo(() => {
@@ -1207,6 +1227,54 @@ export default function DashboardPage() {
                 </div>
               ))
             )}
+          </div>
+        </PanelCard>
+      </section>
+
+      <section className="mt-6">
+        <PanelCard
+          title="Načini plaćanja / Ödeme Yöntemleri"
+          subtitle="Nakit, kart ve havale satışlarının döneme göre dağılımı / Nakit, kart ve havale satışlarının döneme göre dağılımı."
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-widest text-slate-500">
+                  <th className="pb-3 pr-4">Yöntem / Metod</th>
+                  <th className="pb-3 pr-4 text-right">İşlem / Transakcija</th>
+                  <th className="pb-3 pr-4 text-right">Tutar / Iznos</th>
+                  <th className="pb-3 text-right">Komisyon / Komisija</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {paymentMethodStats.map((row) => (
+                  <tr key={row.key}>
+                    <td className="py-3 pr-4 font-medium text-white">{row.label}</td>
+                    <td className="py-3 pr-4 text-right text-slate-300">{row.count}</td>
+                    <td className="py-3 pr-4 text-right font-semibold text-white">
+                      €{row.total.toFixed(2)}
+                    </td>
+                    <td className={`py-3 text-right font-semibold ${row.commission > 0 ? "text-amber-400" : "text-slate-500"}`}>
+                      {row.commission > 0 ? `-€${row.commission.toFixed(2)}` : "-"}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-slate-600">
+                  <td className="pt-3 pr-4 text-xs uppercase tracking-widest text-slate-400">Toplam / Ukupno</td>
+                  <td className="pt-3 pr-4 text-right font-semibold text-white">
+                    {paymentMethodStats.reduce((s, r) => s + r.count, 0)}
+                  </td>
+                  <td className="pt-3 pr-4 text-right font-semibold text-white">
+                    €{paymentMethodStats.reduce((s, r) => s + r.total, 0).toFixed(2)}
+                  </td>
+                  <td className="pt-3 text-right font-semibold text-amber-400">
+                    {paymentMethodStats.reduce((s, r) => s + r.commission, 0) > 0
+                      ? `-€${paymentMethodStats.reduce((s, r) => s + r.commission, 0).toFixed(2)}`
+                      : "-"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </PanelCard>
       </section>

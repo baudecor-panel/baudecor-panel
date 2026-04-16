@@ -28,6 +28,9 @@ type Product = {
   product_groups?: ProductGroupRelation;
   default_supplier_id?: number | null;
   supplier_name?: string;
+  parent_product_id?: string | null;
+  accessory_type?: string | null;
+  parent_name?: string;
 };
 
 type ProductGroup = {
@@ -176,7 +179,7 @@ export default function ProductsPage() {
       supabase
         .from("products")
         .select(
-          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, product_groups(name)"
+          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, product_groups(name)"
         )
         .order("name", { ascending: true }),
       supabase.from("stock_movements").select("product_id, quantity, created_at"),
@@ -192,13 +195,20 @@ export default function ProductsPage() {
       return;
     }
 
-    const normalizedProducts = ((productData || []) as Product[]).map((product) => ({
+    const rawProducts = ((productData || []) as Product[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
       supplier_name: getSupplierNameById(product.default_supplier_id),
       is_active: product.is_active ?? true,
       opening_stock: Number(product.opening_stock ?? 0),
       minimum_stock: Number(product.minimum_stock ?? 5),
+    }));
+
+    const normalizedProducts = rawProducts.map((product) => ({
+      ...product,
+      parent_name: product.parent_product_id
+        ? rawProducts.find((p) => p.id === product.parent_product_id)?.name || "-"
+        : undefined,
     }));
 
     const nextStockMetaMap: Record<string, ProductStockMeta> = {};
@@ -490,7 +500,7 @@ export default function ProductsPage() {
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    return products
+    const filtered = products
       .filter((product) => {
         const active = product.is_active ?? true;
         if (viewFilter === "active") return active;
@@ -525,6 +535,26 @@ export default function ProductsPage() {
         const supplierName = (product.supplier_name || "").toLowerCase();
         return productName.includes(q) || groupName.includes(q) || supplierName.includes(q);
       });
+
+    // Aksesuarları üst ürünlerinin hemen altına yerleştir
+    const filteredIds = new Set(filtered.map((p) => p.id));
+    const parents = filtered.filter((p) => !p.parent_product_id);
+    const accessories = filtered.filter((p) => !!p.parent_product_id);
+
+    const result: typeof filtered = [];
+    for (const parent of parents) {
+      result.push(parent);
+      const children = accessories.filter((a) => a.parent_product_id === parent.id);
+      result.push(...children);
+    }
+    // Üst ürünü filtrede görünmeyen aksesuarları sona ekle
+    for (const acc of accessories) {
+      if (!filteredIds.has(acc.parent_product_id || "")) {
+        result.push(acc);
+      }
+    }
+
+    return result;
   }, [products, search, viewFilter, groupFilter, supplierFilter, stockFilter, marginFilter, stockMetaMap, suppliers]);
 
   type ExportRow = {
@@ -1429,7 +1459,16 @@ export default function ProductsPage() {
                 }`}
               >
                 <td className="py-3 text-base text-white">{product.group_name || "-"}</td>
-                <td className="py-3 text-base font-semibold text-white">{product.name}</td>
+                <td className="py-3 text-base font-semibold text-white">
+                  <div className="flex flex-col gap-0.5">
+                    <span>{product.name}</span>
+                    {product.parent_product_id && (
+                      <span className="text-xs font-normal text-violet-400">
+                        ↳ {product.parent_name || "-"}{product.accessory_type ? ` · ${product.accessory_type}` : ""}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="py-3 text-base text-slate-300">{product.supplier_name || "-"}</td>
                 <td
                   className={`py-3 text-center text-base font-semibold ${

@@ -69,6 +69,9 @@ type Sale = {
   latitude?: number | null;
   longitude?: number | null;
   payment_status: string;
+  payment_method?: string | null;
+  commission_rate?: number | null;
+  commission_amount?: number | null;
   delivery_status?: string;
   shipment_date?: string | null;
   shipment_status?: string;
@@ -160,6 +163,7 @@ export default function SalesPage() {
   const [employee, setEmployee] = useState("");
   const [city, setCity] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("Ödendi / Paid");
+  const [paymentMethod, setPaymentMethod] = useState("Nakit / Cash");
   const [simpleStatus, setSimpleStatus] =
     useState<SimpleStatus>("Bekliyor / Pending");
   const [saleDate, setSaleDate] = useState(getTodayDate());
@@ -284,7 +288,7 @@ export default function SalesPage() {
 
     const { data, error } = await supabase
       .from("sales")
-      .select("id, order_id, sale_date, product_name, quantity, unit_price, discount, final_unit_price, total, unit_cost, total_cost, profit, customer_id, group_id, customer_name, customer_phone, customer_address, employee, city, latitude, longitude, payment_status, delivery_status, shipment_date, shipment_status, route_order, loading_order, shipment_note, note, created_at")
+      .select("id, order_id, sale_date, product_name, quantity, unit_price, discount, final_unit_price, total, unit_cost, total_cost, profit, customer_id, group_id, customer_name, customer_phone, customer_address, employee, city, latitude, longitude, payment_status, payment_method, commission_rate, commission_amount, delivery_status, shipment_date, shipment_status, route_order, loading_order, shipment_note, note, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -369,6 +373,7 @@ export default function SalesPage() {
     setShipmentDate(parseDateString(sale.shipment_date));
     setSimpleStatus(getSimpleStatusFromSale(sale));
     setPaymentStatus(sale.payment_status || "Ödendi / Paid");
+    setPaymentMethod(sale.payment_method || "Nakit / Cash");
     setEmployee(sale.employee || "");
     setNote(sale.note || "");
 
@@ -404,6 +409,7 @@ export default function SalesPage() {
     setEmployee("");
     setCity("");
     setPaymentStatus("Ödendi / Paid");
+    setPaymentMethod("Nakit / Cash");
     setSimpleStatus("Bekliyor / Pending");
     setSaleDate(getTodayDate());
     setShipmentDate(null);
@@ -1210,7 +1216,9 @@ export default function SalesPage() {
 
       const unitCost = Number(product.cost || 0);
       const totalCost = unitCost * Number(quantity);
-      const profit = Number(total) - totalCost;
+      const commissionRate = paymentMethod === "Kredi Kartı / Credit Card" ? 3 : 0;
+      const commissionAmount = Number(((Number(total) * commissionRate) / 100).toFixed(2));
+      const profit = Number(total) - totalCost - commissionAmount;
 
       const { error: insertError } = await supabase.from("sales").insert([
         {
@@ -1227,6 +1235,9 @@ export default function SalesPage() {
           unit_cost: unitCost,
           total_cost: totalCost,
           profit: profit,
+          payment_method: paymentMethod,
+          commission_rate: commissionRate,
+          commission_amount: commissionAmount,
           customer_name: customerName,
           customer_phone: customerPhone,
           customer_address: customerAddress,
@@ -1599,6 +1610,26 @@ export default function SalesPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
+                Način plaćanja / Ödeme Yöntemi
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+              >
+                <option value="Nakit / Cash">Gotovina / Nakit</option>
+                <option value="Kredi Kartı / Credit Card">Kreditna kartica / Kredi Kartı (%3)</option>
+                <option value="Banka Transferi / Bank Transfer">Bankovni transfer / Banka Havalesi</option>
+              </select>
+              {paymentMethod === "Kredi Kartı / Credit Card" && (
+                <p className="mt-1.5 text-xs text-amber-400">
+                  %3 banka komisyonu kârdan düşülecek / 3% banka komisija biće odbijena od dobiti
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Napomena / Not
               </label>
               <textarea
@@ -1774,6 +1805,7 @@ export default function SalesPage() {
                           <th className="py-3 text-center">Ukupno / Toplam</th>
                           <th className="py-3 text-center">Trošak / Maliyet</th>
                           <th className="py-3 text-center">Dobit / Kâr</th>
+                          <th className="py-3 text-center">Način plaćanja / Ödeme Yöntemi</th>
                           <th className="py-3 text-center">Plaćanje / Ödeme</th>
                           <th className="py-3 text-center">Status / Durum</th>
                           <th className="py-3 text-center">Isporuka / Sevkiyat Tarihi</th>
@@ -1913,6 +1945,19 @@ export default function SalesPage() {
                                 Number(sale.profit || 0) >= 0 ? "text-emerald-300" : "text-red-300"
                               }`}>
                                 €{Number(sale.profit || 0).toFixed(2)}
+                                {Number(sale.commission_amount || 0) > 0 && (
+                                  <div className="text-xs font-normal text-amber-400">
+                                    Kom: -€{Number(sale.commission_amount).toFixed(2)}
+                                  </div>
+                                )}
+                              </td>
+
+                              <td className="py-3 text-center text-slate-300">
+                                {sale.payment_method === "Kredi Kartı / Credit Card"
+                                  ? "Kart / Kartica"
+                                  : sale.payment_method === "Banka Transferi / Bank Transfer"
+                                  ? "Havale / Transfer"
+                                  : "Nakit / Gotovina"}
                               </td>
 
                               <td className="py-3 text-center">

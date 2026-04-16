@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { supabase } from "../../../lib/supabase";
 
 type ProductGroupRelation =
@@ -24,6 +26,9 @@ type Product = {
   group_name?: string;
   is_active?: boolean;
   product_groups?: ProductGroupRelation;
+  parent_product_id?: string | null;
+  accessory_type?: string | null;
+  parent_name?: string;
 };
 
 type ProductGroup = {
@@ -50,6 +55,7 @@ export default function StockOutPage() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState("Hasarlı / Damaged");
+  const [documentDate, setDocumentDate] = useState<Date | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingMovements, setLoadingMovements] = useState(true);
@@ -91,7 +97,7 @@ export default function StockOutPage() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, stock, price, cost, opening_stock, is_active, group_id, product_groups(name)"
+        "id, name, stock, price, cost, opening_stock, is_active, group_id, parent_product_id, accessory_type, product_groups(name)"
       )
       .eq("is_active", true)
       .order("name", { ascending: true });
@@ -101,9 +107,16 @@ export default function StockOutPage() {
       return;
     }
 
-    const normalized = ((data || []) as Product[]).map((product) => ({
+    const raw = ((data || []) as Product[]).map((product) => ({
       ...product,
       group_name: getGroupNameFromRelation(product.product_groups),
+    }));
+
+    const normalized = raw.map((product) => ({
+      ...product,
+      parent_name: product.parent_product_id
+        ? raw.find((p) => p.id === product.parent_product_id)?.name || "-"
+        : undefined,
     }));
 
     setProducts(normalized);
@@ -269,6 +282,7 @@ export default function StockOutPage() {
             movement_type: reason,
             quantity: -qty,
             note: note || null,
+            document_date: documentDate ? documentDate.toISOString().slice(0, 10) : null,
           },
         ]);
 
@@ -316,6 +330,7 @@ export default function StockOutPage() {
       setSelectedProductId("");
       setQuantity(1);
       setReason("Hasarlı / Damaged");
+      setDocumentDate(null);
       setNote("");
 
       await fetchProducts();
@@ -433,6 +448,21 @@ export default function StockOutPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
+                Datum dokumenta / Belge Tarihi
+              </label>
+              <DatePicker
+                selected={documentDate}
+                onChange={(date: Date | null) => setDocumentDate(date)}
+                dateFormat="dd.MM.yyyy"
+                placeholderText="Tarih seçin..."
+                isClearable
+                wrapperClassName="w-full"
+                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Napomena / Not
               </label>
               <textarea
@@ -473,6 +503,19 @@ export default function StockOutPage() {
               title="Proizvod / Ürün"
               value={selectedProduct?.name || "-"}
             />
+            {selectedProduct?.parent_product_id && (
+              <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
+                <p className="text-xs uppercase tracking-wide text-violet-400">
+                  Aksesuar / Accessory
+                </p>
+                <p className="mt-1 text-sm font-medium text-white">
+                  ↳ {selectedProduct.parent_name || "-"}
+                </p>
+                {selectedProduct.accessory_type && (
+                  <p className="mt-0.5 text-xs text-violet-300">{selectedProduct.accessory_type}</p>
+                )}
+              </div>
+            )}
             <InfoCard
               title="Trenutna zaliha / Mevcut Stok"
               value={selectedProduct ? String(selectedProduct.stock) : "-"}

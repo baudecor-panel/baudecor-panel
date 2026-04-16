@@ -6,6 +6,17 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
+// Patch Leaflet's getPosition to handle undefined DOM elements gracefully.
+// This prevents "Cannot read properties of undefined (reading '_leaflet_pos')"
+// errors that occur during React component cleanup / animation races.
+if (typeof L !== "undefined" && L.DomUtil) {
+  const _origGetPosition = L.DomUtil.getPosition;
+  L.DomUtil.getPosition = function (el: HTMLElement) {
+    if (!el) return new L.Point(0, 0);
+    return _origGetPosition(el);
+  };
+}
+
 type Row = {
   id: string;
   customer_name?: string;
@@ -119,9 +130,11 @@ function isMapUsable(map: L.Map | null): map is L.Map {
   if (!map) return false;
 
   try {
-    const hasContainer = !!(map as any)._container;
+    if (!(map as any)._leaflet_id) return false;
+    const container = (map as any)._container;
+    if (!container || !document.contains(container)) return false;
     const overlayPane = map.getPane("overlayPane");
-    return hasContainer && !!overlayPane;
+    return !!overlayPane;
   } catch {
     return false;
   }
@@ -225,6 +238,20 @@ export default function DispatchMapClient({
   const requestSeqRef = useRef(0);
   const markersRef = useRef<Map<string, L.CircleMarker>>(new Map());
 
+  // Suppress Leaflet's _leaflet_pos animation errors that occur during
+  // React cleanup / component unmount race conditions.
+  useEffect(() => {
+    function handleError(event: ErrorEvent) {
+      if (event.message?.includes("_leaflet_pos")) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return true;
+      }
+    }
+    window.addEventListener("error", handleError);
+    return () => window.removeEventListener("error", handleError);
+  }, []);
+
   const legendGroups = useMemo(() => {
     return buildGroupBuckets(
       rows
@@ -248,6 +275,9 @@ export default function DispatchMapClient({
     const map = L.map(mapElRef.current, {
       center: DEFAULT_CENTER,
       zoom: 10,
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -258,6 +288,8 @@ export default function DispatchMapClient({
       maxClusterRadius: 50,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
+      animate: false,
+      animateAddingMarkers: false,
     });
 
     cluster.addTo(map);
@@ -312,6 +344,12 @@ export default function DispatchMapClient({
 
       try {
         cluster.clearLayers();
+      } catch {
+        // ignore
+      }
+
+      try {
+        map.stop();
       } catch {
         // ignore
       }
@@ -659,7 +697,7 @@ export default function DispatchMapClient({
     if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) return;
 
     try {
-      map.setView([lat, lng], 15, { animate: true });
+      map.setView([lat, lng], 15, { animate: false });
       const marker = markersRef.current.get(selectedRow.id);
       if (marker) {
         marker.openPopup();
