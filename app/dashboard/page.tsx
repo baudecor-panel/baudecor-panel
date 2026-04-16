@@ -634,10 +634,10 @@ export default function DashboardPage() {
   }
 
   function getRangeLabel(value: RangeType) {
-    if (value === "today") return "Bugün";
-    if (value === "week") return "Bu Hafta";
-    if (value === "month") return "Bu Ay";
-    return "Bu Yıl";
+    if (value === "today") return "Danas / Bugün";
+    if (value === "week") return "Ove sedmice / Bu Hafta";
+    if (value === "month") return "Ovog mjeseca / Bu Ay";
+    return "Ove godine / Bu Yıl";
   }
 
   function getStockDot(level: StockAlertItem["level"]) {
@@ -653,9 +653,9 @@ export default function DashboardPage() {
   }
 
   function getStockLabel(level: StockAlertItem["level"]) {
-    if (level === "out") return "Stok Yok";
-    if (level === "critical") return "Kritik";
-    return "Düşük";
+    if (level === "out") return "Nema na stanju / Stok Yok";
+    if (level === "critical") return "Kritično / Kritik";
+    return "Nisko / Düşük";
   }
 
   if (loading) {
@@ -663,7 +663,7 @@ export default function DashboardPage() {
       <main className="min-h-screen bg-[#030712] p-8 text-white flex items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.4em] text-amber-500/60">BAUDECOR</div>
-          <div className="text-2xl font-black tracking-tight text-white">Yükleniyor...</div>
+          <div className="text-2xl font-black tracking-tight text-white">Učitava se / Yükleniyor...</div>
         </div>
       </main>
     );
@@ -676,10 +676,10 @@ export default function DashboardPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.45em] text-amber-500/70">
-            BAUDECOR · YÖNETİM PANELİ
+            BAUDECOR · UPRAVLJAČKI PANEL / YÖNETİM PANELİ
           </p>
           <h1 className="mt-1.5 text-3xl font-black tracking-tight text-white md:text-4xl">
-            Kontrol Paneli
+            Kontrolna tabla / Kontrol Paneli
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -709,7 +709,7 @@ export default function DashboardPage() {
             disabled={loggingOut}
             className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-slate-400 transition hover:text-white disabled:opacity-50"
           >
-            {loggingOut ? "Çıkılıyor..." : "Çıkış"}
+            {loggingOut ? "Odjava... / Çıkılıyor..." : "Odjava / Çıkış"}
           </button>
         </div>
       </div>
@@ -717,48 +717,48 @@ export default function DashboardPage() {
       {/* ── KPI KARTI SATIRI ── */}
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <KpiCard
-          label="Toplam Ciro"
+          label="Ukupan prihod / Toplam Ciro"
           value={`€${totalRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="Dönem geliri"
+          sub="Prihod perioda / Dönem geliri"
           accent="amber"
         />
         <KpiCard
-          label="Toplam Kâr"
+          label="Ukupan profit / Toplam Kâr"
           value={`€${totalProfit.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="Brüt kârlılık"
+          sub="Bruto profitabilnost / Brüt kârlılık"
           accent={totalProfit >= 0 ? "green" : "red"}
         />
         <KpiCard
-          label="Sipariş"
+          label="Narudžbe / Sipariş"
           value={String(totalOrders)}
-          sub={`${activeOrders} aktif · ${completedOrders} tamamlandı`}
+          sub={`${activeOrders} aktivnih / aktif · ${completedOrders} završenih / tamamlandı`}
           accent="blue"
         />
         <KpiCard
-          label="Stok Sağlığı"
+          label="Zdravlje zalihe / Stok Sağlığı"
           value={`%${stockHealthRate}`}
-          sub="Min. stok üstü ürün oranı"
+          sub="Udio iznad min. zalihe / Min. stok üstü oran"
           accent={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
         />
       </div>
 
       {/* ── OPERASYON METRİKLERİ ── */}
       <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-6">
-        <MetricPill label="Tamamlanma" value={`%${completionRate}`} tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"} />
-        <MetricPill label="İptal Oranı" value={`%${cancellationRate}`} tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"} />
-        <MetricPill label="Bekleyen Ödeme" value={`€${pendingPaymentsTotal.toFixed(0)}`} tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"} />
-        <MetricPill label="Teslimat Backlog" value={String(deliveryBacklog)} tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"} />
-        <MetricPill label="Kritik Stok" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"} />
-        <MetricPill label="Stoksuz Ürün" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
+        <MetricPill label="Završenost / Tamamlanma" value={`%${completionRate}`} tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"} />
+        <MetricPill label="Stopa otkazivanja / İptal" value={`%${cancellationRate}`} tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"} />
+        <MetricPill label="Plaćanje na čekanju / Bekleyen" value={`€${pendingPaymentsTotal.toFixed(0)}`} tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"} />
+        <MetricPill label="Zaostale isporuke / Backlog" value={String(deliveryBacklog)} tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"} />
+        <MetricPill label="Kritična zaliha / Kritik Stok" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"} />
+        <MetricPill label="Bez zalihe / Stoksuz Ürün" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
       </div>
 
       {/* ── UYARILAR + İÇGÖRÜLER ── */}
       <div className="mb-5 grid gap-4 xl:grid-cols-2">
-        <LuxCard label="ÖNCELİKLİ UYARILAR" title="Kritik Uyarılar" badge={`${alerts.length} sinyal`}>
+        <LuxCard label="PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR" title="Kritična upozorenja / Kritik Uyarılar" badge={`${alerts.length} signala / sinyal`}>
           <div className="space-y-2">
             {alerts.length === 0 ? (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3 text-sm font-semibold text-emerald-300">
-                Her şey normal
+                Sve je u redu / Her şey normal
               </div>
             ) : (
               alerts.map((alert, i) => (
@@ -782,7 +782,7 @@ export default function DashboardPage() {
           </div>
         </LuxCard>
 
-        <LuxCard label="STRATEJİK YORUMLAR" title="Yönetim İçgörüleri" badge="Özet">
+        <LuxCard label="STRATEŠKI UVIDI / STRATEJİK YORUMLAR" title="Uvidi za upravu / Yönetim İçgörüleri" badge="Sažetak / Özet">
           <div className="grid gap-3 sm:grid-cols-2">
             {insights.map((insight, i) => (
               <div
@@ -811,20 +811,20 @@ export default function DashboardPage() {
       <div className="mb-5 rounded-3xl border border-white/[0.07] bg-slate-900/40 p-6">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-500/70">CİRO ANALİZİ</p>
-            <h2 className="mt-1 text-xl font-bold text-white">Satış ve Kâr Trendi</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-500/70">ANALIZA PRIHODA / CİRO ANALİZİ</p>
+            <h2 className="mt-1 text-xl font-bold text-white">Trend prodaje i profita / Satış ve Kâr Trendi</h2>
           </div>
           <div className="flex items-center gap-5 text-xs text-slate-400">
             <span className="flex items-center gap-2">
               <span className="h-[3px] w-6 rounded-full bg-blue-400" />
-              Ciro
+              Prihod / Ciro
             </span>
             <span className="flex items-center gap-2">
               <span className="h-[3px] w-6 rounded-full bg-emerald-400" />
-              Kâr
+              Profit / Kâr
             </span>
             <span className="rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 font-semibold text-slate-300">
-              Ort. sipariş: €{averageOrderValue.toFixed(2)}
+              Prosječna narudžba / Ort. sipariş: €{averageOrderValue.toFixed(2)}
             </span>
           </div>
         </div>
@@ -851,29 +851,29 @@ export default function DashboardPage() {
 
       {/* ── STOK RİSKİ ── */}
       <div className="mb-5 grid gap-4 xl:grid-cols-[1fr_1.4fr]">
-        <LuxCard label="STOK BASKISI" title="Stok Riski">
+        <LuxCard label="PRITISAK ZALIHE / STOK BASKISI" title="Rizik zalihe / Stok Riski">
           <div className="grid grid-cols-2 gap-3">
-            <MiniStat label="Kritik Ürün" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : "amber"} />
-            <MiniStat label="Stoksuz" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
-            <MiniStat label="Düşük Stok" value={String(lowStockCount)} tone="blue" />
-            <MiniStat label="Stok Sağlığı" value={`%${stockHealthRate}`} tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"} />
+            <MiniStat label="Kritični proizvod / Kritik Ürün" value={String(criticalStockCount)} tone={criticalStockCount === 0 ? "green" : "amber"} />
+            <MiniStat label="Bez zalihe / Stoksuz" value={String(outOfStockCount)} tone={outOfStockCount === 0 ? "green" : "red"} />
+            <MiniStat label="Niska zaliha / Düşük Stok" value={String(lowStockCount)} tone="blue" />
+            <MiniStat label="Zdravlje zalihe / Stok Sağlığı" value={`%${stockHealthRate}`} tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"} />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Envanter Maliyeti</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Trošak inventara / Envanter Maliyeti</p>
               <p className="mt-1.5 text-base font-black text-white">€{inventoryCostValue.toFixed(0)}</p>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Satış Değeri</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Vrijednost prodaje / Satış Değeri</p>
               <p className="mt-1.5 text-base font-black text-white">€{inventorySaleValue.toFixed(0)}</p>
             </div>
           </div>
         </LuxCard>
 
-        <LuxCard label="STOK ALARMASI" title="Ürün Stok Durumu">
+        <LuxCard label="ALARM ZALIHE / STOK ALARMASI" title="Status zalihe proizvoda / Ürün Stok Durumu">
           {stockAlerts.length === 0 ? (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3 text-sm font-semibold text-emerald-300">
-              Stok seviyeleri normal
+              Nivo zalihe je zdrav / Stok seviyeleri normal
             </div>
           ) : (
             <div className="space-y-2">
@@ -896,27 +896,27 @@ export default function DashboardPage() {
 
       {/* ── KÂRLILIK PANELLERİ ── */}
       <div className="mb-5 grid gap-4 xl:grid-cols-3">
-        <LuxCard label="KÂRLILIK" title="Kârlılık Özeti">
+        <LuxCard label="PROFITABILNOST / KÂRLILIK" title="Sažetak profitabilnosti / Kârlılık Özeti">
           <div className="grid grid-cols-2 gap-3">
-            <MiniStat label="Potansiyel Kâr" value={`€${totalPotentialProfit.toFixed(0)}`} tone={totalPotentialProfit >= 0 ? "green" : "red"} />
-            <MiniStat label="Ort. Marj" value={`%${averageMarginPercent.toFixed(1)}`} tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"} />
-            <MiniStat label="Kârlı Ürün" value={String(profitableProductCount)} tone="green" />
-            <MiniStat label="Zararlı Ürün" value={String(losingProductCount)} tone={losingProductCount === 0 ? "green" : "red"} />
+            <MiniStat label="Potencijalni profit / Potansiyel Kâr" value={`€${totalPotentialProfit.toFixed(0)}`} tone={totalPotentialProfit >= 0 ? "green" : "red"} />
+            <MiniStat label="Prosječna marža / Ort. Marj" value={`%${averageMarginPercent.toFixed(1)}`} tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"} />
+            <MiniStat label="Profitabilni proizvodi / Kârlı Ürün" value={String(profitableProductCount)} tone="green" />
+            <MiniStat label="Proizvodi u gubitku / Zararlı Ürün" value={String(losingProductCount)} tone={losingProductCount === 0 ? "green" : "red"} />
           </div>
         </LuxCard>
 
-        <LuxCard label="EN KARLI ÜRÜNLER" title="Stok Kâr Potansiyeli">
+        <LuxCard label="NAJPROFITABILNIJI PROIZVODI / EN KÂRLI ÜRÜNLER" title="Profit potencijal zalihe / Stok Kâr Potansiyeli">
           <div className="space-y-2">
             {topProfitableProducts.length === 0 ? <EmptyRow /> : topProfitableProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Marj %${item.marginPercent.toFixed(1)} · Stok ${item.stock}`} value={`€${item.stockProfit.toFixed(0)}`} valueClass={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"} />
+              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Marža / Marj %${item.marginPercent.toFixed(1)} · Zaliha / Stok ${item.stock}`} value={`€${item.stockProfit.toFixed(0)}`} valueClass={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"} />
             ))}
           </div>
         </LuxCard>
 
-        <LuxCard label="EN ZAYIF MARJ" title="Marj Uyarısı">
+        <LuxCard label="NAJSLABIJA MARŽA / EN ZAYIF MARJ" title="Upozorenje na maržu / Marj Uyarısı">
           <div className="space-y-2">
             {worstMarginProducts.length === 0 ? <EmptyRow /> : worstMarginProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Birim kâr: €${item.unitProfit.toFixed(2)}`} value={`%${item.marginPercent.toFixed(1)}`} valueClass={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"} />
+              <RankItem key={item.name} rank={i + 1} name={item.name} sub={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`} value={`%${item.marginPercent.toFixed(1)}`} valueClass={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"} />
             ))}
           </div>
         </LuxCard>
@@ -924,39 +924,39 @@ export default function DashboardPage() {
 
       {/* ── ALT PANELLER ── */}
       <div className="grid gap-4 xl:grid-cols-5">
-        <LuxCard label="EN İYİ ÜRÜNLER" title="Ciro Katkısı">
+        <LuxCard label="NAJBOLJI PROIZVODI / EN İYİ ÜRÜNLER" title="Doprinos prihodu / Ciro Katkısı">
           <div className="space-y-2">
             {topProducts.length === 0 ? <EmptyRow /> : topProducts.map((item, i) => (
-              <RankItem key={item.name} rank={i + 1} name={item.name} sub="Ciro katkısı" value={`€${item.total.toFixed(0)}`} valueClass="text-emerald-300" />
+              <RankItem key={item.name} rank={i + 1} name={item.name} sub="Doprinos prihodu / Ciro katkısı" value={`€${item.total.toFixed(0)}`} valueClass="text-emerald-300" />
             ))}
           </div>
         </LuxCard>
 
-        <LuxCard label="ŞEHİR PERFORMANSI" title="Şehre Göre Ciro">
+        <LuxCard label="UČINAK PO GRADU / ŞEHİR PERFORMANSI" title="Prihod po gradu / Şehre Göre Ciro">
           <div className="space-y-2">
             {cityStats.length === 0 ? <EmptyRow /> : cityStats.map((item, i) => (
-              <RankItem key={item.city} rank={i + 1} name={item.city} sub={`${item.count} sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-violet-300" />
+              <RankItem key={item.city} rank={i + 1} name={item.city} sub={`${item.count} narudžba / sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-violet-300" />
             ))}
           </div>
         </LuxCard>
 
-        <LuxCard label="EN İYİ MÜŞTERİLER" title="Ciro Bazında">
+        <LuxCard label="NAJBOLJI KUPCI / EN İYİ MÜŞTERİLER" title="Prema prihodu / Ciro Bazında">
           <div className="space-y-2">
             {customerStats.length === 0 ? <EmptyRow /> : customerStats.map((item, i) => (
-              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-cyan-300" />
+              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} narudžba / sipariş`} value={`€${item.total.toFixed(0)}`} valueClass="text-cyan-300" />
             ))}
           </div>
         </LuxCard>
 
-        <LuxCard label="EN KARLI MÜŞTERİLER" title="Kâr Bazında">
+        <LuxCard label="NAJPROFITABILNIJI KUPCI / EN KÂRLI MÜŞTERİLER" title="Prema profitu / Kâr Bazında">
           <div className="space-y-2">
             {topCustomersByProfit.length === 0 ? <EmptyRow /> : topCustomersByProfit.map((item, i) => (
-              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} sipariş`} value={`€${item.profit.toFixed(0)}`} valueClass={item.profit >= 0 ? "text-emerald-300" : "text-red-300"} />
+              <RankItem key={item.customer} rank={i + 1} name={item.customer} sub={`${item.orderCount} narudžba / sipariş`} value={`€${item.profit.toFixed(0)}`} valueClass={item.profit >= 0 ? "text-emerald-300" : "text-red-300"} />
             ))}
           </div>
         </LuxCard>
 
-        <LuxCard label="SON SATIŞLAR" title="Güncel Kayıtlar">
+        <LuxCard label="NEDAVNE PRODAJE / SON SATIŞLAR" title="Najnoviji zapisi / Güncel Kayıtlar">
           <div className="space-y-2">
             {recentSales.length === 0 ? <EmptyRow /> : recentSales.map((sale) => (
               <div key={sale.id} className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3">
@@ -1102,7 +1102,7 @@ function RankItem({ rank, name, sub, value, valueClass }: {
 function EmptyRow() {
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-xs text-slate-500">
-      Kayıt yok
+      Nema zapisa / Kayıt yok
     </div>
   );
 }
