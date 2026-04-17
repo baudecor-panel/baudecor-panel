@@ -100,6 +100,8 @@ export default function ProductsPage() {
   const [editAccessoryType, setEditAccessoryType] = useState("");
   const [editParentProducts, setEditParentProducts] = useState<{ id: string; name: string }[]>([]);
   const [loadingEditParents, setLoadingEditParents] = useState(false);
+  const [editCurrentStock, setEditCurrentStock] = useState(0);
+  const [editNewStock, setEditNewStock] = useState<number | "">("");
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [actionLoadingId, setActionLoadingId] = useState("");
@@ -244,6 +246,7 @@ export default function ProductsPage() {
   }
 
   async function startEdit(product: Product) {
+    const currentStock = getCalculatedStock(product);
     setEditingProductId(product.id);
     setEditName(product.name || "");
     setEditPrice(Number(product.price || 0));
@@ -254,6 +257,8 @@ export default function ProductsPage() {
     setEditIsAccessory(!!product.parent_product_id);
     setEditParentProductId(product.parent_product_id || "");
     setEditAccessoryType(product.accessory_type || "");
+    setEditCurrentStock(currentStock);
+    setEditNewStock("");
 
     if (product.group_id) {
       setLoadingEditParents(true);
@@ -282,6 +287,8 @@ export default function ProductsPage() {
     setEditParentProductId("");
     setEditAccessoryType("");
     setEditParentProducts([]);
+    setEditCurrentStock(0);
+    setEditNewStock("");
   }
 
   async function saveEdit() {
@@ -328,15 +335,37 @@ export default function ProductsPage() {
       })
       .eq("id", editingProductId);
 
-    setSavingEdit(false);
-
     if (error) {
+      setSavingEdit(false);
       alert("Proizvod nije ažuriran / Ürün güncellenemedi: " + error.message);
       return;
     }
 
-    alert("Proizvod je ažuriran / Ürün güncellendi ✅");
+    // Stok düzeltme hareketi
+    if (editNewStock !== "" && Number(editNewStock) !== editCurrentStock) {
+      const diff = Number(editNewStock) - editCurrentStock;
+      const product = products.find((p) => p.id === editingProductId);
 
+      const { error: movErr } = await supabase.from("stock_movements").insert([{
+        product_id: editingProductId,
+        product_name: product?.name || editName.trim(),
+        movement_type: "Sayım Düzeltme / Adjustment",
+        quantity: diff,
+        note: `Manuel düzeltme: ${editCurrentStock} → ${Number(editNewStock)} / Ručna korekcija`,
+      }]);
+
+      if (movErr) {
+        setSavingEdit(false);
+        alert("Stok hareketi eklenemedi / Stok kretanje nije dodato: " + movErr.message);
+        return;
+      }
+
+      // products.stock güncelle
+      await supabase.from("products").update({ stock: Number(editNewStock) }).eq("id", editingProductId);
+    }
+
+    setSavingEdit(false);
+    alert("Proizvod je ažuriran / Ürün güncellendi ✅");
     cancelEdit();
     await fetchProductsWithMeta();
   }
@@ -1195,6 +1224,55 @@ export default function ProductsPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+          <p className="mb-3 text-sm font-medium text-slate-300">
+            Stok Düzeltme / Korekcija Zalihe
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="mb-2 block text-xs text-slate-500">
+                Mevcut Stok / Trenutna
+              </label>
+              <div className="flex h-[56px] items-center rounded-2xl border border-slate-700 bg-slate-800 px-4 text-white">
+                {editCurrentStock}
+              </div>
+            </div>
+            <div>
+              <label className="mb-2 block text-xs text-slate-500">
+                Yeni Stok / Nova Zaliha
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={editNewStock}
+                onChange={(e) => setEditNewStock(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder="Boş bırakırsan değişmez"
+                className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs text-slate-500">
+                Fark / Razlika
+              </label>
+              <div className={`flex h-[56px] items-center rounded-2xl border px-4 font-semibold ${
+                editNewStock === "" || Number(editNewStock) === editCurrentStock
+                  ? "border-slate-700 bg-slate-800 text-slate-500"
+                  : Number(editNewStock) > editCurrentStock
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                  : "border-red-500/20 bg-red-500/10 text-red-300"
+              }`}>
+                {editNewStock === "" ? "-" : Number(editNewStock) - editCurrentStock > 0
+                  ? `+${Number(editNewStock) - editCurrentStock}`
+                  : Number(editNewStock) - editCurrentStock}
+              </div>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Yeni stok girilirse otomatik "Sayım Düzeltme" hareketi oluşturulur. Boş bırakırsan stok değişmez. /
+            Ako uneseš novu zalihu, automatski se kreira kretanje "Sayım Düzeltme".
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
