@@ -24,6 +24,9 @@ type Row = {
   shipment_status?: string | null;
   delivery_status?: string | null;
   payment_status?: string | null;
+  payment_method?: string | null;
+  commission_rate?: number | null;
+  commission_amount?: number | null;
   assigned_vehicle?: string | null;
   assigned_courier?: string | null;
   employee?: string | null;
@@ -62,7 +65,7 @@ export default function CompletedSalesPage() {
 
     const { data, error } = await supabase
       .from("sales")
-      .select("id, order_id, customer_id, customer_name, customer_phone, customer_address, product_name, quantity, unit_price, discount, final_unit_price, total, city, sale_date, shipment_date, shipment_status, delivery_status, payment_status, assigned_vehicle, assigned_courier, employee, note, created_at")
+      .select("id, order_id, customer_id, customer_name, customer_phone, customer_address, product_name, quantity, unit_price, discount, final_unit_price, total, city, sale_date, shipment_date, shipment_status, delivery_status, payment_status, payment_method, commission_rate, commission_amount, assigned_vehicle, assigned_courier, employee, note, created_at")
       .eq("delivery_status", "Teslim Edildi / Delivered")
       .eq("payment_status", "Ödendi / Paid")
       .order("created_at", { ascending: false });
@@ -328,25 +331,39 @@ export default function CompletedSalesPage() {
           <div className="text-slate-400">Učitava se / Yükleniyor...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[2200px] text-sm">
-              <thead className="text-slate-400">
+            <table className="w-full min-w-[2600px] text-sm">
+              <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="py-3 text-left">Narudžba / Sipariş</th>
-                  <th className="py-3 text-left">Kupac / Müşteri</th>
-                  <th className="py-3 text-left">Telefon / Telefon</th>
-                  <th className="py-3 text-left">Adresa / Adres</th>
-                  <th className="py-3 text-left">Grad / Şehir</th>
-                  <th className="py-3 text-left">Proizvod / Ürün</th>
-                  <th className="py-3 text-center">Količina / Adet</th>
-                  <th className="py-3 text-center">Neto jedinica / Net Birim</th>
-                  <th className="py-3 text-center">Ukupno / Toplam</th>
-                  <th className="py-3 text-center">Datum prodaje / Satış Tarihi</th>
-                  <th className="py-3 text-center">Datum isporuke / Sevkiyat Tarihi</th>
-                  <th className="py-3 text-center">Isporuka / Teslimat</th>
-                  <th className="py-3 text-center">Plaćanje / Ödeme</th>
-                  <th className="py-3 text-center">Vozilo / Araç</th>
-                  <th className="py-3 text-center">Kurir / Kurye</th>
-                  <th className="py-3 text-center">Akcija / İşlem</th>
+                  {[
+                    { tr: "Sipariş", sr: "Narudžba", align: "left" },
+                    { tr: "Müşteri", sr: "Kupac", align: "left" },
+                    { tr: "Telefon", sr: "Telefon", align: "left" },
+                    { tr: "Adres", sr: "Adresa", align: "left" },
+                    { tr: "Şehir", sr: "Grad", align: "left" },
+                    { tr: "Ürün", sr: "Proizvod", align: "left" },
+                    { tr: "Adet", sr: "Količina", align: "center" },
+                    { tr: "Net Birim", sr: "Neto jed.", align: "center" },
+                    { tr: "Toplam", sr: "Ukupno", align: "center" },
+                    { tr: "Ödeme Yöntemi", sr: "Način plaćanja", align: "center" },
+                    { tr: "Komisyon", sr: "Komisija", align: "center" },
+                    { tr: "Satış Tarihi", sr: "Dat. prodaje", align: "center" },
+                    { tr: "Sevkiyat Tarihi", sr: "Dat. isporuke", align: "center" },
+                    { tr: "Teslimat", sr: "Isporuka", align: "center" },
+                    { tr: "Ödeme Durumu", sr: "Plaćanje", align: "center" },
+                    { tr: "Araç", sr: "Vozilo", align: "center" },
+                    { tr: "Kurye", sr: "Kurir", align: "center" },
+                    { tr: "İşlem", sr: "Akcija", align: "center" },
+                  ].map((col) => (
+                    <th
+                      key={col.tr}
+                      className={`px-3 py-4 text-${col.align}`}
+                    >
+                      <div className={`min-w-[80px] flex flex-col gap-0.5 ${col.align === "center" ? "items-center" : ""}`}>
+                        <span className="text-sm font-semibold text-slate-300">{col.tr}</span>
+                        <span className="text-xs font-normal text-slate-500">{col.sr}</span>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
@@ -369,10 +386,36 @@ export default function CompletedSalesPage() {
                       <td className="py-3 text-center">
                         €{Number(row.final_unit_price ?? row.unit_price ?? 0).toFixed(2)}
                       </td>
-                      <td className="py-3 text-center font-medium">
+                      <td className="px-3 py-3 text-center font-medium">
                         €{Number(row.total || 0).toFixed(2)}
                       </td>
-                      <td className="py-3 text-center">
+                      <td className="px-3 py-3 text-center">
+                        {row.payment_method ? (
+                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            row.payment_method === "Kredi Kartı / Credit Card"
+                              ? "border border-amber-500/20 bg-amber-500/10 text-amber-300"
+                              : row.payment_method === "Banka / Bank Transfer"
+                              ? "border border-blue-500/20 bg-blue-500/10 text-blue-300"
+                              : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                          }`}>
+                            {row.payment_method === "Kredi Kartı / Credit Card"
+                              ? "Kredi Kartı"
+                              : row.payment_method === "Banka / Bank Transfer"
+                              ? "Banka"
+                              : "Nakit"}
+                          </span>
+                        ) : "-"}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {row.commission_amount && Number(row.commission_amount) > 0 ? (
+                          <span className="text-amber-300">
+                            €{Number(row.commission_amount).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500">-</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center">
                         {row.sale_date || row.created_at?.slice(0, 10) || "-"}
                       </td>
                       <td className="py-3 text-center">{row.shipment_date || "-"}</td>
@@ -396,7 +439,7 @@ export default function CompletedSalesPage() {
                 {filteredRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={16}
+                      colSpan={18}
                       className="py-8 text-center text-slate-400"
                     >
                       Nema zapisa / Kayıt yok
