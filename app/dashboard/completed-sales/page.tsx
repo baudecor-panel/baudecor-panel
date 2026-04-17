@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { supabase } from "../../../lib/supabase";
+import * as XLSX from "xlsx";
 
 type Row = {
   id: string;
@@ -253,19 +254,55 @@ export default function CompletedSalesPage() {
     });
   }, [rows, cityFilter, dateFrom, dateTo, search]);
 
+  function exportToExcel() {
+    const data = filteredRows.map((row) => ({
+      "Sipariş / Order": row.order_id || "-",
+      "Müşteri / Kupac": row.customer_name || "-",
+      "Telefon": row.customer_phone || "-",
+      "Adres / Adresa": row.customer_address || "-",
+      "Şehir / Grad": row.city || "-",
+      "Ürün / Proizvod": row.product_name || "-",
+      "Adet / Količina": row.quantity || 0,
+      "Birim Fiyat / Jedinica": Number(row.final_unit_price ?? row.unit_price ?? 0).toFixed(2),
+      "İndirim / Popust": Number(row.discount || 0).toFixed(2),
+      "Toplam / Ukupno": Number(row.total || 0).toFixed(2),
+      "Satış Tarihi / Prodaja": row.sale_date || row.created_at?.slice(0, 10) || "-",
+      "Sevkiyat / Isporuka": row.shipment_date || "-",
+      "Ödeme Yöntemi / Plaćanje": row.payment_method || "-",
+      "Komisyon / Komisija": Number(row.commission_amount || 0).toFixed(2),
+      "Çalışan / Zaposleni": row.employee || "-",
+      "Not / Napomena": row.note || "-",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws["!cols"] = Object.keys(data[0] || {}).map(() => ({ wch: 22 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Tamamlanan Satışlar");
+    XLSX.writeFile(wb, `tamamlanan-satislar-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SISTEM / BAUDECOR SİSTEM
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Završene prodaje / Tamamlanan Satışlar
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Isporučeni i plaćeni prodajni zapisi. Ovdje se rade retroaktivno filtriranje, pretraga i povrat. /
-          Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme, arama ve iade işlemleri buradan yapılır.
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+            BAUDECOR SISTEM / BAUDECOR SİSTEM
+          </p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight">
+            Završene prodaje / Tamamlanan Satışlar
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm text-slate-400">
+            Isporučeni i plaćeni prodajni zapisi. Ovdje se rade retroaktivno filtriranje, pretraga i povrat. /
+            Teslimatı ve ödemesi tamamlanmış satış kayıtları. Geriye dönük filtreleme, arama ve iade işlemleri buradan yapılır.
+          </p>
+        </div>
+        <button
+          onClick={exportToExcel}
+          disabled={filteredRows.length === 0}
+          className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Excel İndir / Export
+        </button>
       </div>
 
       <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">

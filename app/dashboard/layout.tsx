@@ -216,9 +216,11 @@ export default function DashboardLayout({
 
         <section className="min-w-0 flex-1 overflow-y-auto bg-slate-950">
           <div className="border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur">
-            <h2 className="text-lg font-semibold text-white">
-              Upravljački panel / Yönetim Paneli
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">
+                Upravljački panel / Yönetim Paneli
+              </h2>
+            </div>
           </div>
 
           <div className="min-h-[calc(100vh-64px)] px-6 py-6">

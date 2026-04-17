@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 
 type Customer = {
@@ -614,6 +615,13 @@ export default function CustomersPage() {
                       <div className="flex flex-wrap gap-2">
                         {!isEditing ? (
                           <>
+                            <Link
+                              href={`/dashboard/customers/${summary.customer.id}`}
+                              className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-300 transition hover:bg-blue-500/20"
+                            >
+                              Detay Sayfası / Detalji
+                            </Link>
+
                             <button
                               onClick={() =>
                                 setExpandedCustomerId(

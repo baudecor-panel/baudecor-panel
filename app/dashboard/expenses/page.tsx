@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import * as XLSX from "xlsx";
 
 type Expense = {
   id: string;
@@ -97,19 +98,41 @@ export default function ExpensesPage() {
     }, 0);
   }, [expenses]);
 
+  function exportToExcel() {
+    const data = expenses.map((e) => ({
+      "Tür / Tip": e.type,
+      "Tutar / Iznos (€)": Number(e.amount).toFixed(2),
+      "Not / Napomena": e.note || "-",
+      "Tarih / Datum": e.created_at?.slice(0, 10) || "-",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 36 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Giderler");
+    XLSX.writeFile(wb, `giderler-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   return (
     <main className="flex-1 bg-slate-950 text-white p-8">
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-          BAUDECOR SISTEM / BAUDECOR SİSTEM
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Troškovi / Giderler
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-400">
-          Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet
-          ve takip et.
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+            BAUDECOR SISTEM / BAUDECOR SİSTEM
+          </p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight">
+            Troškovi / Giderler
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm text-slate-400">
+            Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet ve takip et.
+          </p>
+        </div>
+        <button
+          onClick={exportToExcel}
+          disabled={expenses.length === 0}
+          className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Excel İndir / Export
+        </button>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
