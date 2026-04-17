@@ -1355,9 +1355,9 @@ export default function ProductsPage() {
   {loading ? (
     <div className="text-sm text-slate-400">Učitava se / Yükleniyor...</div>
   ) : (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
       <table className="w-full min-w-[3550px] text-sm">
-        <thead className="text-slate-400">
+        <thead className="sticky top-0 z-10 bg-slate-900 text-slate-400">
           <tr className="border-b border-slate-800">
             <th className="px-4 py-4 text-left">
               <div className="min-w-[120px]">
