@@ -95,6 +95,11 @@ export default function ProductsPage() {
   const [editGroupId, setEditGroupId] = useState("");
   const [editSupplierId, setEditSupplierId] = useState("");
   const [editMinimumStock, setEditMinimumStock] = useState(5);
+  const [editIsAccessory, setEditIsAccessory] = useState(false);
+  const [editParentProductId, setEditParentProductId] = useState("");
+  const [editAccessoryType, setEditAccessoryType] = useState("");
+  const [editParentProducts, setEditParentProducts] = useState<{ id: string; name: string }[]>([]);
+  const [loadingEditParents, setLoadingEditParents] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [actionLoadingId, setActionLoadingId] = useState("");
@@ -238,7 +243,7 @@ export default function ProductsPage() {
     setStockMetaMap(nextStockMetaMap);
   }
 
-  function startEdit(product: Product) {
+  async function startEdit(product: Product) {
     setEditingProductId(product.id);
     setEditName(product.name || "");
     setEditPrice(Number(product.price || 0));
@@ -246,6 +251,23 @@ export default function ProductsPage() {
     setEditGroupId(product.group_id || "");
     setEditSupplierId(product.default_supplier_id ? String(product.default_supplier_id) : "");
     setEditMinimumStock(Number(product.minimum_stock || 5));
+    setEditIsAccessory(!!product.parent_product_id);
+    setEditParentProductId(product.parent_product_id || "");
+    setEditAccessoryType(product.accessory_type || "");
+
+    if (product.group_id) {
+      setLoadingEditParents(true);
+      const { data } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("is_active", true)
+        .eq("group_id", product.group_id)
+        .is("parent_product_id", null)
+        .neq("id", product.id)
+        .order("name", { ascending: true });
+      setEditParentProducts((data || []) as { id: string; name: string }[]);
+      setLoadingEditParents(false);
+    }
   }
 
   function cancelEdit() {
@@ -256,6 +278,10 @@ export default function ProductsPage() {
     setEditGroupId("");
     setEditSupplierId("");
     setEditMinimumStock(5);
+    setEditIsAccessory(false);
+    setEditParentProductId("");
+    setEditAccessoryType("");
+    setEditParentProducts([]);
   }
 
   async function saveEdit() {
@@ -297,6 +323,8 @@ export default function ProductsPage() {
         group_id: editGroupId,
         default_supplier_id: editSupplierId ? Number(editSupplierId) : null,
         minimum_stock: Number(editMinimumStock),
+        parent_product_id: editIsAccessory && editParentProductId ? editParentProductId : null,
+        accessory_type: editIsAccessory && editAccessoryType.trim() ? editAccessoryType.trim() : null,
       })
       .eq("id", editingProductId);
 
@@ -1208,6 +1236,62 @@ export default function ProductsPage() {
               className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
             />
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-300">Aksesuar / Accessory</p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Bu ürün başka bir ürünün aksesuarıysa etkinleştir. / Aktiviraj ako je accessory.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEditIsAccessory(!editIsAccessory);
+                setEditParentProductId("");
+                setEditAccessoryType("");
+              }}
+              className={`relative h-7 w-14 rounded-full transition-colors ${editIsAccessory ? "bg-blue-600" : "bg-slate-700"}`}
+            >
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${editIsAccessory ? "left-8" : "left-1"}`} />
+            </button>
+          </div>
+
+          {editIsAccessory && (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Üst Ürün / Nadređeni Proizvod
+                </label>
+                <select
+                  value={editParentProductId}
+                  onChange={(e) => setEditParentProductId(e.target.value)}
+                  disabled={loadingEditParents}
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 disabled:opacity-60"
+                >
+                  <option value="">
+                    {loadingEditParents ? "Yükleniyor..." : "Üst ürün seç / Odaberi nadređeni"}
+                  </option>
+                  {editParentProducts.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Aksesuar Türü / Tip
+                </label>
+                <input
+                  value={editAccessoryType}
+                  onChange={(e) => setEditAccessoryType(e.target.value)}
+                  placeholder="Başlangıç Profili, Bitiş Profili..."
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
