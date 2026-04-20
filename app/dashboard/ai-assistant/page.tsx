@@ -197,7 +197,7 @@ export default function AiAssistantPage() {
       if (data.error) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: "Hata oluştu, tekrar deneyin." },
+          { role: "assistant", content: `Hata: ${data.error}` },
         ]);
       } else {
         const updatedMessages = [...newMessages, { role: "assistant" as const, content: data.reply }];

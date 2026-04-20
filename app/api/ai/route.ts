@@ -21,25 +21,29 @@ function isCacheValid(): boolean {
 }
 
 async function fetchMemory(): Promise<string> {
-  const { data } = await supabase
-    .from("ai_memory")
-    .select("category, key, value")
-    .order("category");
+  try {
+    const { data } = await supabase
+      .from("ai_memory")
+      .select("category, key, value")
+      .order("category");
 
-  if (!data || data.length === 0) return "";
+    if (!data || data.length === 0) return "";
 
-  const grouped = new Map<string, string[]>();
-  data.forEach((m) => {
-    const list = grouped.get(m.category) || [];
-    list.push(`- ${m.key}: ${m.value}`);
-    grouped.set(m.category, list);
-  });
+    const grouped = new Map<string, string[]>();
+    data.forEach((m) => {
+      const list = grouped.get(m.category) || [];
+      list.push(`- ${m.key}: ${m.value}`);
+      grouped.set(m.category, list);
+    });
 
-  let result = "\n=== KALICI HAFIZA / ÖĞRENILEN BİLGİLER ===\n";
-  grouped.forEach((items, category) => {
-    result += `\n[${category.toUpperCase()}]\n${items.join("\n")}\n`;
-  });
-  return result;
+    let result = "\n=== KALICI HAFIZA / ÖĞRENILEN BİLGİLER ===\n";
+    grouped.forEach((items, category) => {
+      result += `\n[${category.toUpperCase()}]\n${items.join("\n")}\n`;
+    });
+    return result;
+  } catch {
+    return "";
+  }
 }
 
 async function fetchContext() {
@@ -286,7 +290,8 @@ export async function POST(req: NextRequest) {
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     return NextResponse.json({ reply: text });
   } catch (err) {
-    console.error("AI route error:", err);
-    return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("AI route error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
