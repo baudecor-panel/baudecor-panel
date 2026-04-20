@@ -83,7 +83,25 @@ export default function DashboardPage() {
     fetchAiAlerts();
   }, []);
 
-  async function fetchAiAlerts() {
+  async function fetchAiAlerts(force = false) {
+    const CACHE_KEY = "ai_alerts_cache";
+    const today = new Date().toDateString();
+
+    if (!force) {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.date === today && Array.isArray(parsed.alerts)) {
+            setAiAlerts(parsed.alerts);
+            return;
+          }
+        }
+      } catch {
+        // önbellek okunamazsa devam et
+      }
+    }
+
     setAiAlertsLoading(true);
     try {
       const res = await fetch("/api/ai", {
@@ -94,7 +112,6 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.reply) {
         const lines = data.reply.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-        // Group pairs: emoji line + indented translation line
         const grouped: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].match(/^[\p{Emoji}]/u)) {
@@ -106,6 +123,11 @@ export default function DashboardPage() {
           }
         }
         setAiAlerts(grouped);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, alerts: grouped }));
+        } catch {
+          // localStorage yazılamazsa sessizce geç
+        }
       }
     } catch {
       // sessizce geç
@@ -787,6 +809,15 @@ export default function DashboardPage() {
             </h2>
             {aiAlertsLoading && (
               <span className="ml-2 text-xs text-slate-500 animate-pulse">analiz ediliyor...</span>
+            )}
+            {!aiAlertsLoading && (
+              <button
+                onClick={() => fetchAiAlerts(true)}
+                className="ml-auto text-xs text-slate-500 hover:text-slate-300 transition"
+                title="Yenile / Refresh"
+              >
+                ↻ Yenile
+              </button>
             )}
           </div>
           {aiAlertsLoading ? (
