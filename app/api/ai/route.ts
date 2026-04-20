@@ -269,11 +269,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Mesaj boş" }, { status: 400 });
     }
 
+    // Anthropic requires messages to start with "user" role
+    const firstUserIdx = messages.findIndex((m) => m.role === "user");
+    if (firstUserIdx === -1) {
+      return NextResponse.json({ error: "Mesaj boş" }, { status: 400 });
+    }
+    const anthropicMessages = messages.slice(firstUserIdx);
+
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: fullPrompt,
-      messages,
+      messages: anthropicMessages,
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";

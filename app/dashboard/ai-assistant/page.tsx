@@ -298,7 +298,7 @@ export default function AiAssistantPage() {
     filterCategory === "tümü" ? memories : memories.filter((m) => m.category === filterCategory);
 
   return (
-    <main className="flex h-[calc(100vh-64px)] flex-col bg-slate-950 text-white">
+    <main className="-mx-6 -mt-6 flex h-[calc(100vh-64px)] flex-col bg-slate-950 text-white">
       {/* Header */}
       <div className="border-b border-slate-800 px-6 py-5">
         <div className="flex items-center justify-between">
