@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+function getAnthropic() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY .env.local dosyasında tanımlı değil");
+  return new Anthropic({ apiKey });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -226,7 +228,7 @@ export async function POST(req: NextRequest) {
     const fullPrompt = systemPrompt + memory;
 
     if (alertMode) {
-      const response = await anthropic.messages.create({
+      const response = await getAnthropic().messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 512,
         system: fullPrompt,
@@ -243,7 +245,7 @@ export async function POST(req: NextRequest) {
 
     if (extractMode) {
       const conversation = (messages || []).map((m) => `${m.role === "user" ? "Kullanıcı" : "AI"}: ${m.content}`).join("\n");
-      const response = await anthropic.messages.create({
+      const response = await getAnthropic().messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 512,
         system: "Sen bir bilgi çıkarma asistanısın. Verilen sohbetten kalıcı olarak hatırlanmaya değer bilgileri çıkar. Sadece geçerli JSON dizisi döndür, başka hiçbir şey yazma.",
@@ -280,7 +282,7 @@ export async function POST(req: NextRequest) {
     }
     const anthropicMessages = messages.slice(firstUserIdx);
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: fullPrompt,
