@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { supabase } from "../../../lib/supabase";
+
+const ManualRouteMapClient = dynamic(() => import("./ManualRouteMapClient"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center bg-slate-950 text-slate-400 text-sm">
+      Harita yükleniyor...
+    </div>
+  ),
+});
 
 type DispatchRow = {
   id: string;
@@ -32,12 +42,6 @@ type MethodFilter = "all" | "Sopstveno vozilo / Kendi Araç" | "Kurir / Kurye";
 
 type DispatchRowWithDistance = DispatchRow & {
   showroom_distance: number;
-};
-
-type GroupSection = {
-  groupName: string;
-  vehicleRows: DispatchRow[];
-  courierRows: DispatchRow[];
 };
 
 const SHOWROOM_LAT = 41.935659350080314;
@@ -392,6 +396,9 @@ export default function DispatchPage() {
   const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
   const [optimizingGroup, setOptimizingGroup] = useState<string | null>(null);
   const [savingIds, setSavingIds] = useState<string[]>([]);
+  const [routeModeMap, setRouteModeMap] = useState<Record<string, string>>({});
+  const [manualModalGroup, setManualModalGroup] = useState<string | null>(null);
+  const [manualSaving, setManualSaving] = useState(false);
 
   async function fetchDispatchRows() {
     setLoading(true);
@@ -401,10 +408,8 @@ export default function DispatchPage() {
       .select(
         "id, customer_name, customer_phone, customer_address, product_name, quantity, delivery_status, payment_status, delivery_method, shipment_date, shipment_status, route_order, loading_order, shipment_note, route_mode, latitude, longitude, city, assigned_vehicle, assigned_courier, dispatch_group, created_at"
       )
-      .or(
-        "delivery_status.neq.Teslim Edildi / Delivered,payment_status.neq.Ödendi / Paid"
-      )
-      .neq("delivery_status", "İade Edildi / Returned")
+      .or("delivery_status.is.null,delivery_status.neq.Teslim Edildi / Delivered")
+      .or("delivery_status.is.null,delivery_status.neq.İade Edildi / Returned")
       .order("shipment_date", { ascending: true, nullsFirst: false })
       .order("dispatch_group", { ascending: true, nullsFirst: true })
       .order("route_order", { ascending: true, nullsFirst: true })
@@ -536,13 +541,6 @@ export default function DispatchPage() {
     return ready || null;
   }, [selectedGroupNames, groupNameInput]);
 
-  const activeGroupRows = useMemo(() => {
-    if (!activeGroupName) return [];
-    return rows.filter(
-      (row) => normalizeGroupName(row.dispatch_group) === activeGroupName
-    );
-  }, [rows, activeGroupName]);
-
   const activeGroupSelectedCount = useMemo(() => {
     if (!activeGroupName) return 0;
     return selectedRows.filter(
@@ -578,7 +576,6 @@ export default function DispatchPage() {
 
     if (field === "delivery_method" && value !== row.delivery_method) return true;
     if (field === "shipment_date" && value !== (row.shipment_date || "")) return true;
-    if (field === "route_mode" && value !== row.route_mode) return true;
 
     return false;
   }
@@ -653,7 +650,7 @@ export default function DispatchPage() {
     return true;
   }
 
-  async function optimizeSingleGroupRows(groupRows: DispatchRow[]) {
+  async function optimizeSingleGroupRows(groupRows: DispatchRow[], forceRouteMode?: string) {
     if (groupRows.length === 0) {
       alert("Bu grupta optimize edilecek kayıt yok / U ovoj grupi nema zapisa za optimizaciju");
       return false;
@@ -689,6 +686,13 @@ export default function DispatchPage() {
     }
 
     function optimizeNearestNeighbor(rowsToOptimize: DispatchRow[]) {
+      const INLAND_CITIES = ["podgorica", "nikšić", "niksic", "cetinje", "kolašin", "kolasin", "žabljak", "zabljak", "berane", "bijelo polje", "pljevlja", "mojkovac", "andrijevica", "rožaje", "rozaje", "plav", "gusinje"];
+
+      function isInland(row: DispatchRow) {
+        const city = (row.city || "").toLowerCase().trim();
+        return INLAND_CITIES.some((c) => city.includes(c));
+      }
+
       const validRows = rowsToOptimize.filter(
         (row) =>
           typeof row.latitude === "number" &&
@@ -711,29 +715,35 @@ export default function DispatchPage() {
         return [...validRows, ...invalidRows];
       }
 
-      const routeMode = normalizeText(validRows[0]?.route_mode) || "Daleko → Blizu / Uzak → Yakın";
+      const routeMode = forceRouteMode
+        || normalizeText(validRows.find((r) => r.route_mode)?.route_mode)
+        || "Daleko → Blizu / Uzak → Yakın";
 
       if (routeMode === "Ručno / Manuel") {
         return [...validRows, ...invalidRows];
       }
 
-      const withDistances = validRows.map((row) => ({
-        row,
-        distance: getDistanceKm(
-          SHOWROOM_LAT,
-          SHOWROOM_LNG,
-          row.latitude as number,
-          row.longitude as number
-        ),
-      }));
+      const farToNear = routeMode === "Daleko → Blizu / Uzak → Yakın";
 
-      withDistances.sort((a, b) =>
-        routeMode === "Daleko → Blizu / Uzak → Yakın"
-          ? b.distance - a.distance
-          : a.distance - b.distance
-      );
+      const inlandRows = validRows.filter(isInland);
+      const coastalRows = validRows.filter((r) => !isInland(r));
 
-      return [...withDistances.map((x) => x.row), ...invalidRows];
+      const sortByDistance = (a: DispatchRow, b: DispatchRow) => {
+        const da = getDistanceKm(SHOWROOM_LAT, SHOWROOM_LNG, a.latitude as number, a.longitude as number);
+        const db = getDistanceKm(SHOWROOM_LAT, SHOWROOM_LNG, b.latitude as number, b.longitude as number);
+        return farToNear ? db - da : da - db;
+      };
+
+      inlandRows.sort(sortByDistance);
+      coastalRows.sort(sortByDistance);
+
+      // Uzaktan yakına: iç şehirler önce (çıkarken uğranır), sonra kıyı uzaktan yakına
+      // Yakından uzağa: kıyı yakından uzağa, sonra iç şehirler sonda
+      const ordered = farToNear
+        ? [...inlandRows, ...coastalRows]
+        : [...coastalRows, ...inlandRows];
+
+      return [...ordered, ...invalidRows];
     }
 
     if (vehicleRows.length > 0) {
@@ -749,6 +759,24 @@ export default function DispatchPage() {
     }
 
     return true;
+  }
+
+  async function handleManualSave(orderedIds: string[]) {
+    setManualSaving(true);
+    const total = orderedIds.length;
+    for (let i = 0; i < orderedIds.length; i++) {
+      await supabase.from("sales").update({
+        route_order: i + 1,
+        loading_order: total - i,
+      }).eq("id", orderedIds[i]);
+    }
+    const savedGroup = manualModalGroup;
+    setManualSaving(false);
+    setManualModalGroup(null);
+    await fetchDispatchRows();
+    if (savedGroup) {
+      openPrintPage(savedGroup);
+    }
   }
 
   async function optimizeGroup(groupName: string) {
@@ -768,8 +796,10 @@ export default function DispatchPage() {
       return;
     }
 
+    const routeMode = routeModeMap[value] || "Daleko → Blizu / Uzak → Yakın";
+
     setOptimizingGroup(value);
-    const ok = await optimizeSingleGroupRows(groupRows);
+    const ok = await optimizeSingleGroupRows(groupRows, routeMode);
     setOptimizingGroup(null);
 
     if (ok) {
@@ -1534,7 +1564,7 @@ export default function DispatchPage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <button
                             onClick={() => setGroupNameInput(section.groupName)}
                             className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:border-slate-500"
@@ -1542,15 +1572,34 @@ export default function DispatchPage() {
                             Grubu hazırla / Učitaj grupu
                           </button>
 
-                          <button
-                            onClick={() => optimizeGroup(section.groupName)}
-                            disabled={isOptimizing}
-                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                          <select
+                            value={routeModeMap[section.groupName] || "Daleko → Blizu / Uzak → Yakın"}
+                            onChange={(e) => setRouteModeMap((prev) => ({ ...prev, [section.groupName]: e.target.value }))}
+                            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                           >
-                            {isOptimizing
-                              ? "Optimize Ediliyor... / Optimizing..."
-                              : "Rota Optimize Et / Optimize Route"}
-                          </button>
+                            <option>Daleko → Blizu / Uzak → Yakın</option>
+                            <option>Blizu → Daleko / Yakın → Uzak</option>
+                            <option>Ručno / Manuel</option>
+                          </select>
+
+                          {(routeModeMap[section.groupName] || "Daleko → Blizu / Uzak → Yakın") === "Ručno / Manuel" ? (
+                            <button
+                              onClick={() => setManualModalGroup(section.groupName)}
+                              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500"
+                            >
+                              Sıralamayı Belirle / Odredi redoslijed
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => optimizeGroup(section.groupName)}
+                              disabled={isOptimizing}
+                              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                            >
+                              {isOptimizing
+                                ? "Optimize Ediliyor... / Optimizing..."
+                                : "Rota Optimize Et / Optimize Route"}
+                            </button>
+                          )}
 
                           <button
                             onClick={() => copyGroupRoute(section.groupName)}
@@ -1562,10 +1611,17 @@ export default function DispatchPage() {
                           </button>
 
                           <button
-                            onClick={() => optimizeAndPrintGroup(section.groupName)}
+                            onClick={() => optimizeGroup(section.groupName)}
+                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+                          >
+                            Optimize
+                          </button>
+
+                          <button
+                            onClick={() => openPrintPage(section.groupName)}
                             className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
                           >
-                            Optimize + Yazdır / Optimize + Print
+                            Yazdır / Print
                           </button>
                         </div>
                       </div>
@@ -1644,7 +1700,7 @@ export default function DispatchPage() {
                                     </div>
                                   </div>
 
-                                  <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
+                                  <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
                                     <div
                                       className="flex flex-col justify-between"
                                       onClick={(event) => event.stopPropagation()}
@@ -1677,26 +1733,6 @@ export default function DispatchPage() {
                                       >
                                         <option>Sopstveno vozilo / Kendi Araç</option>
                                         <option>Kurir / Kurye</option>
-                                      </select>
-                                    </div>
-
-                                    <div
-                                      className="flex flex-col justify-between"
-                                      onClick={(event) => event.stopPropagation()}
-                                    >
-                                      <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Režim rute / Rota Modu
-                                      </div>
-                                      <select
-                                        value={row.route_mode || "Daleko → Blizu / Uzak → Yakın"}
-                                        onChange={(e) =>
-                                          updateField(row.id, "route_mode", e.target.value)
-                                        }
-                                        className="h-[56px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-                                      >
-                                        <option>Daleko → Blizu / Uzak → Yakın</option>
-                                        <option>Blizu → Daleko / Yakın → Uzak</option>
-                                        <option>Ručno / Manuel</option>
                                       </select>
                                     </div>
                                   </div>
@@ -1818,7 +1854,7 @@ export default function DispatchPage() {
                                     </div>
                                   </div>
 
-                                  <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
+                                  <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
                                     <div
                                       className="flex flex-col justify-between"
                                       onClick={(event) => event.stopPropagation()}
@@ -1851,26 +1887,6 @@ export default function DispatchPage() {
                                       >
                                         <option>Sopstveno vozilo / Kendi Araç</option>
                                         <option>Kurir / Kurye</option>
-                                      </select>
-                                    </div>
-
-                                    <div
-                                      className="flex flex-col justify-between"
-                                      onClick={(event) => event.stopPropagation()}
-                                    >
-                                      <div className="mb-2 text-xs text-slate-400 tracking-wide">
-                                        Režim rute / Rota Modu
-                                      </div>
-                                      <select
-                                        value={row.route_mode || "Daleko → Blizu / Uzak → Yakın"}
-                                        onChange={(e) =>
-                                          updateField(row.id, "route_mode", e.target.value)
-                                        }
-                                        className="h-[56px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
-                                      >
-                                        <option>Daleko → Blizu / Uzak → Yakın</option>
-                                        <option>Blizu → Daleko / Yakın → Uzak</option>
-                                        <option>Ručno / Manuel</option>
                                       </select>
                                     </div>
                                   </div>
@@ -1952,7 +1968,6 @@ export default function DispatchPage() {
                     <th className="px-4 py-3">Proizvod / Ürün</th>
                     <th className="px-4 py-3">Metod / Yöntem</th>
                     <th className="px-4 py-3">Datum isporuke / Sevkiyat Tarihi</th>
-                    <th className="px-4 py-3">Režim rute / Rota Modu</th>
                     <th className="px-4 py-3">Udaljenost / Mesafe</th>
                     <th className="px-4 py-3">Status / Durum</th>
                     <th className="px-4 py-3">Akcija / İşlem</th>
@@ -1961,7 +1976,7 @@ export default function DispatchPage() {
                 <tbody className="divide-y divide-slate-800 bg-slate-900/30">
                   {ungroupedRows.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
                         Grupsuz kayıt yok / Nema zapisa bez grupe
                       </td>
                     </tr>
@@ -2036,21 +2051,6 @@ export default function DispatchPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-white">
-                            <div onClick={(event) => event.stopPropagation()}>
-                              <select
-                                value={row.route_mode || "Daleko → Blizu / Uzak → Yakın"}
-                                onChange={(event) =>
-                                  updateField(row.id, "route_mode", event.target.value)
-                                }
-                                className="min-h-[60px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
-                              >
-                                <option>Daleko → Blizu / Uzak → Yakın</option>
-                                <option>Blizu → Daleko / Yakın → Uzak</option>
-                                <option>Ručno / Manuel</option>
-                              </select>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-white">
                             {formatDistance(row.showroom_distance)}
                           </td>
                           <td className="px-4 py-4 align-middle">
@@ -2108,6 +2108,31 @@ export default function DispatchPage() {
             </div>
           </div>
         </section>
+
+        {manualModalGroup && (
+          <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-950">
+            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-purple-400">Manuel Rota</p>
+                <p className="text-sm font-semibold text-white">{manualModalGroup}</p>
+              </div>
+              <button
+                onClick={() => setManualModalGroup(null)}
+                className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-400 hover:text-white"
+              >
+                Kapat
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ManualRouteMapClient
+                rows={rows.filter((r) => (r.dispatch_group || "") === manualModalGroup)}
+                onSave={handleManualSave}
+                onClose={() => setManualModalGroup(null)}
+                saving={manualSaving}
+              />
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="fixed inset-x-0 bottom-4 z-50 mx-auto flex w-fit items-center gap-3 rounded-full border border-slate-700 bg-slate-950/95 px-4 py-2 text-sm text-white shadow-2xl">

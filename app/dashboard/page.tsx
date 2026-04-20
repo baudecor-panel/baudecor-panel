@@ -49,6 +49,11 @@ type AlertItem = {
   type: "danger" | "warning" | "info";
 };
 
+type Expense = {
+  amount: number;
+  created_at: string;
+};
+
 type StockAlertItem = {
   name: string;
   stock: number;
@@ -66,13 +71,48 @@ export default function DashboardPage() {
   const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [range, setRange] = useState<RangeType>("month");
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [aiAlerts, setAiAlerts] = useState<string[]>([]);
+  const [aiAlertsLoading, setAiAlertsLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchAiAlerts();
   }, []);
+
+  async function fetchAiAlerts() {
+    setAiAlertsLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [], alertMode: true }),
+      });
+      const data = await res.json();
+      if (data.reply) {
+        const lines = data.reply.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+        // Group pairs: emoji line + indented translation line
+        const grouped: string[] = [];
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].match(/^[\p{Emoji}]/u)) {
+            const next = lines[i + 1] && !lines[i + 1].match(/^[\p{Emoji}]/u) ? lines[i + 1] : null;
+            grouped.push(next ? `${lines[i]}\n${next}` : lines[i]);
+            if (next) i++;
+          } else {
+            grouped.push(lines[i]);
+          }
+        }
+        setAiAlerts(grouped);
+      }
+    } catch {
+      // sessizce geç
+    } finally {
+      setAiAlertsLoading(false);
+    }
+  }
 
   async function fetchData() {
     setLoading(true);
@@ -80,6 +120,7 @@ export default function DashboardPage() {
     const [
       { data: salesData, error: salesError },
       { data: productData, error: productError },
+      { data: expenseData },
     ] = await Promise.all([
       supabase
         .from("sales")
@@ -89,6 +130,9 @@ export default function DashboardPage() {
       supabase
         .from("products")
         .select("id, name, cost, price, stock, minimum_stock, is_active"),
+      supabase
+        .from("expenses")
+        .select("amount, created_at"),
     ]);
 
     if (salesError) {
@@ -101,6 +145,7 @@ export default function DashboardPage() {
 
     setSales((salesData || []) as Sale[]);
     setProducts((productData || []) as Product[]);
+    setExpenses((expenseData || []) as Expense[]);
     setLoading(false);
   }
 
@@ -167,6 +212,27 @@ export default function DashboardPage() {
       0
     );
   }, [filteredSales]);
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((e) => {
+      const date = new Date(e.created_at);
+      const now = new Date();
+      if (range === "today") return date.toDateString() === now.toDateString();
+      if (range === "week") {
+        const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+        return diff >= 0 && diff <= 7;
+      }
+      if (range === "month") return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      if (range === "year") return date.getFullYear() === now.getFullYear();
+      return true;
+    });
+  }, [expenses, range]);
+
+  const totalFilteredExpenses = useMemo(() => {
+    return filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  }, [filteredExpenses]);
+
+  const netProfit = useMemo(() => totalProfit - totalFilteredExpenses, [totalProfit, totalFilteredExpenses]);
 
   const totalOrders = useMemo(() => {
     return new Set(
@@ -711,28 +777,56 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* AI Uyarı Kartı */}
+      {(aiAlertsLoading || aiAlerts.length > 0) && (
+        <section className="mb-6 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-blue-400 text-lg">🤖</span>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-blue-300">
+              AI Haftalık Uyarılar / AI Sedmični Upozorenja
+            </h2>
+            {aiAlertsLoading && (
+              <span className="ml-2 text-xs text-slate-500 animate-pulse">analiz ediliyor...</span>
+            )}
+          </div>
+          {aiAlertsLoading ? (
+            <div className="flex gap-1.5">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:0ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:150ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:300ms]" />
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {aiAlerts.map((alert, i) => {
+                const [line1, line2] = alert.split("\n");
+                return (
+                  <li key={i} className="leading-relaxed">
+                    <div className="text-sm text-white">{line1}</div>
+                    {line2 && <div className="mt-0.5 text-sm text-slate-400">{line2}</div>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
       <section className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-2xl shadow-black/40 md:p-8">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
-        <div className="relative z-10 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-          <div>
-            <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
-              PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
+                PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
+              </div>
+              <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">
+                Kontrolna tabla / Kontrol Paneli
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+                Satış, kârlılık, tahsilat ve stok riskini tek ekranda görün / Prodaja, profitabilnost, naplata i zaliha na jednom ekranu.
+              </p>
             </div>
-
-            <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl 2xl:text-6xl">
-              Kontrolna tabla / Kontrol Paneli
-            </h1>
-
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
-              Pogledajte prodajne rezultate, pritisak profitabilnosti, rizik naplate i
-              osjetljivost zaliha na jednom ekranu. Ova stranica je dizajnirana ne za
-              operativni rad, već za brzo donošenje odluka na nivou uprave /
-              Şirketin satış performansını, kârlılık baskısını, tahsilat riskini ve
-              stok kırılganlığını tek ekranda gör. Bu sayfa operasyon yapmak için değil,
-              yönetim seviyesinde hızlı karar almak için tasarlandı.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
                 <button
                   key={item}
@@ -747,76 +841,88 @@ export default function DashboardPage() {
                 </button>
               ))}
             </div>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <HeroStatCard
-                label="Ukupan prihod / Toplam Ciro"
-                value={`€${totalRevenue.toFixed(2)}`}
-                helper="Prihod izabranog perioda / Seçili dönem geliri"
-                tone="blue"
-              />
-              <HeroStatCard
-                label="Ukupan profit / Toplam Kâr"
-                value={`€${totalProfit.toFixed(2)}`}
-                helper="Pregled bruto profitabilnosti / Brüt kârlılık görünümü"
-                tone={totalProfit >= 0 ? "green" : "red"}
-              />
-              <HeroStatCard
-                label="Narudžbe / Sipariş"
-                value={String(totalOrders)}
-                helper="Ukupan broj jedinstvenih narudžbi / Benzersiz sipariş toplamı"
-                tone="slate"
-              />
-              <HeroStatCard
-                label="Zdravlje zalihe / Stok Sağlığı"
-                value={`%${stockHealthRate}`}
-                helper="Udio proizvoda iznad minimalne zalihe / Minimum stok üstü ürün oranı"
-                tone={
-                  stockHealthRate >= 75
-                    ? "green"
-                    : stockHealthRate >= 50
-                    ? "amber"
-                    : "red"
-                }
-              />
-            </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ExecutiveMetric
-              title="Stopa završetka / Tamamlanma Oranı"
+          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Finansije / Finansal</p>
+          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
+            <HeroStatCard
+              label="Ukupan prihod / Toplam Ciro"
+              value={`€${totalRevenue.toFixed(2)}`}
+              helper="Seçili dönem geliri / Prihod perioda"
+              tone="blue"
+            />
+            <HeroStatCard
+              label="Bruto profit / Brüt Kâr"
+              value={`€${totalProfit.toFixed(2)}`}
+              helper="Giderler dahil değil / Bez troškova"
+              tone={totalProfit >= 0 ? "green" : "red"}
+            />
+            <HeroStatCard
+              label="Troškovi / Giderler"
+              value={`€${totalFilteredExpenses.toFixed(2)}`}
+              helper="Dönem gider toplamı / Ukupni troškovi"
+              tone="red"
+            />
+            <HeroStatCard
+              label="Neto profit / Net Kâr"
+              value={`€${netProfit.toFixed(2)}`}
+              helper="Brüt kâr − giderler / Bruto − troškovi"
+              tone={netProfit >= 0 ? "green" : "red"}
+            />
+          </div>
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Operacije / Operasyonlar</p>
+          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
+            <HeroStatCard
+              label="Narudžbe / Sipariş"
+              value={String(totalOrders)}
+              helper="Benzersiz sipariş sayısı / Jedinstvene narudžbe"
+              tone="slate"
+            />
+            <HeroStatCard
+              label="Zdravlje zalihe / Stok Sağlığı"
+              value={`%${stockHealthRate}`}
+              helper="Minimum stok üstü ürün oranı"
+              tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
+            />
+            <HeroStatCard
+              label="Stopa završetka / Tamamlanma"
               value={`%${completionRate}`}
-              subtitle="Isporučene i plaćene narudžbe / Teslim + ödeme tamamlanan siparişler"
+              helper="Teslim + ödeme tamamlanan siparişler"
               tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
             />
-            <ExecutiveMetric
-              title="Stopa otkazivanja / İptal Oranı"
+            <HeroStatCard
+              label="Stopa otkazivanja / İptal"
               value={`%${cancellationRate}`}
-              subtitle="Pritisak otkazivanja u periodu / Dönem içi iptal baskısı"
+              helper="Dönem içi iptal baskısı / Otkazivanja"
               tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
             />
-            <ExecutiveMetric
-              title="Plaćanje na čekanju / Bekleyen Ödeme"
+          </div>
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rizici / Riskler</p>
+          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
+            <HeroStatCard
+              label="Plaćanje na čekanju / Bekleyen"
               value={`€${pendingPaymentsTotal.toFixed(2)}`}
-              subtitle={`Udio u prihodu / Ciro payı: %${pendingPaymentRate}`}
+              helper={`Ciro payı: %${pendingPaymentRate}`}
               tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
             />
-            <ExecutiveMetric
-              title="Zaostale isporuke / Teslimat Backlog"
+            <HeroStatCard
+              label="Zaostale isporuke / Backlog"
               value={String(deliveryBacklog)}
-              subtitle="Nezatvorene isporuke / Kapanmamış teslimatlar"
+              helper="Kapanmamış teslimatlar / Nezatvorene"
               tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
             />
-            <ExecutiveMetric
-              title="Kritična zaliha / Kritik Stok"
+            <HeroStatCard
+              label="Kritična zaliha / Kritik Stok"
               value={String(criticalStockCount)}
-              subtitle="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
+              helper="Minimum stok seviyesinde / Minimalna zaliha"
               tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
             />
-            <ExecutiveMetric
-              title="Proizvod bez zalihe / Stoksuz Ürün"
+            <HeroStatCard
+              label="Bez zalihe / Stoksuz Ürün"
               value={String(outOfStockCount)}
-              subtitle="Neposredan rizik gubitka prodaje / Doğrudan satış kaybı riski"
+              helper="Doğrudan satış kaybı riski / Gubitak"
               tone={outOfStockCount === 0 ? "green" : "red"}
             />
           </div>
@@ -1308,36 +1414,6 @@ function HeroStatCard({
       </p>
       <p className="mt-3 text-2xl font-black">{value}</p>
       <p className="mt-1 text-sm opacity-80">{helper}</p>
-    </div>
-  );
-}
-
-function ExecutiveMetric({
-  title,
-  value,
-  subtitle,
-  tone,
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-  tone: "green" | "amber" | "red" | "blue" | "slate";
-}) {
-  const styles = {
-    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-red-500/20 bg-red-500/10 text-red-200",
-    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
-    slate: "border-white/10 bg-white/5 text-slate-200",
-  };
-
-  return (
-    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
-        {title}
-      </p>
-      <p className="mt-3 text-3xl font-black">{value}</p>
-      <p className="mt-1 text-sm opacity-80">{subtitle}</p>
     </div>
   );
 }

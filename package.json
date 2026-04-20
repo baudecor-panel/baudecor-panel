@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@supabase/supabase-js": "^2.100.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",

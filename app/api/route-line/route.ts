@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 type RouteLineRequest = {
-  coords?: [number, number][];
+  coords?: [number, number][]; // [lng, lat] pairs
 };
 
 export async function POST(req: Request) {
@@ -10,56 +10,25 @@ export async function POST(req: Request) {
     const coords = Array.isArray(body?.coords) ? body.coords : [];
 
     if (coords.length < 2) {
-      return NextResponse.json(
-        { error: "Not enough coordinates" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Not enough coordinates" }, { status: 400 });
     }
 
-    const apiKey = process.env.ORS_API_KEY;
+    // OSRM: coords as "lng,lat;lng,lat;..." in URL
+    const coordStr = coords.map(([lng, lat]) => `${lng},${lat}`).join(";");
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`;
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "ORS_API_KEY is missing in .env.local" },
-        { status: 500 }
-      );
+    const res = await fetch(url, { headers: { "User-Agent": "baudecor-system/1.0" } });
+    const data = await res.json();
+
+    if (!res.ok || data.code !== "Ok") {
+      return NextResponse.json({ error: data.message || "OSRM routing failed" }, { status: 500 });
     }
 
-    const orsRes = await fetch(
-      "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
-      {
-        method: "POST",
-        headers: {
-          Authorization: apiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          coordinates: coords,
-          instructions: false,
-        }),
-      }
-    );
-
-    const orsData = await orsRes.json();
-
-    if (!orsRes.ok) {
-      return NextResponse.json(
-        {
-          error:
-            orsData?.error?.message ||
-            orsData?.message ||
-            "openrouteservice directions failed",
-          ors: orsData,
-        },
-        { status: orsRes.status }
-      );
-    }
-
-    return NextResponse.json(orsData);
+    // Normalize to same shape as before: features[0].geometry.coordinates
+    const geometry = data?.routes?.[0]?.geometry;
+    return NextResponse.json({ features: [{ geometry }] });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Route line failed";
-
+    const message = error instanceof Error ? error.message : "Route line failed";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

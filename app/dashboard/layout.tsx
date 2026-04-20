@@ -70,6 +70,11 @@ const menuGroups: MenuGroup[] = [
     label: "Finansije / Finans",
     children: [{ href: "/dashboard/expenses", label: "Troškovi / Giderler" }],
   },
+  {
+    id: "ai",
+    label: "AI Asistan",
+    children: [{ href: "/dashboard/ai-assistant", label: "AI Asistan / AI Asistent" }],
+  },
 ];
 
 export default function DashboardLayout({

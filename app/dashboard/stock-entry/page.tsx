@@ -66,8 +66,8 @@ export default function StockEntryPage() {
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [purchaseCost, setPurchaseCost] = useState(0);
+  const [quantity, setQuantity] = useState<number | "">("");
+  const [purchaseCost, setPurchaseCost] = useState<number | "">("");
   const [documentNo, setDocumentNo] = useState("");
   const [documentDate, setDocumentDate] = useState<Date | null>(null);
   const [note, setNote] = useState("");
@@ -271,12 +271,12 @@ export default function StockEntryPage() {
 
     const product = products.find((p) => p.id === productId);
     if (product) {
-      setPurchaseCost(Number(product.cost || 0));
+      setPurchaseCost(product.cost ? Number(product.cost) : "");
       setSelectedSupplierId(
         product.default_supplier_id ? String(product.default_supplier_id) : ""
       );
     } else {
-      setPurchaseCost(0);
+      setPurchaseCost("");
       setSelectedSupplierId("");
     }
   }
@@ -339,7 +339,7 @@ export default function StockEntryPage() {
       return;
     }
 
-    if (!quantity || quantity <= 0) {
+    if (!quantity || Number(quantity) <= 0) {
       alert("Unesi ispravnu količinu / Lütfen geçerli adet gir");
       return;
     }
@@ -361,7 +361,7 @@ export default function StockEntryPage() {
       return;
     }
 
-    if (purchaseCost < 0) {
+    if (Number(purchaseCost) < 0) {
       alert("Kupovna cijena mora biti 0 ili veća / Alış fiyatı 0 veya daha büyük olmalı");
       return;
     }
@@ -440,8 +440,8 @@ export default function StockEntryPage() {
     setSelectedGroupId("");
     setSelectedProductId("");
     setSelectedSupplierId("");
-    setQuantity(1);
-    setPurchaseCost(0);
+    setQuantity("");
+    setPurchaseCost("");
     setDocumentNo("");
     setDocumentDate(null);
     setNote("");
@@ -556,8 +556,9 @@ export default function StockEntryPage() {
                   type="number"
                   min={1}
                   value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+                  placeholder="0"
+                  onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
 
@@ -570,8 +571,9 @@ export default function StockEntryPage() {
                   min={0}
                   step="0.01"
                   value={purchaseCost}
-                  onChange={(e) => setPurchaseCost(Number(e.target.value))}
-                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
+                  placeholder="0.00"
+                  onChange={(e) => setPurchaseCost(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
             </div>

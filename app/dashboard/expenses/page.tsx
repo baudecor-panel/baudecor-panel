@@ -16,6 +16,7 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [type, setType] = useState("Zakup / Kira");
   const [amount, setAmount] = useState(0);
@@ -41,6 +42,15 @@ export default function ExpensesPage() {
 
     setExpenses((data || []) as Expense[]);
     setLoading(false);
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Bu gider silinsin mi? / Obrisati ovaj trošak?")) return;
+    setDeletingId(id);
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    setDeletingId(null);
+    if (error) { alert("Silinemedi / Greška: " + error.message); return; }
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
   }
 
   async function handleSave() {
@@ -267,11 +277,12 @@ export default function ExpensesPage() {
                   <th className="py-3 text-center">Iznos / Tutar</th>
                   <th className="py-3 text-left">Napomena / Not</th>
                   <th className="py-3 text-center">Datum / Tarih</th>
+                  <th className="py-3 text-center">İşlem / Akcija</th>
                 </tr>
               </thead>
 
               <tbody>
-                {expenses.slice(0, 15).map((expense) => (
+                {expenses.slice(0, 50).map((expense) => (
                   <tr
                     key={expense.id}
                     className="border-t border-slate-800 transition hover:bg-slate-800/30"
@@ -283,6 +294,15 @@ export default function ExpensesPage() {
                     <td className="py-3">{expense.note || "-"}</td>
                     <td className="py-3 text-center text-slate-400">
                       {expense.created_at?.slice(0, 10)}
+                    </td>
+                    <td className="py-3 text-center">
+                      <button
+                        onClick={() => handleDelete(expense.id)}
+                        disabled={deletingId === expense.id}
+                        className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/20 disabled:opacity-40"
+                      >
+                        {deletingId === expense.id ? "..." : "Sil / Obriši"}
+                      </button>
                     </td>
                   </tr>
                 ))}

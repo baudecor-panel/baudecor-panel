@@ -86,8 +86,8 @@ function DispatchPrintContent() {
   const filteredRows = useMemo(() => {
     let result = rows.filter(
       (r) =>
-        r.delivery_status === "Bekliyor / Pending" ||
-        r.delivery_status === "Hazırlanıyor / Preparing"
+        r.delivery_status !== "Teslim Edildi / Delivered" &&
+        r.delivery_status !== "İade Edildi / Returned"
     );
 
     if (dateFilter) {
@@ -151,33 +151,31 @@ function DispatchPrintContent() {
     groupFilter,
   ]);
 
+  function isVehicleMethod(method?: string) {
+    return (
+      method === "Kendi Araç / Own Vehicle" ||
+      method === "Sopstveno vozilo / Kendi Araç"
+    );
+  }
+
+  function isCourierMethod(method?: string) {
+    return method === "Kurye / Courier" || method === "Kurir / Kurye";
+  }
+
+  function sortByRoute(a: DispatchRow, b: DispatchRow) {
+    const routeA = a.route_order ?? 9999;
+    const routeB = b.route_order ?? 9999;
+    if (routeA !== routeB) return routeA - routeB;
+    return (a.loading_order ?? 9999) - (b.loading_order ?? 9999);
+  }
+
   const ownVehicleRows = [...filteredRows]
-    .filter((r) => r.delivery_method === "Kendi Araç / Own Vehicle")
-    .sort((a, b) => {
-      const routeA = a.route_order ?? 9999;
-      const routeB = b.route_order ?? 9999;
-
-      if (routeA !== routeB) return routeA - routeB;
-
-      const loadA = a.loading_order ?? 9999;
-      const loadB = b.loading_order ?? 9999;
-
-      return loadA - loadB;
-    });
+    .filter((r) => isVehicleMethod(r.delivery_method))
+    .sort(sortByRoute);
 
   const courierRows = [...filteredRows]
-    .filter((r) => r.delivery_method === "Kurye / Courier")
-    .sort((a, b) => {
-      const routeA = a.route_order ?? 9999;
-      const routeB = b.route_order ?? 9999;
-
-      if (routeA !== routeB) return routeA - routeB;
-
-      const loadA = a.loading_order ?? 9999;
-      const loadB = b.loading_order ?? 9999;
-
-      return loadA - loadB;
-    });
+    .filter((r) => isCourierMethod(r.delivery_method))
+    .sort(sortByRoute);
 
   const headerVehicle =
     vehicleFilter ||
