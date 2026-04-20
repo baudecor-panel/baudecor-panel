@@ -95,7 +95,11 @@ function DispatchPrintContent() {
     }
 
     if (methodFilter !== "all") {
-      result = result.filter((r) => r.delivery_method === methodFilter);
+      result = result.filter((r) => {
+        if (isVehicleMethod(methodFilter)) return isVehicleMethod(r.delivery_method);
+        if (isCourierMethod(methodFilter)) return isCourierMethod(r.delivery_method);
+        return r.delivery_method === methodFilter;
+      });
     }
 
     if (cityFilter.trim()) {

@@ -997,7 +997,7 @@ export default function ProductsPage() {
         </section>
       )}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-10">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SummaryCard title="Ukupno proizvoda / Toplam Ürün" value={String(totalProducts)} />
         <SummaryCard title="Aktivni proizvodi / Aktif Ürün" value={String(activeProductsCount)} />
         <SummaryCard title="Pasivni proizvodi / Pasif Ürün" value={String(inactiveProductsCount)} />
@@ -1867,9 +1867,9 @@ function SummaryCard({
   const color = red ? "text-red-300" : amber ? "text-amber-300" : "text-white";
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-      <p className="text-xs tracking-wide text-slate-500">{title}</p>
-      <p className={`mt-2 text-2xl font-bold ${color}`}>{value}</p>
+    <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/60 p-4 h-[88px]">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500 leading-tight line-clamp-2">{title}</p>
+      <p className={`text-xl font-bold truncate ${color}`}>{value}</p>
     </div>
   );
 }
@@ -1888,9 +1888,9 @@ function InfoCard({
   const color = green ? "text-emerald-300" : red ? "text-red-300" : "text-white";
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-      <p className="text-xs tracking-wide text-slate-500">{title}</p>
-      <p className={`mt-2 text-base font-medium ${color}`}>{value}</p>
+    <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/70 p-4 h-[80px]">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500 leading-tight">{title}</p>
+      <p className={`text-sm font-semibold truncate ${color}`}>{value}</p>
     </div>
   );
 }

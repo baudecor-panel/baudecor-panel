@@ -252,19 +252,15 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "user",
-            content: `Aşağıdaki sohbetten kalıcı olarak hatırlanması gereken tüm bilgileri çıkar. Çalışanlar, müşteriler, ürünler, stratejiler, tercihler, işletme hakkında söylenen her şey dahil. Her madde: {"category": "işletme|strateji|müşteri|ürün|pazar|tercih|not", "key": "kisa_baslik", "value": "tam içerik"}.\n\nSohbet:\n${conversation}`,
-          },
-          {
-            role: "assistant",
-            content: "[",
+            content: `Aşağıdaki sohbetten kalıcı olarak hatırlanması gereken tüm bilgileri çıkar. Çalışanlar, müşteriler, ürünler, stratejiler, tercihler, işletme hakkında söylenen her şey dahil. Her madde: {"category": "işletme|strateji|müşteri|ürün|pazar|tercih|not", "key": "kisa_baslik", "value": "tam içerik"}. Sadece JSON dizisi döndür, [ ile başla ] ile bitir, başka hiçbir şey yazma.\n\nSohbet:\n${conversation}`,
           },
         ],
       });
       const raw = response.content[0].type === "text" ? response.content[0].text : "";
       try {
-        const full = ("[" + raw).replace(/```json|```/g, "").trim();
-        const match = full.match(/\[[\s\S]*\]/);
-        const items = JSON.parse(match ? match[0] : full);
+        const cleaned = raw.replace(/```json|```/g, "").trim();
+        const match = cleaned.match(/\[[\s\S]*\]/);
+        const items = JSON.parse(match ? match[0] : cleaned);
         return NextResponse.json({ items: Array.isArray(items) ? items : [] });
       } catch {
         return NextResponse.json({ items: [] });

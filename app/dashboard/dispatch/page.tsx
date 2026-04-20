@@ -770,13 +770,9 @@ export default function DispatchPage() {
         loading_order: total - i,
       }).eq("id", orderedIds[i]);
     }
-    const savedGroup = manualModalGroup;
     setManualSaving(false);
     setManualModalGroup(null);
     await fetchDispatchRows();
-    if (savedGroup) {
-      openPrintPage(savedGroup);
-    }
   }
 
   async function optimizeGroup(groupName: string) {
@@ -1240,25 +1236,6 @@ export default function DispatchPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={optimizeSelectedGroup}
-                disabled={!activeGroupName || optimizingGroup === activeGroupName}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {optimizingGroup === activeGroupName
-                  ? "Rota hesaplanıyor... / Optimizuje se..."
-                  : "Optimizuj aktivnu grupu / Aktif Grubu Optimize Et"}
-              </button>
-
-              <button
-                onClick={printActiveGroup}
-                disabled={!activeGroupName}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Aktif Grubu Yazdır / Print Active Group
-              </button>
-            </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-4">
@@ -1608,13 +1585,6 @@ export default function DispatchPage() {
                             {isCopied
                               ? "Kopyalandı / Kopirano"
                               : "Rotayı kopyala / Kopiraj rutu"}
-                          </button>
-
-                          <button
-                            onClick={() => optimizeGroup(section.groupName)}
-                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
-                          >
-                            Optimize
                           </button>
 
                           <button
