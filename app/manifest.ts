@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Baudecor System",
     short_name: "Baudecor",
     description: "Showroom Management Panel",
-    start_url: "/dashboard",
+    start_url: "/mobile",
     display: "standalone",
     background_color: "#0f172a",
     theme_color: "#0f172a",
