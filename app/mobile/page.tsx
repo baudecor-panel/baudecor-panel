@@ -239,7 +239,7 @@ export default function MobilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-24">
+    <div className="min-h-screen bg-slate-950 text-white pb-32">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <span className="text-lg font-bold tracking-wide">BAUDECOR</span>
@@ -523,16 +523,16 @@ export default function MobilePage() {
       </div>
 
       {/* Bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex">
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex pb-safe">
         {navTabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 text-[10px] transition-colors ${
+            className={`flex-1 py-4 flex flex-col items-center gap-1 text-xs transition-colors ${
               tab === t.key ? "text-blue-400" : "text-slate-500"
             }`}
           >
-            <span className="text-base leading-none">{t.icon}</span>
+            <span className="text-2xl leading-none">{t.icon}</span>
             <span>{t.label}</span>
           </button>
         ))}
