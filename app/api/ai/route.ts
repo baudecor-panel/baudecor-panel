@@ -13,13 +13,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Günlük cache — gece yarısı sıfırlanır
+// 5 dakika cache
 let contextCache: { data: string; timestamp: number; date: string } | null = null;
 
 function isCacheValid(): boolean {
   if (!contextCache) return false;
-  const today = new Date().toDateString();
-  return contextCache.date === today;
+  return Date.now() - contextCache.timestamp < 5 * 60 * 1000;
 }
 
 async function fetchMemory(): Promise<string> {
@@ -206,6 +205,33 @@ ${(stockMovements || []).slice(0, 30).map((m) => {
     const date = new Date(m.created_at).toLocaleDateString("tr-TR");
     return `${date} | ${m.product_name} | ${m.movement_type} | ${m.quantity} adet`;
   }).join("\n") || "Veri yok"}
+
+--- BUGÜNKÜ AKTİVİTE (${now.toLocaleDateString("tr-TR")}) ---
+${(() => {
+    const todayStr = now.toISOString().slice(0, 10);
+    const todaySales = (salesAll || []).filter((s) => (s.sale_date || s.created_at || "").slice(0, 10) === todayStr);
+    const todayExpenses = (expenses || []).filter((e) => (e.created_at || "").slice(0, 10) === todayStr);
+    const todayMovements = (stockMovements || []).filter((m) => (m.created_at || "").slice(0, 10) === todayStr);
+    const todayCustomers = (customers || []).filter((c) => (c.created_at || "").slice(0, 10) === todayStr);
+    const lines: string[] = [];
+    if (todaySales.length > 0) {
+      lines.push(`Satışlar (${todaySales.length} adet, toplam €${todaySales.reduce((s, x) => s + Number(x.total || 0), 0).toFixed(0)}):`);
+      todaySales.forEach((s) => lines.push(`  • ${s.customer_name} | ${s.product_name} | €${Number(s.total || 0).toFixed(0)} | ${s.payment_status || "-"}`));
+    }
+    if (todayExpenses.length > 0) {
+      lines.push(`Giderler (${todayExpenses.length} adet):`);
+      todayExpenses.forEach((e) => lines.push(`  • ${e.type} | €${Number(e.amount || 0).toFixed(0)}${e.note ? " | " + e.note : ""}`));
+    }
+    if (todayMovements.length > 0) {
+      lines.push(`Stok hareketleri (${todayMovements.length} adet):`);
+      todayMovements.forEach((m) => lines.push(`  • ${m.product_name} | ${m.movement_type} | ${m.quantity} adet${m.note ? " | " + m.note : ""}`));
+    }
+    if (todayCustomers.length > 0) {
+      lines.push(`Yeni müşteriler (${todayCustomers.length} adet):`);
+      todayCustomers.forEach((c) => lines.push(`  • ${c.name} | ${c.city || "-"}`));
+    }
+    return lines.length > 0 ? lines.join("\n") : "Bugün henüz işlem yapılmadı.";
+  })()}
 `.trim();
 
   contextCache = { data: result, timestamp: Date.now(), date: new Date().toDateString() };
