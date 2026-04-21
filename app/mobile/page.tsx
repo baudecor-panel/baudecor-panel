@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -53,7 +53,8 @@ type Expense = {
 
 type AlertItem = { text: string; type: "danger" | "warning" | "info" };
 type RangeType = "today" | "week" | "month" | "year";
-type TabType = "home" | "sales" | "dispatch" | "products" | "expenses";
+type TabType = "home" | "sales" | "dispatch" | "products" | "expenses" | "ai";
+type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function getRangeStart(range: RangeType): string {
   const now = new Date();
@@ -79,6 +80,10 @@ export default function MobilePage() {
   const [tab, setTab] = useState<TabType>("home");
   const [range, setRange] = useState<RangeType>("month");
   const [groupFilter, setGroupFilter] = useState("all");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -197,12 +202,40 @@ export default function MobilePage() {
     { key: "year", label: "Yıl" },
   ];
 
+  async function sendChat(text?: string) {
+    const content = (text ?? chatInput).trim();
+    if (!content || chatLoading) return;
+    const newMessages: ChatMessage[] = [...chatMessages, { role: "user", content }];
+    setChatMessages(newMessages);
+    setChatInput("");
+    setChatLoading(true);
+    setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+      const data = await res.json();
+      setChatMessages([...newMessages, {
+        role: "assistant",
+        content: data.error ? `Hata: ${data.error}` : data.reply,
+      }]);
+    } catch {
+      setChatMessages([...newMessages, { role: "assistant", content: "Bağlantı hatası, tekrar deneyin." }]);
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+  }
+
   const navTabs: { key: TabType; icon: string; label: string }[] = [
     { key: "home", icon: "⊞", label: "Özet" },
     { key: "sales", icon: "◎", label: "Satışlar" },
     { key: "dispatch", icon: "⊡", label: "Sevkiyat" },
     { key: "products", icon: "▦", label: "Ürünler" },
     { key: "expenses", icon: "◈", label: "Giderler" },
+    { key: "ai", icon: "✦", label: "AI" },
   ];
 
   return (
@@ -393,6 +426,68 @@ export default function MobilePage() {
                   {filteredProducts.length === 0 && (
                     <p className="text-center text-slate-500 py-10">Ürün yok</p>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* AI CHAT */}
+            {tab === "ai" && (
+              <div className="flex flex-col" style={{ height: "calc(100vh - 180px)" }}>
+                <div className="flex-1 overflow-y-auto space-y-3 pb-2">
+                  {chatMessages.length === 0 && (
+                    <div className="space-y-2 pt-2">
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-3">Hızlı Sorular</p>
+                      {[
+                        "Bu ay satışlar nasıl gidiyor?",
+                        "Kritik stok uyarıları var mı?",
+                        "En kârlı ürün hangisi?",
+                        "Bekleyen teslimatlar özeti",
+                      ].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => sendChat(q)}
+                          className="w-full text-left bg-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-300"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {chatMessages.map((m, i) => (
+                    <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                        m.role === "user"
+                          ? "bg-blue-600 text-white rounded-br-sm"
+                          : "bg-slate-800 text-slate-100 rounded-bl-sm"
+                      }`}>
+                        {m.content}
+                      </div>
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-slate-800 rounded-2xl rounded-bl-sm px-4 py-2 text-slate-400 text-sm">
+                        <span className="animate-pulse">●●●</span>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatBottomRef} />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
+                    placeholder="Soru sor..."
+                    className="flex-1 bg-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none"
+                  />
+                  <button
+                    onClick={() => sendChat()}
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="bg-blue-600 disabled:bg-slate-700 rounded-xl px-4 text-sm font-medium"
+                  >
+                    Gönder
+                  </button>
                 </div>
               </div>
             )}
