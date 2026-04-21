@@ -27,7 +27,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const isPwa = window.matchMedia("(display-mode: standalone)").matches;
+    router.push(isPwa ? "/mobile" : "/dashboard");
   }
 
   return (
