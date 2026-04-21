@@ -13,12 +13,19 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// 5 dakika cache
+// Günlük cache — bugün/today/danas sorularında bypass edilir
 let contextCache: { data: string; timestamp: number; date: string } | null = null;
 
-function isCacheValid(): boolean {
+function isCacheValid(bypassForToday = false): boolean {
   if (!contextCache) return false;
-  return Date.now() - contextCache.timestamp < 5 * 60 * 1000;
+  if (bypassForToday) return false;
+  const today = new Date().toDateString();
+  return contextCache.date === today;
+}
+
+function mentionsToday(messages: { role: string; content: string }[]): boolean {
+  const last = messages.filter((m) => m.role === "user").slice(-1)[0]?.content || "";
+  return /bugün|bugun|today|danas|dnes|oggi|hoy/i.test(last);
 }
 
 async function fetchMemory(): Promise<string> {
@@ -47,8 +54,8 @@ async function fetchMemory(): Promise<string> {
   }
 }
 
-async function fetchContext() {
-  if (isCacheValid()) return contextCache!.data;
+async function fetchContext(bypassForToday = false) {
+  if (isCacheValid(bypassForToday)) return contextCache!.data;
 
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -250,7 +257,7 @@ export async function POST(req: NextRequest) {
     const memory = await fetchMemory();
     const systemPrompt = clientContext
       ? `Sen Baudecor showroom'unun AI danışmanısın. Karadağ pazarında iç mekan/dekorasyon showroom'u. Somut ve kısa yanıtlar ver.\n\nDİL KURALI: Kullanıcı hangi dilde yazıyorsa o dilde yanıt ver.\n\n${clientContext}`
-      : await fetchContext();
+      : await fetchContext(mentionsToday(messages));
     const fullPrompt = systemPrompt + memory;
 
     if (alertMode) {
