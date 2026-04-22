@@ -135,8 +135,16 @@ function parseDateString(value?: string | null) {
   return new Date(year, month - 1, day);
 }
 
+type Toast = { message: string; type: "success" | "error" | "warning" } | null;
+
 export default function SalesPage() {
   const formSectionRef = useRef<HTMLElement | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
+
+  function showToast(message: string, type: "success" | "error" | "warning" = "success") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }
 
   const [products, setProducts] = useState<Product[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
@@ -240,7 +248,7 @@ export default function SalesPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı");
+      showToast("Grupe proizvoda nijesu učitane / Ürün grupları alınamadı", "error");
       return;
     }
 
@@ -257,7 +265,7 @@ export default function SalesPage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert("Proizvodi nijesu učitani / Ürünler alınamadı");
+      showToast("Proizvodi nijesu učitani / Ürünler alınamadı", "error");
       return;
     }
 
@@ -276,7 +284,7 @@ export default function SalesPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Kupci nijesu učitani / Müşteriler alınamadı");
+      showToast("Kupci nijesu učitani / Müşteriler alınamadı", "error");
       return;
     }
 
@@ -293,7 +301,7 @@ export default function SalesPage() {
 
     if (error) {
       setLoadingSales(false);
-      alert("Prodaje nijesu učitane / Satışlar alınamadı");
+      showToast("Prodaje nijesu učitane / Satışlar alınamadı", "error");
       return;
     }
 
@@ -538,9 +546,7 @@ export default function SalesPage() {
 
   async function handleDeleteSale(sale: Sale) {
     if (!canDeleteSale(sale)) {
-      alert(
-        "Ova prodaja se ne može obrisati. Isporučeni ili poslati zapisi se ne mogu brisati / Bu satış silinemez. Teslim edilmiş veya sevkiyata çıkmış kayıtlar silinemez."
-      );
+      showToast("Ova prodaja se ne može obrisati. Isporučeni ili poslati zapisi se ne mogu brisati / Bu satış silinemez. Teslim edilmiş veya sevkiyata çıkmış kayıtlar silinemez.", "error");
       return;
     }
 
@@ -575,19 +581,13 @@ export default function SalesPage() {
         throw new Error(deleteError.message);
       }
 
-      alert(
-        "Prodaja je obrisana i zaliha je vraćena / Satış silindi ve stok geri eklendi ✅"
-      );
+      showToast("Prodaja je obrisana i zaliha je vraćena / Satış silindi ve stok geri eklendi ✅", "success");
 
       await fetchProducts();
       await fetchSales();
       await fetchCustomers();
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Prodaja nije obrisana / Satış silinemedi"
-      );
+      showToast(error instanceof Error ? error.message : "Prodaja nije obrisana / Satış silinemedi", "error");
     } finally {
       setActionLoadingId("");
     }
@@ -597,7 +597,7 @@ export default function SalesPage() {
     const newQty = Number(rawValue);
 
     if (!newQty || newQty <= 0) {
-      alert("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı");
+      showToast("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı", "warning");
       await fetchSales();
       return;
     }
@@ -607,7 +607,7 @@ export default function SalesPage() {
     const product = findProductByName(sale.product_name);
 
     if (!product) {
-      alert("Proizvod nije pronađen / Ürün bulunamadı");
+      showToast("Proizvod nije pronađen / Ürün bulunamadı", "error");
       await fetchSales();
       return;
     }
@@ -653,16 +653,12 @@ export default function SalesPage() {
         );
       }
 
-      alert("Adet güncellendi / Quantity updated ✅");
+      showToast("Adet güncellendi / Quantity updated ✅", "success");
 
       await fetchProducts();
       await fetchSales();
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Adet güncellenemedi / Quantity update failed"
-      );
+      showToast(error instanceof Error ? error.message : "Adet güncellenemedi / Quantity update failed", "error");
       await fetchSales();
     } finally {
       setActionLoadingId("");
@@ -690,7 +686,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Adresa nije ažurirana / Adres güncellenemedi: " + error.message);
+      showToast("Adresa nije ažurirana / Adres güncellenemedi: " + error.message, "error");
       return;
     }
 
@@ -706,11 +702,9 @@ export default function SalesPage() {
     }
 
     if (!geocode.found && trimmed && (sale.city || "").trim()) {
-      alert(
-        "Adresa je ažurirana ali koordinate nijesu pronađene / Adres güncellendi ama koordinat bulunamadı"
-      );
+      showToast("Adresa je ažurirana ali koordinate nijesu pronađene / Adres güncellendi ama koordinat bulunamadı", "success");
     } else {
-      alert("Adresa je ažurirana / Adres güncellendi ✅");
+      showToast("Adresa je ažurirana / Adres güncellendi ✅", "success");
     }
 
     await fetchSales();
@@ -738,7 +732,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Grad nije ažuriran / Şehir güncellenemedi: " + error.message);
+      showToast("Grad nije ažuriran / Şehir güncellenemedi: " + error.message, "error");
       return;
     }
 
@@ -754,11 +748,9 @@ export default function SalesPage() {
     }
 
     if (!geocode.found && trimmed && (sale.customer_address || "").trim()) {
-      alert(
-        "Grad je ažuriran ali koordinate nijesu pronađene / Şehir güncellendi ama koordinat bulunamadı"
-      );
+      showToast("Grad je ažuriran ali koordinate nijesu pronađene / Şehir güncellendi ama koordinat bulunamadı", "success");
     } else {
-      alert("Grad je ažuriran / Şehir güncellendi ✅");
+      showToast("Grad je ažuriran / Şehir güncellendi ✅", "success");
     }
 
     await fetchSales();
@@ -782,7 +774,7 @@ export default function SalesPage() {
     setActionLoadingId("");
 
     if (error) {
-      alert("Telefon nije ažuriran / Telefon güncellenemedi: " + error.message);
+      showToast("Telefon nije ažuriran / Telefon güncellenemedi: " + error.message, "error");
       return;
     }
 
@@ -795,7 +787,7 @@ export default function SalesPage() {
         .eq("id", sale.customer_id);
     }
 
-    alert("Telefon je ažuriran / Telefon güncellendi ✅");
+    showToast("Telefon je ažuriran / Telefon güncellendi ✅", "success");
     await fetchSales();
     await fetchCustomers();
   }
@@ -846,12 +838,10 @@ export default function SalesPage() {
         throw new Error("Status nije ažuriran / Durum güncellenemedi: " + error.message);
       }
 
-      alert("Status je ažuriran / Durum güncellendi ✅");
+      showToast("Status je ažuriran / Durum güncellendi ✅", "success");
       await fetchSales();
     } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "İşlem başarısız / Operacija neuspješna"
-      );
+      showToast(error instanceof Error ? error.message : "İşlem başarısız / Operacija neuspješna", "error");
     } finally {
       setActionLoadingId("");
     }
@@ -869,7 +859,7 @@ export default function SalesPage() {
       ) || findProductByName(newProductName);
 
     if (!newProduct) {
-      alert("Novi proizvod nije pronađen / Yeni ürün bulunamadı");
+      showToast("Novi proizvod nije pronađen / Yeni ürün bulunamadı", "error");
       await fetchSales();
       return;
     }
@@ -935,16 +925,12 @@ export default function SalesPage() {
         );
       }
 
-      alert("Proizvod je promijenjen / Ürün değiştirildi ✅");
+      showToast("Proizvod je promijenjen / Ürün değiştirildi ✅", "success");
 
       await fetchProducts();
       await fetchSales();
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Proizvod nije promijenjen / Ürün değiştirilemedi"
-      );
+      showToast(error instanceof Error ? error.message : "Proizvod nije promijenjen / Ürün değiştirilemedi", "error");
       await fetchProducts();
       await fetchSales();
     } finally {
@@ -954,7 +940,7 @@ export default function SalesPage() {
 
   async function handleSaleGroupUpdate(sale: Sale, newGroupId: string) {
     if (!newGroupId) {
-      alert("Odaberi grupu / Lütfen grup seç");
+      showToast("Odaberi grupu / Lütfen grup seç", "warning");
       return;
     }
 
@@ -963,9 +949,7 @@ export default function SalesPage() {
     );
 
     if (currentGroupProducts.length === 0) {
-      alert(
-        "U ovoj grupi nema aktivnih proizvoda / Bu grupta aktif ürün yok"
-      );
+      showToast("U ovoj grupi nema aktivnih proizvoda / Bu grupta aktif ürün yok", "error");
       return;
     }
 
@@ -986,11 +970,11 @@ export default function SalesPage() {
       setActionLoadingId("");
 
       if (error) {
-        alert("Grupa nije ažurirana / Grup güncellenemedi: " + error.message);
+        showToast("Grupa nije ažurirana / Grup güncellenemedi: " + error.message, "error");
         return;
       }
 
-      alert("Grupa je ažurirana / Grup güncellendi ✅");
+      showToast("Grupa je ažurirana / Grup güncellendi ✅", "success");
       await fetchSales();
       return;
     }
@@ -1093,61 +1077,59 @@ export default function SalesPage() {
 
   async function handleSave() {
     if (!selectedGroupId) {
-      alert("Odaberi grupu proizvoda / Lütfen ürün grubu seç");
+      showToast("Odaberi grupu proizvoda / Lütfen ürün grubu seç", "warning");
       return;
     }
 
     if (!selectedProductId) {
-      alert("Odaberi proizvod / Lütfen ürün seç");
+      showToast("Odaberi proizvod / Lütfen ürün seç", "warning");
       return;
     }
 
     if (!customerName.trim()) {
-      alert("Unesi ime kupca / Lütfen müşteri adı gir");
+      showToast("Unesi ime kupca / Lütfen müşteri adı gir", "warning");
       return;
     }
 
     if (!employee.trim()) {
-      alert("Unesi ime zaposlenog / Lütfen çalışan adı gir");
+      showToast("Unesi ime zaposlenog / Lütfen çalışan adı gir", "warning");
       return;
     }
 
     if (!city.trim()) {
-      alert("Odaberi grad / Lütfen şehir seç");
+      showToast("Odaberi grad / Lütfen şehir seç", "warning");
       return;
     }
 
     if (!shipmentDate) {
-      alert("Unesi datum isporuke / Lütfen sevkiyat tarihi gir");
+      showToast("Unesi datum isporuke / Lütfen sevkiyat tarihi gir", "warning");
       return;
     }
 
     const product = products.find((p) => p.id === selectedProductId);
 
     if (!product) {
-      alert("Proizvod nije pronađen / Ürün bulunamadı");
+      showToast("Proizvod nije pronađen / Ürün bulunamadı", "error");
       return;
     }
 
     if (!product.group_id) {
-      alert("Ovom proizvodu nije dodijeljena grupa / Bu ürüne grup atanmadı");
+      showToast("Ovom proizvodu nije dodijeljena grupa / Bu ürüne grup atanmadı", "error");
       return;
     }
 
     if (product.group_id !== selectedGroupId) {
-      alert(
-        "Odabrani proizvod se ne podudara sa grupom / Seçilen ürün grup ile eşleşmiyor"
-      );
+      showToast("Odabrani proizvod se ne podudara sa grupom / Seçilen ürün grup ile eşleşmiyor", "warning");
       return;
     }
 
     if (quantity <= 0) {
-      alert("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı");
+      showToast("Količina mora biti 1 ili veća / Adet 1 veya daha büyük olmalı", "warning");
       return;
     }
 
     if (product.stock < quantity) {
-      alert("Nema dovoljno zalihe / Yeterli stok yok!");
+      showToast("Nema dovoljno zalihe / Yeterli stok yok!", "error");
       return;
     }
 
@@ -1269,11 +1251,9 @@ export default function SalesPage() {
       await syncProductStock(product);
 
       if (!geocode.found && customerAddress.trim() && city.trim()) {
-        alert(
-          "Prodaja je sačuvana / Satış kaydedildi ✅\n\nKoordinate adrese nijesu pronađene. Mogu se kasnije urediti / Adres koordinatı bulunamadı. Daha sonra düzenlenebilir."
-        );
+        showToast("Prodaja je sačuvana / Satış kaydedildi ✅\n\nKoordinate adrese nijesu pronađene. Mogu se kasnije urediti / Adres koordinatı bulunamadı. Daha sonra düzenlenebilir.", "success");
       } else {
-        alert("Prodaja je sačuvana / Satış kaydedildi ✅");
+        showToast("Prodaja je sačuvana / Satış kaydedildi ✅", "success");
       }
 
       clearForm();
@@ -1282,7 +1262,7 @@ export default function SalesPage() {
       await fetchSales();
       await fetchCustomers();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Prodaja nije sačuvana");
+      showToast(error instanceof Error ? error.message : "Prodaja nije sačuvana", "error");
     } finally {
       setSaving(false);
     }
@@ -1290,6 +1270,21 @@ export default function SalesPage() {
 
   return (
     <main className="flex-1 bg-slate-950 p-8 text-white">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className={`pointer-events-auto max-w-sm w-full mx-4 rounded-2xl px-6 py-4 shadow-2xl text-center text-sm font-semibold ${
+            toast.type === "success" ? "bg-emerald-600 text-white" :
+            toast.type === "error"   ? "bg-red-600 text-white" :
+                                       "bg-yellow-500 text-slate-900"
+          }`}>
+            {toast.type === "success" && <span className="mr-2">✓</span>}
+            {toast.type === "error"   && <span className="mr-2">✕</span>}
+            {toast.type === "warning" && <span className="mr-2">⚠</span>}
+            {toast.message}
+          </div>
+        </div>
+      )}
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
           BAUDECOR SISTEM / BAUDECOR SİSTEM
