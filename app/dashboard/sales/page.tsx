@@ -1273,7 +1273,7 @@ export default function SalesPage() {
       {/* Toast */}
       {toast && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className={`pointer-events-auto max-w-sm w-full mx-4 rounded-2xl px-6 py-4 shadow-2xl text-center text-sm font-semibold ${
+          <div className={`pointer-events-auto max-w-lg w-full mx-4 rounded-2xl px-12 py-8 shadow-2xl text-center text-xl font-semibold ${
             toast.type === "success" ? "bg-emerald-600 text-white" :
             toast.type === "error"   ? "bg-red-600 text-white" :
                                        "bg-yellow-500 text-slate-900"
