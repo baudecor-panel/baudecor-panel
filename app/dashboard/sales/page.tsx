@@ -792,6 +792,27 @@ export default function SalesPage() {
     await fetchCustomers();
   }
 
+  async function handlePaymentStatusUpdate(sale: Sale, newStatus: string) {
+    if (sale.payment_status === newStatus) return;
+
+    setActionLoadingId(sale.id);
+
+    const { error } = await supabase
+      .from("sales")
+      .update({ payment_status: newStatus })
+      .eq("id", sale.id);
+
+    setActionLoadingId("");
+
+    if (error) {
+      showToast("Status plaćanja nije ažuriran / Ödeme durumu güncellenemedi: " + error.message, "error");
+      return;
+    }
+
+    showToast("Status plaćanja ažuriran / Ödeme durumu güncellendi ✅", "success");
+    await fetchSales();
+  }
+
   async function handleSimpleStatusUpdate(sale: Sale, newStatus: SimpleStatus) {
     const current = getSimpleStatusFromSale(sale);
     if (current === newStatus) return;
@@ -1956,11 +1977,16 @@ export default function SalesPage() {
                               </td>
 
                               <td className="py-3 text-center">
-                                {sale.payment_status === "Ödendi / Paid"
-  ? "Plaćeno / Ödendi"
-  : sale.payment_status === "Bekliyor / Pending"
-  ? "Čeka / Bekliyor"
-  : sale.payment_status || "-"}
+                                <select
+                                  value={sale.payment_status || "Bekliyor / Pending"}
+                                  onChange={(e) =>
+                                    handlePaymentStatusUpdate(sale, e.target.value)
+                                  }
+                                  className="w-[170px] rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                                >
+                                  <option value="Ödendi / Paid">Plaćeno / Ödendi</option>
+                                  <option value="Bekliyor / Pending">Čeka / Bekliyor</option>
+                                </select>
                               </td>
 
                               <td className="py-3 text-center">
