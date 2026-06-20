@@ -153,6 +153,7 @@ export default function SalesPage() {
   const [saving, setSaving] = useState(false);
   const [loadingSales, setLoadingSales] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState("");
+  const [loadingGroupKey, setLoadingGroupKey] = useState("");
   const [prefillMode, setPrefillMode] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState("");
 
@@ -790,6 +791,51 @@ export default function SalesPage() {
     showToast("Telefon je ažuriran / Telefon güncellendi ✅", "success");
     await fetchSales();
     await fetchCustomers();
+  }
+
+  async function handleGroupPaymentUpdate(groupItems: Sale[], newStatus: string, groupKey: string) {
+    const toUpdate = groupItems.filter((s) => s.payment_status !== newStatus);
+    if (toUpdate.length === 0) return;
+
+    setLoadingGroupKey(groupKey);
+
+    const { error } = await supabase
+      .from("sales")
+      .update({ payment_status: newStatus })
+      .in("id", toUpdate.map((s) => s.id));
+
+    setLoadingGroupKey("");
+
+    if (error) {
+      showToast("Status plaćanja nije ažuriran / Ödeme durumu güncellenemedi: " + error.message, "error");
+      return;
+    }
+
+    showToast("Sva plaćanja ažurirana / Tüm ödemeler güncellendi ✅", "success");
+    await fetchSales();
+  }
+
+  async function handleGroupDeliveryUpdate(groupItems: Sale[], newStatus: SimpleStatus, groupKey: string) {
+    const payload = getStatusPayload(newStatus);
+    const toUpdate = groupItems.filter((s) => getSimpleStatusFromSale(s) !== newStatus);
+    if (toUpdate.length === 0) return;
+
+    setLoadingGroupKey(groupKey);
+
+    const { error } = await supabase
+      .from("sales")
+      .update(payload)
+      .in("id", toUpdate.map((s) => s.id));
+
+    setLoadingGroupKey("");
+
+    if (error) {
+      showToast("Status isporuke nije ažuriran / Teslimat durumu güncellenemedi: " + error.message, "error");
+      return;
+    }
+
+    showToast("Sve isporuke ažurirane / Tüm teslimatlar güncellendi ✅", "success");
+    await fetchSales();
   }
 
   async function handlePaymentStatusUpdate(sale: Sale, newStatus: string) {
@@ -1793,12 +1839,28 @@ export default function SalesPage() {
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => handleAddProductToOrder(first)}
-                          className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
-                        >
-                          + Dodaj proizvod / Ürün Ekle
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleAddProductToOrder(first)}
+                            className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
+                          >
+                            + Dodaj proizvod / Ürün Ekle
+                          </button>
+                          <button
+                            onClick={() => handleGroupDeliveryUpdate(group, "Teslim Edildi / Delivered", groupBlock.key)}
+                            disabled={loadingGroupKey === groupBlock.key || group.every(s => getSimpleStatusFromSale(s) === "Teslim Edildi / Delivered")}
+                            className="rounded-2xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {loadingGroupKey === groupBlock.key ? "..." : "✓ Tümü Teslim / Sve Isporučeno"}
+                          </button>
+                          <button
+                            onClick={() => handleGroupPaymentUpdate(group, "Ödendi / Paid", groupBlock.key)}
+                            disabled={loadingGroupKey === groupBlock.key || group.every(s => s.payment_status === "Ödendi / Paid")}
+                            className="rounded-2xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {loadingGroupKey === groupBlock.key ? "..." : "✓ Tümü Ödendi / Sve Plaćeno"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
