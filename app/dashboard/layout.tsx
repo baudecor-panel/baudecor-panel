@@ -68,7 +68,10 @@ const menuGroups: MenuGroup[] = [
   {
     id: "finance",
     label: "Finansije / Finans",
-    children: [{ href: "/dashboard/expenses", label: "Troškovi / Giderler" }],
+    children: [
+      { href: "/dashboard/expenses", label: "Troškovi / Giderler" },
+      { href: "/dashboard/kasa", label: "Kasa / Kasa" },
+    ],
   },
   {
     id: "ai",
