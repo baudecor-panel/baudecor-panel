@@ -30,6 +30,7 @@ type Sale = {
   payment_status?: string | null;
   payment_method?: string | null;
   commission_amount?: number | null;
+  assigned_courier?: string | null;
 };
 
 type Product = {
@@ -147,7 +148,7 @@ export default function DashboardPage() {
       supabase
         .from("sales")
         .select(
-          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, payment_method, commission_amount"
+          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, payment_method, commission_amount, assigned_courier"
         ),
       supabase
         .from("products")
@@ -522,6 +523,30 @@ export default function DashboardPage() {
       productProfitStats.length
     );
   }, [productProfitStats]);
+
+  const courierPending = useMemo(() => {
+    const rows = sales.filter(
+      (s) =>
+        s.assigned_courier &&
+        s.assigned_courier.trim() !== "" &&
+        s.payment_status !== "Ödendi / Paid" &&
+        s.delivery_status !== "İptal / Cancelled"
+    );
+
+    const totalAmount = rows.reduce((sum, s) => sum + Number(s.total || 0), 0);
+
+    const byCourier = new Map<string, number>();
+    rows.forEach((s) => {
+      const name = s.assigned_courier!.trim();
+      byCourier.set(name, (byCourier.get(name) || 0) + Number(s.total || 0));
+    });
+
+    return {
+      totalAmount,
+      orderCount: new Set(rows.map((s) => s.order_id || s.id)).size,
+      byCourier: Array.from(byCourier.entries()).map(([name, amount]) => ({ name, amount })),
+    };
+  }, [sales]);
 
   const stockAlerts = useMemo(() => {
     return activeProducts
@@ -956,6 +981,37 @@ export default function DashboardPage() {
               helper="Doğrudan satış kaybı riski / Gubitak"
               tone={outOfStockCount === 0 ? "green" : "red"}
             />
+          </div>
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kurir / Kurye</p>
+          <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+            {courierPending.totalAmount === 0 ? (
+              <p className="text-sm text-slate-400">Kurye'de bekleyen ödeme yok / Nema plaćanja kod kurira</p>
+            ) : (
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">
+                    Kurye'de Bekleyen Para / Novac kod Kurira
+                  </p>
+                  <p className="mt-1 text-3xl font-bold text-amber-300">
+                    €{courierPending.totalAmount.toFixed(2)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {courierPending.orderCount} sipariş · Ödeme teslim alındığında sıfırlanır / {courierPending.orderCount} narudžbi · Resetuje se po uplati
+                  </p>
+                </div>
+                {courierPending.byCourier.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {courierPending.byCourier.map(({ name, amount }) => (
+                      <div key={name} className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-center">
+                        <p className="text-xs text-amber-300 font-medium">{name}</p>
+                        <p className="mt-1 text-lg font-bold text-white">€{amount.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
