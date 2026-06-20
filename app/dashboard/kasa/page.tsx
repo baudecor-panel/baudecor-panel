@@ -24,7 +24,8 @@ type Expense = {
   created_at: string;
 };
 
-type Toast = { message: string; type: "success" | "error" | "warning" } | null;
+type ToastType = "success" | "error" | "warning";
+type Toast = { message: string; type: ToastType } | null;
 
 function getTodayDate() {
   const now = new Date();
@@ -52,8 +53,8 @@ export default function KasaPage() {
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(getTodayDate());
 
-  function showToast(message: string, type: Toast["type"] = "success") {
-    setToast({ message, type: type ?? "success" });
+  function showToast(message: string, type: ToastType = "success") {
+    setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   }
 
