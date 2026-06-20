@@ -55,6 +55,13 @@ type Expense = {
   created_at: string;
 };
 
+type KasaEntry = {
+  id: string;
+  amount: number;
+  type: "opening_balance" | "manual_in" | "manual_out";
+  created_at: string;
+};
+
 type StockAlertItem = {
   name: string;
   stock: number;
@@ -78,6 +85,7 @@ export default function DashboardPage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [aiAlerts, setAiAlerts] = useState<string[]>([]);
   const [aiAlertsLoading, setAiAlertsLoading] = useState(false);
+  const [kasaEntries, setKasaEntries] = useState<KasaEntry[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -144,6 +152,7 @@ export default function DashboardPage() {
       { data: salesData, error: salesError },
       { data: productData, error: productError },
       { data: expenseData },
+      { data: kasaData },
     ] = await Promise.all([
       supabase
         .from("sales")
@@ -156,6 +165,10 @@ export default function DashboardPage() {
       supabase
         .from("expenses")
         .select("amount, created_at"),
+      supabase
+        .from("kasa_entries")
+        .select("id, amount, type, created_at")
+        .order("created_at", { ascending: false }),
     ]);
 
     if (salesError) {
@@ -169,6 +182,7 @@ export default function DashboardPage() {
     setSales((salesData || []) as Sale[]);
     setProducts((productData || []) as Product[]);
     setExpenses((expenseData || []) as Expense[]);
+    setKasaEntries((kasaData || []) as KasaEntry[]);
     setLoading(false);
   }
 
@@ -523,6 +537,31 @@ export default function DashboardPage() {
       productProfitStats.length
     );
   }, [productProfitStats]);
+
+  const kasaBalance = useMemo(() => {
+    const latestOpening = kasaEntries.find((e) => e.type === "opening_balance");
+    if (!latestOpening) return null;
+
+    const cutoff = latestOpening.created_at;
+
+    const salesIncome = sales
+      .filter((s) => s.payment_status === "Ödendi / Paid" && s.created_at && s.created_at >= cutoff)
+      .reduce((sum, s) => sum + Number(s.total || 0), 0);
+
+    const expensesTotal = expenses
+      .filter((e) => e.created_at >= cutoff)
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    const manualIn = kasaEntries
+      .filter((e) => e.type === "manual_in" && e.created_at >= cutoff)
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    const manualOut = kasaEntries
+      .filter((e) => e.type === "manual_out" && e.created_at >= cutoff)
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    return Number(latestOpening.amount) + salesIncome - expensesTotal + manualIn - manualOut;
+  }, [kasaEntries, sales, expenses]);
 
   const courierPending = useMemo(() => {
     const rows = sales.filter(
@@ -981,6 +1020,25 @@ export default function DashboardPage() {
               helper="Doğrudan satış kaybı riski / Gubitak"
               tone={outOfStockCount === 0 ? "green" : "red"}
             />
+          </div>
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kasa / Kasa</p>
+          <div className={`mt-3 rounded-2xl border p-5 ${kasaBalance === null ? "border-slate-700 bg-slate-900/40" : kasaBalance >= 0 ? "border-emerald-500/30 bg-emerald-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+            {kasaBalance === null ? (
+              <p className="text-sm text-slate-400">Henüz açılış bakiyesi girilmedi / Početni saldo nije unesen</p>
+            ) : (
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Güncel Kasa / Trenutna Kasa</p>
+                  <p className={`mt-1 text-3xl font-bold ${kasaBalance >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+                    €{kasaBalance.toFixed(2)}
+                  </p>
+                </div>
+                <a href="/dashboard/kasa" className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800">
+                  Detay / Detalji →
+                </a>
+              </div>
+            )}
           </div>
 
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kurir / Kurye</p>
