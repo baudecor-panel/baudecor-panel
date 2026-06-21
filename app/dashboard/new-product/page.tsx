@@ -38,6 +38,7 @@ export default function NewProductPage() {
   const [isAccessory, setIsAccessory] = useState(false);
   const [parentProductId, setParentProductId] = useState("");
   const [accessoryType, setAccessoryType] = useState("");
+  const [unit, setUnit] = useState("adet");
   const [saving, setSaving] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{ price: number; reason: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -215,6 +216,7 @@ export default function NewProductPage() {
         opening_stock: initialStock,
         minimum_stock: Number(minimumStock),
         is_active: true,
+        unit,
         parent_product_id: isAccessory && parentProductId ? parentProductId : null,
         accessory_type: isAccessory && accessoryType.trim() ? accessoryType.trim() : null,
       },
@@ -239,6 +241,7 @@ export default function NewProductPage() {
     setIsAccessory(false);
     setParentProductId("");
     setAccessoryType("");
+    setUnit("adet");
   }
 
   const selectedGroupName = useMemo(() => {
@@ -453,6 +456,20 @@ export default function NewProductPage() {
                 Bu değer opening_stock olarak kaydedilir. Sistem uyumu için
                 products.stock alanına da aynı değer yazılır.
               </p>
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-400">
+                Birim / Jedinica
+              </label>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4 text-white border border-slate-700 outline-none focus:border-blue-500"
+              >
+                <option value="adet">Adet (parça)</option>
+                <option value="m2">m² (metrekare)</option>
+              </select>
             </div>
 
             <div>

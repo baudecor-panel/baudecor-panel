@@ -30,6 +30,7 @@ type Product = {
   parent_product_id?: string | null;
   accessory_type?: string | null;
   parent_name?: string;
+  unit?: string;
 };
 
 type ProductGroup = {
@@ -139,7 +140,7 @@ export default function StockEntryPage() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, stock, price, cost, opening_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, product_groups(name)"
+        "id, name, stock, price, cost, opening_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, unit, product_groups(name)"
       )
       .eq("is_active", true)
       .order("name", { ascending: true });
@@ -550,11 +551,12 @@ export default function StockEntryPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Količina za dodavanje / Eklenecek Adet
+                  Količina za dodavanje / Eklenecek {selectedProduct?.unit === "m2" ? "m²" : "Adet"}
                 </label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
+                  step={selectedProduct?.unit === "m2" ? 0.01 : 1}
                   value={quantity}
                   placeholder="0"
                   onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}

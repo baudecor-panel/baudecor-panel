@@ -31,6 +31,7 @@ type Product = {
   parent_product_id?: string | null;
   accessory_type?: string | null;
   parent_name?: string;
+  unit?: string;
 };
 
 type ProductGroup = {
@@ -98,6 +99,7 @@ export default function ProductsPage() {
   const [editIsAccessory, setEditIsAccessory] = useState(false);
   const [editParentProductId, setEditParentProductId] = useState("");
   const [editAccessoryType, setEditAccessoryType] = useState("");
+  const [editUnit, setEditUnit] = useState("adet");
   const [editParentProducts, setEditParentProducts] = useState<{ id: string; name: string }[]>([]);
   const [loadingEditParents, setLoadingEditParents] = useState(false);
   const [editCurrentStock, setEditCurrentStock] = useState(0);
@@ -186,7 +188,7 @@ export default function ProductsPage() {
       supabase
         .from("products")
         .select(
-          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, product_groups(name)"
+          "id, name, price, cost, stock, opening_stock, minimum_stock, is_active, group_id, default_supplier_id, parent_product_id, accessory_type, unit, product_groups(name)"
         )
         .order("name", { ascending: true }),
       supabase.from("stock_movements").select("product_id, quantity, created_at"),
@@ -257,6 +259,7 @@ export default function ProductsPage() {
     setEditIsAccessory(!!product.parent_product_id);
     setEditParentProductId(product.parent_product_id || "");
     setEditAccessoryType(product.accessory_type || "");
+    setEditUnit(product.unit || "adet");
     setEditCurrentStock(currentStock);
     setEditNewStock("");
 
@@ -286,6 +289,7 @@ export default function ProductsPage() {
     setEditIsAccessory(false);
     setEditParentProductId("");
     setEditAccessoryType("");
+    setEditUnit("adet");
     setEditParentProducts([]);
     setEditCurrentStock(0);
     setEditNewStock("");
@@ -332,6 +336,7 @@ export default function ProductsPage() {
         minimum_stock: Number(editMinimumStock),
         parent_product_id: editIsAccessory && editParentProductId ? editParentProductId : null,
         accessory_type: editIsAccessory && editAccessoryType.trim() ? editAccessoryType.trim() : null,
+        unit: editUnit,
       })
       .eq("id", editingProductId);
 
@@ -1579,6 +1584,13 @@ export default function ProductsPage() {
 
             <th className="px-4 py-4 text-center">
               <div className="min-w-[100px]">
+                <div className="text-sm font-semibold text-slate-300">Birim / Jedinica</div>
+                <div className="text-xs text-slate-500">adet / m²</div>
+              </div>
+            </th>
+
+            <th className="px-4 py-4 text-center">
+              <div className="min-w-[100px]">
                 <div className="text-sm font-semibold text-slate-300">Durum</div>
                 <div className="text-xs text-slate-500">Aktivno</div>
               </div>
@@ -1691,6 +1703,20 @@ export default function ProductsPage() {
                   >
                     Kretanja / Hareketler
                   </button>
+                </td>
+                <td className="py-3 text-center">
+                  <select
+                    value={product.unit || "adet"}
+                    onChange={async (e) => {
+                      const newUnit = e.target.value;
+                      await supabase.from("products").update({ unit: newUnit }).eq("id", product.id);
+                      await fetchProductsWithMeta();
+                    }}
+                    className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+                  >
+                    <option value="adet">Adet</option>
+                    <option value="m2">m²</option>
+                  </select>
                 </td>
                 <td className="py-3 text-center">
                   <ActivityBadge isActive={isActive} />

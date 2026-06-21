@@ -25,6 +25,7 @@ type Product = {
   group_id?: string | null;
   group_name?: string;
   is_active?: boolean;
+  unit?: string;
   product_groups?: ProductGroupRelation;
 };
 
@@ -260,7 +261,7 @@ export default function SalesPage() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, price, cost, stock, opening_stock, is_active, group_id, product_groups(name)"
+        "id, name, price, cost, stock, opening_stock, is_active, group_id, unit, product_groups(name)"
       )
       .eq("is_active", true)
       .order("name", { ascending: true });
@@ -1485,11 +1486,12 @@ export default function SalesPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Količina / Adet
+                  Količina / {selectedProductData?.unit === "m2" ? "m²" : "Adet"}
                 </label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
+                  step={selectedProductData?.unit === "m2" ? 0.01 : 1}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="h-[56px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-white outline-none transition focus:border-blue-500"
@@ -1991,7 +1993,8 @@ export default function SalesPage() {
                               <td className="py-3 text-center">
                                 <input
                                   type="number"
-                                  min={1}
+                                  min={0}
+                                  step={products.find(p => p.name === sale.product_name)?.unit === "m2" ? 0.01 : 1}
                                   defaultValue={sale.quantity}
                                   onBlur={(e) =>
                                     handleQuantityUpdate(sale, e.target.value)
