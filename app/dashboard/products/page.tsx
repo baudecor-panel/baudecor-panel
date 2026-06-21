@@ -1584,8 +1584,8 @@ export default function ProductsPage() {
 
             <th className="px-4 py-4 text-center">
               <div className="min-w-[100px]">
-                <div className="text-sm font-semibold text-slate-300">Birim / Jedinica</div>
-                <div className="text-xs text-slate-500">adet / m²</div>
+                <div className="text-sm font-semibold text-slate-300">Jedinica / Birim</div>
+                <div className="text-xs text-slate-500">Komad / Adet · m²</div>
               </div>
             </th>
 
@@ -1714,8 +1714,8 @@ export default function ProductsPage() {
                     }}
                     className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
                   >
-                    <option value="adet">Adet</option>
-                    <option value="m2">m²</option>
+                    <option value="adet">Komad / Adet</option>
+                    <option value="m2">m² / m²</option>
                   </select>
                 </td>
                 <td className="py-3 text-center">

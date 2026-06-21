@@ -460,15 +460,15 @@ export default function NewProductPage() {
 
             <div>
               <label className="text-sm text-slate-400">
-                Birim / Jedinica
+                Jedinica / Birim
               </label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 className="mt-2 h-[56px] w-full rounded-2xl bg-slate-950 px-4 text-white border border-slate-700 outline-none focus:border-blue-500"
               >
-                <option value="adet">Adet (parça)</option>
-                <option value="m2">m² (metrekare)</option>
+                <option value="adet">Komad / Adet</option>
+                <option value="m2">m² / m²</option>
               </select>
             </div>
 
