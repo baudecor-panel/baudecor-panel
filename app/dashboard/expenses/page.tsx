@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import * as XLSX from "xlsx";
 import { EXPENSE_TYPES, isOperatingExpense, PURCHASE_EXPENSE_TYPE } from "../../../lib/expenses";
+import PeriodPicker from "../../../components/PeriodPicker";
+import { defaultSelection, getPeriod, inRange, parseDate, PeriodSelection } from "../../../lib/period";
 
 type Expense = {
   id: string;
@@ -23,6 +25,8 @@ export default function ExpensesPage() {
   const [type, setType] = useState("Zakup / Kira");
   const [amount, setAmount] = useState(0);
   const [note, setNote] = useState("");
+  const [selection, setSelection] = useState<PeriodSelection>(() => defaultSelection());
+  const period = useMemo(() => getPeriod(selection), [selection]);
 
   useEffect(() => {
     fetchExpenses();
@@ -104,33 +108,32 @@ export default function ExpensesPage() {
     return expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   }, [expenses]);
 
-  const thisMonthPurchases = useMemo(() => {
-    const now = new Date();
-    return expenses
-      .filter((e) => !isOperatingExpense(e.type))
-      .filter((e) => {
-        const d = new Date(e.created_at);
-        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-      })
-      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  }, [expenses]);
+  const filteredExpenses = useMemo(
+    () => expenses.filter((e) => inRange(parseDate(e.created_at), period)),
+    [expenses, period]
+  );
 
-  const thisMonthExpense = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+  const periodTotal = useMemo(
+    () => filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0),
+    [filteredExpenses]
+  );
 
-    return expenses.reduce((sum, e) => {
-      const d = new Date(e.created_at);
-      if (d.getFullYear() === year && d.getMonth() === month) {
-        return sum + Number(e.amount || 0);
-      }
-      return sum;
-    }, 0);
-  }, [expenses]);
+  const periodPurchases = useMemo(
+    () =>
+      filteredExpenses
+        .filter((e) => !isOperatingExpense(e.type))
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0),
+    [filteredExpenses]
+  );
+
+  const byType = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredExpenses.forEach((e) => map.set(e.type, (map.get(e.type) || 0) + Number(e.amount || 0)));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [filteredExpenses]);
 
   function exportToExcel() {
-    const data = expenses.map((e) => ({
+    const data = filteredExpenses.map((e) => ({
       "Tür / Tip": e.type,
       "Tutar / Iznos (€)": Number(e.amount).toFixed(2),
       "Not / Napomena": e.note || "-",
@@ -157,13 +160,16 @@ export default function ExpensesPage() {
             Prati i evidentiraj troškove poslovanja. / İşletme giderlerini kaydet ve takip et.
           </p>
         </div>
+        <div className="flex flex-col items-stretch gap-3 md:items-end">
+        <PeriodPicker value={selection} onChange={setSelection} />
         <button
           onClick={exportToExcel}
-          disabled={expenses.length === 0}
+          disabled={filteredExpenses.length === 0}
           className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Excel İndir / Export
+          Excel İndir / Export ({filteredExpenses.length} kayıt)
         </button>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -240,42 +246,43 @@ export default function ExpensesPage() {
           <h2 className="text-lg font-semibold">
             Sažetak troškova / Gider Özeti
           </h2>
-          <p className="mt-1 text-sm text-slate-400">
-            Opšti pregled troškova. / Genel gider görünümü.
-          </p>
+          <p className="mt-1 text-sm text-slate-400">{period.label}</p>
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Ukupni troškovi / Toplam Gider
+                Troškovi perioda / Dönem Gideri
               </p>
               <p className="mt-2 text-2xl font-bold text-red-300">
-                €{totalExpense.toFixed(2)}
+                €{periodTotal.toFixed(2)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {filteredExpenses.length} kayıt
+                {periodPurchases > 0 && ` · bunun €${periodPurchases.toFixed(2)} kadarı mal alımı (net kâra girmez)`}
               </p>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Ovaj mjesec / Bu Ay
+                Po tipu / Türe Göre
               </p>
-              <p className="mt-2 text-xl font-semibold text-white">
-                €{thisMonthExpense.toFixed(2)}
-              </p>
-              {thisMonthPurchases > 0 && (
-                <p className="mt-1 text-xs text-slate-500">
-                  Bunun €{thisMonthPurchases.toFixed(2)} kadarı mal alımı (net kâra girmez)
-                </p>
+              {byType.length === 0 ? (
+                <p className="mt-2 text-sm text-slate-400">Bu dönemde gider yok</p>
+              ) : (
+                <ul className="mt-3 space-y-2 text-sm">
+                  {byType.map(([t, sum]) => (
+                    <li key={t} className="flex justify-between gap-3">
+                      <span className={isOperatingExpense(t) ? "text-slate-300" : "text-amber-300"}>{t}</span>
+                      <span className="font-semibold tabular-nums">€{sum.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                Broj zapisa / Kayıt Sayısı
-              </p>
-              <p className="mt-2 text-xl font-semibold text-white">
-                {expenses.length}
-              </p>
-            </div>
+            <p className="px-1 text-xs text-slate-500">
+              Tüm zamanlar: €{totalExpense.toFixed(2)} · {expenses.length} kayıt
+            </p>
           </div>
         </aside>
       </div>
@@ -283,10 +290,10 @@ export default function ExpensesPage() {
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-black/20">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">
-            Posljednji troškovi / Son Giderler
+            Troškovi perioda / Dönemin Giderleri
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Svi troškovi. Tip možeš promijeniti u tabeli. / Tüm giderler. Türü tablodan değiştirebilirsin.
+            {period.label} · Tip možeš promijeniti u tabeli. / Türü tablodan değiştirebilirsin.
           </p>
         </div>
 
@@ -308,7 +315,7 @@ export default function ExpensesPage() {
               </thead>
 
               <tbody>
-                {expenses.map((expense) => (
+                {filteredExpenses.map((expense) => (
                   <tr
                     key={expense.id}
                     className="border-t border-slate-800 transition hover:bg-slate-800/30"
@@ -346,7 +353,7 @@ export default function ExpensesPage() {
                   </tr>
                 ))}
 
-                {expenses.length === 0 && (
+                {filteredExpenses.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-400">
                       Nema zapisa / Kayıt yok
