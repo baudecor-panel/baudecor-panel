@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useMemo, useState } from "react";
 
 type MenuChild = {
@@ -18,7 +19,7 @@ type MenuGroup = {
 const menuGroups: MenuGroup[] = [
   {
     id: "general",
-    label: "Opšte / Genel",
+    label: "Kontrolna tabla / Panel",
     children: [{ href: "/dashboard", label: "Kontrolna tabla / Panel" }],
   },
   {
@@ -26,10 +27,7 @@ const menuGroups: MenuGroup[] = [
     label: "Prodaja / Satış",
     children: [
       { href: "/dashboard/sales", label: "Prodaja / Satış" },
-      {
-        href: "/dashboard/completed-sales",
-        label: "Završene prodaje / Tamamlanan Satışlar",
-      },
+      { href: "/dashboard/completed-sales", label: "Završene prodaje / Tamamlanan Satışlar" },
       { href: "/dashboard/customers", label: "Kupci / Müşteriler" },
     ],
   },
@@ -38,40 +36,33 @@ const menuGroups: MenuGroup[] = [
     label: "Isporuka / Sevkiyat",
     children: [
       { href: "/dashboard/dispatch", label: "Isporuka / Sevkiyat" },
-      {
-        href: "/dashboard/dispatch-map",
-        label: "Mapa isporuke / Sevkiyat Haritası",
-      },
+      { href: "/dashboard/dispatch-map", label: "Mapa isporuke / Sevkiyat Haritası" },
     ],
   },
   {
     id: "products",
-    label: "Proizvodi / Ürünler",
+    label: "Proizvodi i zaliha / Ürünler & Stok",
     children: [
       { href: "/dashboard/products", label: "Proizvodi / Ürünler" },
-      {
-        href: "/dashboard/product-groups",
-        label: "Grupe proizvoda / Ürün Grupları",
-      },
+      { href: "/dashboard/stock-entry", label: "Unos zaliha / Stok Girişi" },
+      { href: "/dashboard/stock-out", label: "Izlaz zaliha / Stok Çıkışı" },
       { href: "/dashboard/new-product", label: "Novi proizvod / Yeni Ürün" },
+      { href: "/dashboard/product-groups", label: "Grupe proizvoda / Ürün Grupları" },
       { href: "/dashboard/suppliers", label: "Dobavljači / Tedarikçiler" },
     ],
   },
   {
-    id: "stock",
-    label: "Zaliha / Stok",
+    id: "finance",
+    label: "Kasa i troškovi / Kasa & Giderler",
     children: [
-      { href: "/dashboard/stock-entry", label: "Unos zaliha / Stok Girişi" },
-      { href: "/dashboard/stock-out", label: "Izlaz zaliha / Stok Çıkışı" },
+      { href: "/dashboard/kasa", label: "Kasa / Kasa" },
+      { href: "/dashboard/expenses", label: "Troškovi / Giderler" },
     ],
   },
   {
-    id: "finance",
-    label: "Finansije / Finans",
-    children: [
-      { href: "/dashboard/expenses", label: "Troškovi / Giderler" },
-      { href: "/dashboard/kasa", label: "Kasa / Kasa" },
-    ],
+    id: "reports",
+    label: "Izvještaji / Raporlar",
+    children: [{ href: "/dashboard/reports", label: "Izvještaji / Raporlar" }],
   },
   {
     id: "ai",
@@ -86,6 +77,19 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setLoggingOut(false);
+      alert("Odjava nije uspjela / Çıkış yapılamadı: " + error.message);
+      return;
+    }
+    router.push("/login");
+  }
 
   const activeGroupId = useMemo(() => {
     return (
@@ -108,55 +112,53 @@ export default function DashboardLayout({
   return (
     <div className="h-screen overflow-hidden bg-slate-950 text-white">
       <div className="flex h-full">
-        <aside className="w-[290px] shrink-0 border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-5 py-6">
+        <aside className="w-[260px] shrink-0 overflow-y-auto border-r border-slate-800 bg-slate-900 px-4 py-6">
           <div className="flex h-full flex-col">
             <div>
-              <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
-                  SHOWROOM SISTEM
-                </p>
-
-                <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">
-                  BAUDECOR
+              <div className="mb-6 px-3">
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  BAU<span className="text-blue-400">DECOR</span>
                 </h1>
-
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Upravljački panel / Yönetim Paneli
-                </p>
               </div>
 
-              <nav className="space-y-3">
+              <nav className="space-y-1">
                 {menuGroups.map((group) => {
                   const isOpen = openGroupId === group.id;
                   const hasActiveChild = group.children.some(
                     (item) => pathname === item.href
                   );
 
+                  if (group.children.length === 1) {
+                    const item = group.children[0];
+                    return (
+                      <Link
+                        key={group.id}
+                        href={item.href}
+                        className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                          hasActiveChild
+                            ? "bg-blue-500/15 text-white"
+                            : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                        }`}
+                      >
+                        {group.label}
+                      </Link>
+                    );
+                  }
+
                   return (
-                    <div
-                      key={group.id}
-                      className="rounded-3xl border border-slate-800 bg-slate-900/40"
-                    >
+                    <div key={group.id}>
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.id)}
-                        className={`flex w-full items-center justify-between rounded-3xl px-4 py-3 text-left text-sm font-semibold transition ${
+                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
                           hasActiveChild
-                            ? "bg-blue-500/10 text-white"
-                            : "text-slate-200 hover:bg-slate-900/70 hover:text-white"
+                            ? "text-white"
+                            : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
                         }`}
                       >
-                        <div className="flex items-center">
-                          <span
-                            className={`mr-3 h-2.5 w-2.5 rounded-full transition ${
-                              hasActiveChild ? "bg-blue-400" : "bg-slate-600"
-                            }`}
-                          />
-                          {group.label}
-                        </div>
-
+                        {group.label}
                         <span
-                          className={`text-xs transition ${
+                          className={`text-[10px] text-slate-500 transition ${
                             isOpen ? "rotate-180" : "rotate-0"
                           }`}
                         >
@@ -165,33 +167,23 @@ export default function DashboardLayout({
                       </button>
 
                       {isOpen && (
-                        <div className="px-3 pb-3">
-                          <div className="space-y-2 border-t border-slate-800 pt-3">
-                            {group.children.map((item) => {
-                              const active = pathname === item.href;
-
-                              return (
-                                <Link
-                                  key={item.href}
-                                  href={item.href}
-                                  className={`group flex items-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                                    active
-                                      ? "border-blue-500/30 bg-blue-500/10 text-white shadow-lg shadow-blue-950/30"
-                                      : "border-transparent text-slate-300 hover:border-slate-800 hover:bg-slate-900/70 hover:text-white"
-                                  }`}
-                                >
-                                  <span
-                                    className={`mr-3 h-2 w-2 rounded-full transition ${
-                                      active
-                                        ? "bg-blue-400"
-                                        : "bg-slate-600 group-hover:bg-slate-400"
-                                    }`}
-                                  />
-                                  {item.label}
-                                </Link>
-                              );
-                            })}
-                          </div>
+                        <div className="mb-1 ml-3 space-y-0.5 border-l border-slate-800 pl-2">
+                          {group.children.map((item) => {
+                            const active = pathname === item.href;
+                            return (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`block rounded-lg px-3 py-2 text-sm transition ${
+                                  active
+                                    ? "bg-blue-500/15 font-medium text-white"
+                                    : "text-slate-400 hover:text-white"
+                                }`}
+                              >
+                                {item.label}
+                              </Link>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -200,24 +192,15 @@ export default function DashboardLayout({
               </nav>
             </div>
 
-            <div className="mt-auto">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                  STATUS / DURUM
-                </p>
-
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                  <span className="text-sm text-slate-300">
-                    Sistem aktivan / Sistem aktif
-                  </span>
-                </div>
-
-                <p className="mt-4 text-xs text-slate-500">
-                  Upravljanje prodajom, zalihama, kupcima i dobavljačima /
-                  Satış, stok, müşteri ve tedarikçi yönetimi
-                </p>
-              </div>
+            <div className="mt-auto pt-6">
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="w-full rounded-xl border border-slate-800 px-3 py-2.5 text-left text-sm text-slate-400 transition hover:border-red-500/30 hover:text-red-300 disabled:opacity-60"
+              >
+                {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
+              </button>
             </div>
           </div>
         </aside>

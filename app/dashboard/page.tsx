@@ -1,18 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import * as XLSX from "xlsx";
+import PeriodPicker from "@/components/PeriodPicker";
 import {
+  buildBuckets,
+  defaultSelection,
+  getPeriod,
+  inRange,
+  parseDate,
+  PeriodSelection,
+  previousRange,
+} from "@/lib/period";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
   Line,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Area,
-  ComposedChart,
 } from "recharts";
 
 type Sale = {
@@ -28,26 +37,16 @@ type Sale = {
   city?: string | null;
   delivery_status?: string | null;
   payment_status?: string | null;
-  payment_method?: string | null;
-  commission_amount?: number | null;
   assigned_courier?: string | null;
 };
 
 type Product = {
   id: string;
   name: string;
-  cost: number | null;
-  price?: number | null;
   stock?: number | null;
   minimum_stock?: number | null;
   is_active?: boolean | null;
-};
-
-type RangeType = "today" | "week" | "month" | "year";
-
-type AlertItem = {
-  text: string;
-  type: "danger" | "warning" | "info";
+  unit?: string | null;
 };
 
 type Expense = {
@@ -62,88 +61,23 @@ type KasaEntry = {
   created_at: string;
 };
 
-type StockAlertItem = {
-  name: string;
-  stock: number;
-  minimumStock: number;
-  level: "out" | "critical" | "low";
-};
+const PAID = "Ödendi / Paid";
+const DELIVERED = "Teslim Edildi / Delivered";
+const CANCELLED = "İptal / Cancelled";
 
-type InsightItem = {
-  title: string;
-  text: string;
-  tone: "danger" | "warning" | "positive" | "neutral";
-};
+const eur = (n: number) =>
+  "€" + n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qty = (n: number) => n.toLocaleString("de-DE", { maximumFractionDigits: 2 });
+const orderKey = (s: Sale) => s.order_id || `fallback_${s.id}`;
+const saleDate = (s: Sale) => parseDate(s.sale_date || s.created_at);
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [range, setRange] = useState<RangeType>("month");
-  const [loading, setLoading] = useState(true);
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [aiAlerts, setAiAlerts] = useState<string[]>([]);
-  const [aiAlertsLoading, setAiAlertsLoading] = useState(false);
   const [kasaEntries, setKasaEntries] = useState<KasaEntry[]>([]);
-
-  useEffect(() => {
-    fetchData();
-    fetchAiAlerts();
-  }, []);
-
-  async function fetchAiAlerts(force = false) {
-    const CACHE_KEY = "ai_alerts_cache";
-    const today = new Date().toDateString();
-
-    if (!force) {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed.date === today && Array.isArray(parsed.alerts)) {
-            setAiAlerts(parsed.alerts);
-            return;
-          }
-        }
-      } catch {
-        // önbellek okunamazsa devam et
-      }
-    }
-
-    setAiAlertsLoading(true);
-    try {
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [], alertMode: true }),
-      });
-      const data = await res.json();
-      if (data.reply) {
-        const lines = data.reply.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-        const grouped: string[] = [];
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].match(/^[\p{Emoji}]/u)) {
-            const next = lines[i + 1] && !lines[i + 1].match(/^[\p{Emoji}]/u) ? lines[i + 1] : null;
-            grouped.push(next ? `${lines[i]}\n${next}` : lines[i]);
-            if (next) i++;
-          } else {
-            grouped.push(lines[i]);
-          }
-        }
-        setAiAlerts(grouped);
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, alerts: grouped }));
-        } catch {
-          // localStorage yazılamazsa sessizce geç
-        }
-      }
-    } catch {
-      // sessizce geç
-    } finally {
-      setAiAlertsLoading(false);
-    }
-  }
+  const [loading, setLoading] = useState(true);
+  const [selection, setSelection] = useState<PeriodSelection>(() => defaultSelection());
 
   async function fetchData() {
     setLoading(true);
@@ -157,27 +91,18 @@ export default function DashboardPage() {
       supabase
         .from("sales")
         .select(
-          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, payment_method, commission_amount, assigned_courier"
+          "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, assigned_courier"
         ),
-      supabase
-        .from("products")
-        .select("id, name, cost, price, stock, minimum_stock, is_active"),
-      supabase
-        .from("expenses")
-        .select("amount, created_at"),
+      supabase.from("products").select("id, name, stock, minimum_stock, is_active, unit"),
+      supabase.from("expenses").select("amount, created_at"),
       supabase
         .from("kasa_entries")
         .select("id, amount, type, created_at")
         .order("created_at", { ascending: false }),
     ]);
 
-    if (salesError) {
-      alert("Prodaje nijesu učitane / Satışlar alınamadı: " + salesError.message);
-    }
-
-    if (productError) {
-      alert("Proizvodi nijesu učitani / Ürünler alınamadı: " + productError.message);
-    }
+    if (salesError) alert("Prodaje nijesu učitane / Satışlar alınamadı: " + salesError.message);
+    if (productError) alert("Proizvodi nijesu učitani / Ürünler alınamadı: " + productError.message);
 
     setSales((salesData || []) as Sale[]);
     setProducts((productData || []) as Product[]);
@@ -186,376 +111,66 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  async function handleLogout() {
-    setLoggingOut(true);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, []);
 
-    const { error } = await supabase.auth.signOut();
+  const period = useMemo(() => getPeriod(selection), [selection]);
+  const prev = useMemo(() => previousRange(period), [period]);
 
-    if (error) {
-      setLoggingOut(false);
-      alert("Odjava nije uspjela / Çıkış yapılamadı: " + error.message);
-      return;
-    }
+  const periodSales = useMemo(
+    () => sales.filter((s) => inRange(saleDate(s), period)),
+    [sales, period]
+  );
 
-    router.push("/login");
-  }
+  const revenue = useMemo(
+    () => periodSales.reduce((sum, s) => sum + Number(s.total || 0), 0),
+    [periodSales]
+  );
 
-  function filterByDate(data: Sale[]) {
-    const now = new Date();
-
-    return data.filter((sale) => {
-      const rawDate = sale.sale_date || sale.created_at || "";
-      const date = new Date(rawDate);
-
-      if (Number.isNaN(date.getTime())) return false;
-
-      if (range === "today") {
-        return date.toDateString() === now.toDateString();
-      }
-
-      if (range === "week") {
-        const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return diff >= 0 && diff <= 7;
-      }
-
-      if (range === "month") {
-        return (
-          date.getMonth() === now.getMonth() &&
-          date.getFullYear() === now.getFullYear()
-        );
-      }
-
-      if (range === "year") {
-        return date.getFullYear() === now.getFullYear();
-      }
-
-      return true;
-    });
-  }
-
-  const filteredSales = useMemo(() => filterByDate(sales), [sales, range]);
-
-  const activeProducts = useMemo(() => {
-    return products.filter((product) => (product.is_active ?? true) === true);
-  }, [products]);
-
-  const totalRevenue = useMemo(() => {
-    return filteredSales.reduce((sum, sale) => sum + Number(sale.total || 0), 0);
-  }, [filteredSales]);
-
-  const totalProfit = useMemo(() => {
-    return filteredSales.reduce(
-      (sum, sale) => sum + Number(sale.profit || 0),
-      0
-    );
-  }, [filteredSales]);
-
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter((e) => {
-      const date = new Date(e.created_at);
-      const now = new Date();
-      if (range === "today") return date.toDateString() === now.toDateString();
-      if (range === "week") {
-        const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return diff >= 0 && diff <= 7;
-      }
-      if (range === "month") return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      if (range === "year") return date.getFullYear() === now.getFullYear();
-      return true;
-    });
-  }, [expenses, range]);
-
-  const totalFilteredExpenses = useMemo(() => {
-    return filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  }, [filteredExpenses]);
-
-  const netProfit = useMemo(() => totalProfit - totalFilteredExpenses, [totalProfit, totalFilteredExpenses]);
-
-  const totalOrders = useMemo(() => {
-    return new Set(
-      filteredSales.map((sale) => sale.order_id || `fallback_${sale.id}`)
-    ).size;
-  }, [filteredSales]);
-
-  const activeOrders = useMemo(() => {
-    return new Set(
-      filteredSales
-        .filter(
-          (sale) =>
-            sale.delivery_status !== "Teslim Edildi / Delivered" ||
-            sale.payment_status !== "Ödendi / Paid"
-        )
-        .map((sale) => sale.order_id || `fallback_${sale.id}`)
-    ).size;
-  }, [filteredSales]);
-
-  const completedOrders = useMemo(() => {
-    return new Set(
-      filteredSales
-        .filter(
-          (sale) =>
-            sale.delivery_status === "Teslim Edildi / Delivered" &&
-            sale.payment_status === "Ödendi / Paid"
-        )
-        .map((sale) => sale.order_id || `fallback_${sale.id}`)
-    ).size;
-  }, [filteredSales]);
-
-  const paymentMethodStats = useMemo(() => {
-    const methods = [
-      { key: "Nakit / Cash", label: "Nakit / Gotovina", color: "emerald" },
-      { key: "Kredi Kartı / Credit Card", label: "Kredi Kartı / Kartica", color: "amber" },
-      { key: "Banka Transferi / Bank Transfer", label: "Banka Havalesi / Transfer", color: "blue" },
-    ];
-
-    return methods.map(({ key, label, color }) => {
-      const rows = filteredSales.filter(
-        (s) => (s.payment_method || "Nakit / Cash") === key
-      );
-      const total = rows.reduce((sum, s) => sum + Number(s.total || 0), 0);
-      const commission = rows.reduce((sum, s) => sum + Number(s.commission_amount || 0), 0);
-      const count = rows.length;
-      return { key, label, color, total, commission, count };
-    });
-  }, [filteredSales]);
-
-  const pendingPaymentsTotal = useMemo(() => {
-    return filteredSales
-      .filter((sale) => sale.payment_status !== "Ödendi / Paid")
-      .reduce((sum, sale) => sum + Number(sale.total || 0), 0);
-  }, [filteredSales]);
-
-  const cancelledOrders = useMemo(() => {
-    return new Set(
-      filteredSales
-        .filter((sale) => sale.delivery_status === "İptal / Cancelled")
-        .map((sale) => sale.order_id || `fallback_${sale.id}`)
-    ).size;
-  }, [filteredSales]);
-
-  const averageOrderValue = useMemo(() => {
-    if (totalOrders === 0) return 0;
-    return totalRevenue / totalOrders;
-  }, [totalRevenue, totalOrders]);
-
-  const deliveryBacklog = useMemo(() => {
-    return new Set(
+  const prevRevenue = useMemo(
+    () =>
       sales
-        .filter((sale) => sale.delivery_status !== "Teslim Edildi / Delivered")
-        .map((sale) => sale.order_id || `fallback_${sale.id}`)
-    ).size;
-  }, [sales]);
+        .filter((s) => inRange(saleDate(s), prev))
+        .reduce((sum, s) => sum + Number(s.total || 0), 0),
+    [sales, prev]
+  );
 
-  const completionRate = useMemo(() => {
-    if (totalOrders === 0) return 0;
-    return Math.round((completedOrders / totalOrders) * 100);
-  }, [completedOrders, totalOrders]);
+  const revenueChange = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : null;
 
-  const cancellationRate = useMemo(() => {
-    if (totalOrders === 0) return 0;
-    return Math.round((cancelledOrders / totalOrders) * 100);
-  }, [cancelledOrders, totalOrders]);
+  const grossProfit = useMemo(
+    () => periodSales.reduce((sum, s) => sum + Number(s.profit || 0), 0),
+    [periodSales]
+  );
 
-  const pendingPaymentRate = useMemo(() => {
-    if (totalRevenue === 0) return 0;
-    return Math.round((pendingPaymentsTotal / totalRevenue) * 100);
-  }, [pendingPaymentsTotal, totalRevenue]);
+  const periodExpenses = useMemo(() => {
+    const rows = expenses.filter((e) => inRange(parseDate(e.created_at), period));
+    return {
+      total: rows.reduce((sum, e) => sum + Number(e.amount || 0), 0),
+      count: rows.length,
+    };
+  }, [expenses, period]);
 
-  const chartData = useMemo(() => {
-    const map = new Map<string, { sales: number; profit: number }>();
+  const netProfit = grossProfit - periodExpenses.total;
 
-    filteredSales.forEach((sale) => {
-      const rawDate = sale.sale_date || sale.created_at || "";
-      const key = rawDate.slice(5, 10) || rawDate.slice(0, 10) || "N/A";
+  const orderCount = useMemo(() => new Set(periodSales.map(orderKey)).size, [periodSales]);
 
-      if (!map.has(key)) {
-        map.set(key, { sales: 0, profit: 0 });
-      }
-
-      const current = map.get(key)!;
-      current.sales += Number(sale.total || 0);
-      current.profit += Number(sale.profit || 0);
-    });
-
-    return Array.from(map.entries()).map(([date, values]) => ({
-      date,
-      sales: Number(values.sales.toFixed(2)),
-      profit: Number(values.profit.toFixed(2)),
-    }));
-  }, [filteredSales]);
-
-  const topProducts = useMemo(() => {
-    const map = new Map<string, number>();
-
-    filteredSales.forEach((sale) => {
-      const name = sale.product_name || "Nepoznato / Bilinmiyor";
-      map.set(name, (map.get(name) || 0) + Number(sale.total || 0));
-    });
-
-    return Array.from(map.entries())
-      .map(([name, total]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  }, [filteredSales]);
-
-  const recentSales = useMemo(() => {
-    return [...filteredSales]
-      .sort((a, b) =>
-        String(b.sale_date || b.created_at || "").localeCompare(
-          String(a.sale_date || a.created_at || "")
-        )
-      )
-      .slice(0, 6);
-  }, [filteredSales]);
-
-  const cityStats = useMemo(() => {
-    const map = new Map<string, { total: number; count: number }>();
-
-    filteredSales.forEach((sale) => {
-      const city = sale.city || "Nepoznato / Bilinmiyor";
-
-      if (!map.has(city)) {
-        map.set(city, { total: 0, count: 0 });
-      }
-
-      const current = map.get(city)!;
-      current.total += Number(sale.total || 0);
-      current.count += 1;
-    });
-
-    return Array.from(map.entries())
-      .map(([city, values]) => ({
-        city,
-        total: values.total,
-        count: values.count,
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  }, [filteredSales]);
-
-  const customerStats = useMemo(() => {
-    const map = new Map<string, { total: number; orderSet: Set<string> }>();
-
-    filteredSales.forEach((sale) => {
-      const customer = sale.customer_name || "Nepoznato / Bilinmiyor";
-      const orderKey = sale.order_id || `fallback_${sale.id}`;
-
-      if (!map.has(customer)) {
-        map.set(customer, { total: 0, orderSet: new Set<string>() });
-      }
-
-      const current = map.get(customer)!;
-      current.total += Number(sale.total || 0);
-      current.orderSet.add(orderKey);
-    });
-
-    return Array.from(map.entries())
-      .map(([customer, values]) => ({
-        customer,
-        total: values.total,
-        orderCount: values.orderSet.size,
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  }, [filteredSales]);
-
-  const topCustomersByProfit = useMemo(() => {
-    const map = new Map<string, { profit: number; orderSet: Set<string> }>();
-
-    filteredSales.forEach((sale) => {
-      const customer = sale.customer_name || "Nepoznato / Bilinmiyor";
-      const orderKey = sale.order_id || `fallback_${sale.id}`;
-
-      if (!map.has(customer)) {
-        map.set(customer, { profit: 0, orderSet: new Set<string>() });
-      }
-
-      const current = map.get(customer)!;
-      current.profit += Number(sale.profit || 0);
-      current.orderSet.add(orderKey);
-    });
-
-    return Array.from(map.entries())
-      .map(([customer, values]) => ({
-        customer,
-        profit: values.profit,
-        orderCount: values.orderSet.size,
-      }))
-      .sort((a, b) => b.profit - a.profit)
-      .slice(0, 5);
-  }, [filteredSales]);
-
-  const productProfitStats = useMemo(() => {
-    return activeProducts
-      .map((product) => {
-        const price = Number(product.price ?? 0);
-        const cost = Number(product.cost ?? 0);
-        const stock = Number(product.stock ?? 0);
-        const unitProfit = price - cost;
-        const marginPercent = price > 0 ? (unitProfit / price) * 100 : 0;
-        const stockProfit = unitProfit * stock;
-
-        return {
-          name: product.name || "Nepoznato / Bilinmiyor",
-          price,
-          cost,
-          stock,
-          unitProfit,
-          marginPercent,
-          stockProfit,
-        };
-      })
-      .sort((a, b) => b.stockProfit - a.stockProfit);
-  }, [activeProducts]);
-
-  const profitableProductCount = useMemo(() => {
-    return productProfitStats.filter((item) => item.unitProfit > 0).length;
-  }, [productProfitStats]);
-
-  const losingProductCount = useMemo(() => {
-    return productProfitStats.filter((item) => item.unitProfit < 0).length;
-  }, [productProfitStats]);
-
-  const totalPotentialProfit = useMemo(() => {
-    return productProfitStats.reduce((sum, item) => sum + item.stockProfit, 0);
-  }, [productProfitStats]);
-
-  const topProfitableProducts = useMemo(() => {
-    return productProfitStats.slice(0, 5);
-  }, [productProfitStats]);
-
-  const worstMarginProducts = useMemo(() => {
-    return [...productProfitStats]
-      .sort((a, b) => a.marginPercent - b.marginPercent)
-      .slice(0, 5);
-  }, [productProfitStats]);
-
-  const averageMarginPercent = useMemo(() => {
-    if (productProfitStats.length === 0) return 0;
-    return (
-      productProfitStats.reduce((sum, item) => sum + item.marginPercent, 0) /
-      productProfitStats.length
-    );
-  }, [productProfitStats]);
-
+  // Güncel durumlar: seçili dönemden bağımsız
   const kasaBalance = useMemo(() => {
     const latestOpening = kasaEntries.find((e) => e.type === "opening_balance");
     if (!latestOpening) return null;
 
     const cutoff = latestOpening.created_at;
-
     const salesIncome = sales
-      .filter((s) => s.payment_status === "Ödendi / Paid" && s.created_at && s.created_at >= cutoff)
+      .filter((s) => s.payment_status === PAID && s.created_at && s.created_at >= cutoff)
       .reduce((sum, s) => sum + Number(s.total || 0), 0);
-
     const expensesTotal = expenses
       .filter((e) => e.created_at >= cutoff)
       .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
     const manualIn = kasaEntries
       .filter((e) => e.type === "manual_in" && e.created_at >= cutoff)
       .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
     const manualOut = kasaEntries
       .filter((e) => e.type === "manual_out" && e.created_at >= cutoff)
       .reduce((sum, e) => sum + Number(e.amount || 0), 0);
@@ -563,1129 +178,400 @@ export default function DashboardPage() {
     return Number(latestOpening.amount) + salesIncome - expensesTotal + manualIn - manualOut;
   }, [kasaEntries, sales, expenses]);
 
+  const unpaid = useMemo(() => {
+    const rows = sales.filter((s) => s.payment_status !== PAID && s.delivery_status !== CANCELLED);
+    return {
+      total: rows.reduce((sum, s) => sum + Number(s.total || 0), 0),
+      orders: new Set(rows.map(orderKey)).size,
+    };
+  }, [sales]);
+
+  const stockIssues = useMemo(() => {
+    return products
+      .filter((p) => (p.is_active ?? true) === true)
+      .map((p) => ({
+        name: p.name,
+        stock: Number(p.stock ?? 0),
+        min: Number(p.minimum_stock ?? 5),
+        unit: p.unit === "m2" ? "m²" : "adet",
+      }))
+      .filter((p) => p.stock <= p.min)
+      .sort((a, b) => a.stock - b.stock);
+  }, [products]);
+
+  const pendingDeliveries = useMemo(() => {
+    const rows = sales.filter((s) => s.delivery_status !== DELIVERED && s.delivery_status !== CANCELLED);
+    const cities = new Map<string, number>();
+    rows.forEach((s) => {
+      if (s.city) cities.set(s.city, (cities.get(s.city) || 0) + 1);
+    });
+    const topCity = Array.from(cities.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+    return { orders: new Set(rows.map(orderKey)).size, topCity };
+  }, [sales]);
+
   const courierPending = useMemo(() => {
     const rows = sales.filter(
       (s) =>
         s.assigned_courier &&
         s.assigned_courier.trim() !== "" &&
-        s.payment_status !== "Ödendi / Paid" &&
-        s.delivery_status !== "İptal / Cancelled"
+        s.payment_status !== PAID &&
+        s.delivery_status !== CANCELLED
     );
-
-    const totalAmount = rows.reduce((sum, s) => sum + Number(s.total || 0), 0);
-
     const byCourier = new Map<string, number>();
     rows.forEach((s) => {
       const name = s.assigned_courier!.trim();
       byCourier.set(name, (byCourier.get(name) || 0) + Number(s.total || 0));
     });
-
     return {
-      totalAmount,
-      orderCount: new Set(rows.map((s) => s.order_id || s.id)).size,
-      byCourier: Array.from(byCourier.entries()).map(([name, amount]) => ({ name, amount })),
+      total: rows.reduce((sum, s) => sum + Number(s.total || 0), 0),
+      orders: new Set(rows.map(orderKey)).size,
+      byCourier: Array.from(byCourier.entries()).sort((a, b) => b[1] - a[1]),
     };
   }, [sales]);
 
-  const stockAlerts = useMemo(() => {
-    return activeProducts
-      .map((product) => {
-        const stock = Number(product.stock ?? 0);
-        const minimumStock = Number(product.minimum_stock ?? 5);
-        let level: StockAlertItem["level"] | null = null;
-
-        if (stock <= 0) level = "out";
-        else if (stock <= minimumStock) level = "critical";
-        else if (stock <= minimumStock * 2) level = "low";
-
-        if (!level) return null;
-
-        return {
-          name: product.name || "Nepoznato / Bilinmiyor",
-          stock,
-          minimumStock,
-          level,
-        } satisfies StockAlertItem;
-      })
-      .filter((item): item is StockAlertItem => item !== null)
-      .sort((a, b) => a.stock - b.stock)
-      .slice(0, 8);
-  }, [activeProducts]);
-
-  const criticalStockCount = useMemo(() => {
-    return activeProducts.filter((product) => {
-      const stock = Number(product.stock ?? 0);
-      const minimumStock = Number(product.minimum_stock ?? 5);
-      return stock > 0 && stock <= minimumStock;
-    }).length;
-  }, [activeProducts]);
-
-  const outOfStockCount = useMemo(() => {
-    return activeProducts.filter((product) => Number(product.stock ?? 0) <= 0).length;
-  }, [activeProducts]);
-
-  const lowStockCount = useMemo(() => {
-    return stockAlerts.filter((item) => item.level === "low").length;
-  }, [stockAlerts]);
-
-  const inventorySaleValue = useMemo(() => {
-    return activeProducts.reduce((sum, product) => {
-      return sum + Number(product.stock ?? 0) * Number(product.price ?? 0);
-    }, 0);
-  }, [activeProducts]);
-
-  const inventoryCostValue = useMemo(() => {
-    return activeProducts.reduce((sum, product) => {
-      return sum + Number(product.stock ?? 0) * Number(product.cost ?? 0);
-    }, 0);
-  }, [activeProducts]);
-
-  const stockHealthRate = useMemo(() => {
-    if (activeProducts.length === 0) return 0;
-    const healthy = activeProducts.filter((product) => {
-      const stock = Number(product.stock ?? 0);
-      const minimumStock = Number(product.minimum_stock ?? 5);
-      return stock > minimumStock;
-    }).length;
-
-    return Math.round((healthy / activeProducts.length) * 100);
-  }, [activeProducts]);
-
-  const alerts = useMemo(() => {
-    const list: AlertItem[] = [];
-
-    if (filteredSales.length === 0) {
-      list.push({
-        text: "Nema prodaje u izabranom periodu / Seçili dönemde satış yok",
-        type: "danger",
-      });
-    }
-
-    const cancelCount = filteredSales.filter(
-      (sale) => sale.delivery_status === "İptal / Cancelled"
-    ).length;
-
-    const cancelRate =
-      filteredSales.length > 0 ? cancelCount / filteredSales.length : 0;
-
-    if (cancelRate > 0.3) {
-      list.push({
-        text: "Visoka stopa otkazivanja / İptal oranı yüksek",
-        type: "warning",
-      });
-    }
-
-    if (pendingPaymentsTotal > 1000) {
-      list.push({
-        text: "Iznos čekajućih uplata je visok / Bekleyen ödeme yüksek",
-        type: "warning",
-      });
-    }
-
-    if (deliveryBacklog > 20) {
-      list.push({
-        text:
-          "Broj narudžbi koje čekaju isporuku je visok / Teslimat bekleyen sipariş sayısı yüksek",
-        type: "info",
-      });
-    }
-
-    if (stockAlerts.some((item) => item.level === "out")) {
-      list.push({
-        text: "Otkriven je proizvod bez zalihe / Stoğu biten ürün var",
-        type: "danger",
-      });
-    }
-
-    if (stockAlerts.some((item) => item.level === "critical")) {
-      list.push({
-        text: "Otkriven je proizvod na kritičnom nivou zalihe / Kritik stok seviyesinde ürün var",
-        type: "warning",
-      });
-    }
-
-    if (stockAlerts.length > 0) {
-      list.push({
-        text: "Proizvode sa niskom zalihom treba pratiti / Düşük stoklu ürünler izlenmeli",
-        type: "info",
-      });
-    }
-
-    return list.slice(0, 6);
-  }, [filteredSales, pendingPaymentsTotal, deliveryBacklog, stockAlerts]);
-
-  const insights = useMemo(() => {
-    const list: InsightItem[] = [];
-
-    if (totalRevenue > 0 && totalProfit <= 0) {
-      list.push({
-        title: "Pritisak na profit / Kâr Baskısı",
-        text: "Prodaja postoji, ali je profitabilnost perioda slaba. Treba pregledati cijene ili strukturu troškova / Satış var ancak dönem kârlılığı zayıf. Fiyatlama veya maliyet yapısı gözden geçirilmeli.",
-        tone: "danger",
-      });
-    }
-
-    if (pendingPaymentRate >= 30) {
-      list.push({
-        title: "Rizik naplate / Tahsilat Riski",
-        text: "Važan dio prihoda još nije naplaćen. Novčani tok može biti pod pritiskom / Cironun önemli bölümü henüz tahsil edilmemiş durumda. Nakit akışı baskı altında olabilir.",
-        tone: "warning",
-      });
-    }
-
-    if (criticalStockCount + outOfStockCount >= 5) {
-      list.push({
-        title: "Pritisak zalihe / Stok Baskısı",
-        text: "Više proizvoda je na minimalnom nivou zalihe ili je potpuno potrošeno. Rizik gubitka prodaje raste / Birden fazla ürün minimum stok seviyesinde veya tamamen tükenmiş. Satış kaybı riski artıyor.",
-        tone: "danger",
-      });
-    }
-
-    if (completionRate >= 70 && cancellationRate <= 10) {
-      list.push({
-        title: "Operativna snaga / Operasyon Gücü",
-        text: "Stopa završetka je snažna, a stopa otkazivanja pod kontrolom. Kvalitet operacija izgleda zdravo / Tamamlanma oranı güçlü ve iptal oranı kontrollü. Operasyon kalitesi sağlıklı görünüyor.",
-        tone: "positive",
-      });
-    }
-
-    if (averageOrderValue > 0 && totalOrders > 0) {
-      list.push({
-        title: "Kvalitet korpe / Sepet Kalitesi",
-        text: `Prosječna vrijednost narudžbe / Ortalama sipariş değeri: €${averageOrderValue.toFixed(
-          2
-        )}`,
-        tone: "neutral",
-      });
-    }
-
-    if (list.length === 0) {
-      list.push({
-        title: "Uravnotežen prikaz / Dengeli Görünüm",
-        text: "U izabranom periodu nema pretjerano negativnih signala. Ipak, treba pratiti ravnotežu plaćanja, zalihe i isporuke / Seçili dönemde aşırı negatif sinyal görünmüyor. Yine de ödeme, stok ve teslimat dengesi izlenmeli.",
-        tone: "neutral",
-      });
-    }
-
-    return list.slice(0, 4);
-  }, [
-    totalRevenue,
-    totalProfit,
-    pendingPaymentRate,
-    criticalStockCount,
-    outOfStockCount,
-    completionRate,
-    cancellationRate,
-    averageOrderValue,
-    totalOrders,
-  ]);
-
-  function exportToExcel() {
-    const data = filteredSales.map((sale) => ({
-      "Sipariş / Order": sale.order_id || "-",
-      "Tarih / Datum": sale.sale_date || sale.created_at?.slice(0, 10) || "-",
-      "Müşteri / Kupac": sale.customer_name || "-",
-      "Şehir / Grad": sale.city || "-",
-      "Ürün / Proizvod": sale.product_name || "-",
-      "Adet / Količina": sale.quantity ?? 0,
-      "Toplam / Ukupno (€)": Number(sale.total || 0),
-      "Kâr / Profit (€)": Number(sale.profit || 0),
-      "Teslimat / Isporuka": sale.delivery_status || "-",
-      "Ödeme / Plaćanje": sale.payment_status || "-",
+  const chartData = useMemo(() => {
+    const buckets = buildBuckets(period).map((b) => ({ ...b, sales: 0, profit: 0 }));
+    periodSales.forEach((s) => {
+      // Saatlik görünümde saat bilgisi created_at'te; sale_date sadece tarih tutuyor
+      const d = period.bucket === "hour" ? parseDate(s.created_at) || saleDate(s) : saleDate(s);
+      const b = buckets.find((x) => inRange(d, x));
+      if (!b) return;
+      b.sales += Number(s.total || 0);
+      b.profit += Number(s.profit || 0);
+    });
+    return buckets.map((b) => ({
+      label: b.label,
+      sales: Number(b.sales.toFixed(2)),
+      profit: Number(b.profit.toFixed(2)),
     }));
+  }, [periodSales, period]);
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Satışlar");
+  const unitByName = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach((p) => map.set(p.name, p.unit === "m2" ? "m²" : "adet"));
+    return map;
+  }, [products]);
 
-    const colWidths = [
-      { wch: 18 }, { wch: 12 }, { wch: 22 }, { wch: 14 },
-      { wch: 28 }, { wch: 8 }, { wch: 14 }, { wch: 14 },
-      { wch: 22 }, { wch: 18 },
-    ];
-    ws["!cols"] = colWidths;
+  const recentSales = useMemo(
+    () =>
+      [...periodSales]
+        .sort((a, b) =>
+          String(b.sale_date || b.created_at || "").localeCompare(String(a.sale_date || a.created_at || ""))
+        )
+        .slice(0, 5),
+    [periodSales]
+  );
 
-    XLSX.writeFile(wb, `baudecor-satis-raporu-${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }
-
-  function getRangeLabel(value: RangeType) {
-    if (value === "today") return "Danas / Bugün";
-    if (value === "week") return "Ove sedmice / Bu Hafta";
-    if (value === "month") return "Ovog mjeseca / Bu Ay";
-    return "Ove godine / Bu Yıl";
-  }
-
-  function getStockLabel(level: StockAlertItem["level"]) {
-    if (level === "out") return "Nema na stanju / Stok Yok";
-    if (level === "critical") return "Kritično / Kritik";
-    return "Nisko / Düşük";
-  }
-
-  function getStockClass(level: StockAlertItem["level"]) {
-    if (level === "out") return "text-red-300";
-    if (level === "critical") return "text-amber-300";
-    return "text-cyan-300";
-  }
+  const topProducts = useMemo(() => {
+    const map = new Map<string, number>();
+    periodSales.forEach((s) => {
+      const name = s.product_name || "Nepoznato / Bilinmiyor";
+      map.set(name, (map.get(name) || 0) + Number(s.total || 0));
+    });
+    return Array.from(map.entries())
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [periodSales]);
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
-        <div className="rounded-[32px] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-black/30">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-            PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
-          </p>
-          <h1 className="mt-4 text-4xl font-black tracking-tight">
-            Kontrolna tabla / Kontrol Paneli
-          </h1>
-          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-slate-400">
-            Učitava se / Yükleniyor
-          </div>
+      <main className="min-h-screen bg-slate-950 text-white">
+        <h1 className="text-2xl font-bold">Kontrolna tabla / Panel</h1>
+        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
+          Učitava se / Yükleniyor
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
-      <div className="mb-4 flex justify-end gap-3">
-        <button
-          onClick={exportToExcel}
-          className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/20"
-        >
-          Excel İndir / Export ({filteredSales.length} kayıt)
-        </button>
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loggingOut ? "Odjava u toku / Çıkış yapılıyor" : "Odjava / Çıkış Yap"}
-        </button>
+    <main className="grid gap-5 text-white">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Kontrolna tabla / Panel</h1>
+          <p className="mt-1 text-sm text-slate-400">{period.label}</p>
+        </div>
+        <PeriodPicker value={selection} onChange={setSelection} />
       </div>
 
-      {/* AI Uyarı Kartı */}
-      {(aiAlertsLoading || aiAlerts.length > 0) && (
-        <section className="mb-6 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-blue-400 text-lg">🤖</span>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-blue-300">
-              AI Haftalık Uyarılar / AI Sedmični Upozorenja
-            </h2>
-            {aiAlertsLoading && (
-              <span className="ml-2 text-xs text-slate-500 animate-pulse">analiz ediliyor...</span>
-            )}
-            {!aiAlertsLoading && (
-              <button
-                onClick={() => fetchAiAlerts(true)}
-                className="ml-auto text-xs text-slate-500 hover:text-slate-300 transition"
-                title="Yenile / Refresh"
-              >
-                ↻ Yenile
-              </button>
-            )}
-          </div>
-          {aiAlertsLoading ? (
-            <div className="flex gap-1.5">
-              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:0ms]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:150ms]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:300ms]" />
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {aiAlerts.map((alert, i) => {
-                const [line1, line2] = alert.split("\n");
-                return (
-                  <li key={i} className="leading-relaxed">
-                    <div className="text-sm text-white">{line1}</div>
-                    {line2 && <div className="mt-0.5 text-sm text-slate-400">{line2}</div>}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      )}
-
-      <section className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#020617_55%,#111827_100%)] p-6 shadow-2xl shadow-black/40 md:p-8">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
-        <div className="relative z-10">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.32em] text-cyan-200">
-                PREGLED UPRAVE / YÖNETİM GÖRÜNÜMÜ
-              </div>
-              <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">
-                Kontrolna tabla / Kontrol Paneli
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-                Satış, kârlılık, tahsilat ve stok riskini tek ekranda görün / Prodaja, profitabilnost, naplata i zaliha na jednom ekranu.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {(["today", "week", "month", "year"] as RangeType[]).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setRange(item)}
-                  className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
-                    range === item
-                      ? "bg-white text-slate-950 shadow-lg shadow-white/10"
-                      : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                  }`}
-                >
-                  {getRangeLabel(item)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Finansije / Finansal</p>
-          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
-            <HeroStatCard
-              label="Ukupan prihod / Toplam Ciro"
-              value={`€${totalRevenue.toFixed(2)}`}
-              helper="Seçili dönem geliri / Prihod perioda"
-              tone="blue"
-            />
-            <HeroStatCard
-              label="Bruto profit / Brüt Kâr"
-              value={`€${totalProfit.toFixed(2)}`}
-              helper="Giderler dahil değil / Bez troškova"
-              tone={totalProfit >= 0 ? "green" : "red"}
-            />
-            <HeroStatCard
-              label="Troškovi / Giderler"
-              value={`€${totalFilteredExpenses.toFixed(2)}`}
-              helper="Dönem gider toplamı / Ukupni troškovi"
-              tone="red"
-            />
-            <HeroStatCard
-              label="Neto profit / Net Kâr"
-              value={`€${netProfit.toFixed(2)}`}
-              helper="Brüt kâr − giderler / Bruto − troškovi"
-              tone={netProfit >= 0 ? "green" : "red"}
-            />
-          </div>
-
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Operacije / Operasyonlar</p>
-          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
-            <HeroStatCard
-              label="Narudžbe / Sipariş"
-              value={String(totalOrders)}
-              helper="Benzersiz sipariş sayısı / Jedinstvene narudžbe"
-              tone="slate"
-            />
-            <HeroStatCard
-              label="Zdravlje zalihe / Stok Sağlığı"
-              value={`%${stockHealthRate}`}
-              helper="Minimum stok üstü ürün oranı"
-              tone={stockHealthRate >= 75 ? "green" : stockHealthRate >= 50 ? "amber" : "red"}
-            />
-            <HeroStatCard
-              label="Stopa završetka / Tamamlanma"
-              value={`%${completionRate}`}
-              helper="Teslim + ödeme tamamlanan siparişler"
-              tone={completionRate >= 70 ? "green" : completionRate >= 50 ? "amber" : "red"}
-            />
-            <HeroStatCard
-              label="Stopa otkazivanja / İptal"
-              value={`%${cancellationRate}`}
-              helper="Dönem içi iptal baskısı / Otkazivanja"
-              tone={cancellationRate <= 10 ? "green" : cancellationRate <= 20 ? "amber" : "red"}
-            />
-          </div>
-
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rizici / Riskler</p>
-          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
-            <HeroStatCard
-              label="Plaćanje na čekanju / Bekleyen"
-              value={`€${pendingPaymentsTotal.toFixed(2)}`}
-              helper={`Ciro payı: %${pendingPaymentRate}`}
-              tone={pendingPaymentRate < 15 ? "green" : pendingPaymentRate < 30 ? "amber" : "red"}
-            />
-            <HeroStatCard
-              label="Zaostale isporuke / Backlog"
-              value={String(deliveryBacklog)}
-              helper="Kapanmamış teslimatlar / Nezatvorene"
-              tone={deliveryBacklog < 10 ? "green" : deliveryBacklog < 20 ? "amber" : "red"}
-            />
-            <HeroStatCard
-              label="Kritična zaliha / Kritik Stok"
-              value={String(criticalStockCount)}
-              helper="Minimum stok seviyesinde / Minimalna zaliha"
-              tone={criticalStockCount === 0 ? "green" : criticalStockCount <= 4 ? "amber" : "red"}
-            />
-            <HeroStatCard
-              label="Bez zalihe / Stoksuz Ürün"
-              value={String(outOfStockCount)}
-              helper="Doğrudan satış kaybı riski / Gubitak"
-              tone={outOfStockCount === 0 ? "green" : "red"}
-            />
-          </div>
-
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kasa / Kasa</p>
-          <div className={`mt-3 rounded-2xl border p-5 ${kasaBalance === null ? "border-slate-700 bg-slate-900/40" : kasaBalance >= 0 ? "border-emerald-500/30 bg-emerald-500/10" : "border-red-500/30 bg-red-500/10"}`}>
-            {kasaBalance === null ? (
-              <p className="text-sm text-slate-400">Henüz açılış bakiyesi girilmedi / Početni saldo nije unesen</p>
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <Kpi
+          label="Prihod / Ciro"
+          value={eur(revenue)}
+          helper={
+            revenueChange === null ? (
+              `${orderCount} sipariş`
             ) : (
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Güncel Kasa / Trenutna Kasa</p>
-                  <p className={`mt-1 text-3xl font-bold ${kasaBalance >= 0 ? "text-emerald-300" : "text-red-300"}`}>
-                    €{kasaBalance.toFixed(2)}
-                  </p>
-                </div>
-                <a href="/dashboard/kasa" className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800">
-                  Detay / Detalji →
-                </a>
-              </div>
-            )}
-          </div>
-
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kurir / Kurye</p>
-          <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
-            {courierPending.totalAmount === 0 ? (
-              <p className="text-sm text-slate-400">Kurye'de bekleyen ödeme yok / Nema plaćanja kod kurira</p>
+              <>
+                <span className={revenueChange >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {revenueChange >= 0 ? "▲" : "▼"} %{Math.abs(revenueChange)}
+                </span>{" "}
+                {period.compareLabel}
+              </>
+            )
+          }
+        />
+        <Kpi
+          label="Troškovi / Giderler"
+          value={eur(periodExpenses.total)}
+          valueClassName={periodExpenses.total > 0 ? "text-red-300" : undefined}
+          helper={periodExpenses.count === 0 ? "Bu dönemde gider yok" : `${periodExpenses.count} gider kaydı`}
+          href="/dashboard/expenses"
+        />
+        <Kpi
+          label="Neto profit / Net Kâr"
+          value={eur(netProfit)}
+          valueClassName={netProfit < 0 ? "text-red-300" : "text-emerald-300"}
+          helper={`Ciro − maliyet ${eur(revenue - grossProfit)} − giderler`}
+        />
+        <Kpi
+          label="Kasa / Kasa"
+          value={kasaBalance === null ? "—" : eur(kasaBalance)}
+          valueClassName={kasaBalance !== null && kasaBalance < 0 ? "text-red-300" : undefined}
+          helper={kasaBalance === null ? "Açılış bakiyesi girilmedi" : "Güncel bakiye"}
+          href="/dashboard/kasa"
+        />
+        <Kpi
+          label="Na čekanju / Bekleyen Tahsilat"
+          value={eur(unpaid.total)}
+          helper={
+            unpaid.orders === 0 ? (
+              "Bekleyen ödeme yok"
             ) : (
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">
-                    Kurye'de Bekleyen Para / Novac kod Kurira
-                  </p>
-                  <p className="mt-1 text-3xl font-bold text-amber-300">
-                    €{courierPending.totalAmount.toFixed(2)}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {courierPending.orderCount} sipariş · Ödeme teslim alındığında sıfırlanır / {courierPending.orderCount} narudžbi · Resetuje se po uplati
-                  </p>
-                </div>
-                {courierPending.byCourier.length > 0 && (
-                  <div className="flex flex-wrap gap-3">
-                    {courierPending.byCourier.map(({ name, amount }) => (
-                      <div key={name} className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-center">
-                        <p className="text-xs text-amber-300 font-medium">{name}</p>
-                        <p className="mt-1 text-lg font-bold text-white">€{amount.toFixed(2)}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              <span className="text-amber-400">{unpaid.orders} sipariş ödenmedi</span>
+            )
+          }
+          href="/dashboard/sales"
+        />
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+        <h2 className="text-sm font-semibold">
+          Za danas / Bugün İlgilenilecekler
+        </h2>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <TodoItem
+            href="/dashboard/products"
+            tone={stockIssues.length === 0 ? "ok" : stockIssues.some((p) => p.stock <= 0) ? "bad" : "warn"}
+            title={stockIssues.length === 0 ? "Stoklar normal" : `${stockIssues.length} ürün kritik stokta`}
+            detail={
+              stockIssues.length === 0
+                ? "Minimum stok altında ürün yok"
+                : `${stockIssues[0].name} · ${qty(stockIssues[0].stock)} ${stockIssues[0].unit} kaldı`
+            }
+          />
+          <TodoItem
+            href="/dashboard/dispatch"
+            tone={pendingDeliveries.orders === 0 ? "ok" : "warn"}
+            title={
+              pendingDeliveries.orders === 0
+                ? "Bekleyen teslimat yok"
+                : `${pendingDeliveries.orders} teslimat bekliyor`
+            }
+            detail={
+              pendingDeliveries.orders === 0
+                ? "Tüm siparişler teslim edildi"
+                : pendingDeliveries.topCity
+                ? `En çok: ${pendingDeliveries.topCity}`
+                : "Sevkiyat sayfasında gör"
+            }
+          />
+          <TodoItem
+            href="/dashboard/dispatch"
+            tone={courierPending.total === 0 ? "ok" : "info"}
+            title={courierPending.total === 0 ? "Kuryede para yok" : `Kuryede ${eur(courierPending.total)}`}
+            detail={
+              courierPending.total === 0
+                ? "Tüm kurye ödemeleri alındı"
+                : courierPending.byCourier
+                    .slice(0, 2)
+                    .map(([name, amount]) => `${name} ${eur(amount)}`)
+                    .join(" · ") + ` · ${courierPending.orders} sipariş`
+            }
+          />
         </div>
       </section>
 
-      <section className="mb-8 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-[28px] border border-red-500/20 bg-gradient-to-br from-red-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-200/80">
-                PRIORITETNA UPOZORENJA / ÖNCELİKLİ UYARILAR
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-white">
-                Kritična upozorenja / Kritik Uyarılar
-              </h2>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              {alerts.length} aktivnih signala / aktif sinyal
-            </div>
-          </div>
-
-          <div className="max-h-[260px] overflow-y-auto space-y-3 pr-1">
-            {alerts.length === 0 ? (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                Sve je u redu / Her şey normal
-              </div>
-            ) : (
-              alerts.map((alert, index) => (
-                <div
-                  key={index}
-                  className={`rounded-2xl border px-4 py-4 text-sm font-semibold ${
-                    alert.type === "danger"
-                      ? "border-red-500/20 bg-red-500/10 text-red-300"
-                      : alert.type === "warning"
-                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                      : "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
-                  }`}
-                >
-                  {alert.text}
-                </div>
-              ))
-            )}
+      <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Prodaja i profit / Satış ve Kâr</h2>
+          <div className="flex gap-4 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <i className="inline-block h-2.5 w-2.5 rounded-sm bg-blue-500" /> Ciro
+            </span>
+            <span className="flex items-center gap-1.5">
+              <i className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-400" /> Kâr
+            </span>
           </div>
         </div>
-
-        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
-                UVIDI ZA UPRAVU / YÖNETİM İÇGÖRÜLERİ
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-white">
-                Strateški uvidi / Stratejik Yorumlar
-              </h2>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Sažetak za upravu / Yönetim özeti
-            </div>
-          </div>
-
-          <div className="max-h-[260px] overflow-y-auto grid gap-4 md:grid-cols-2 pr-1">
-            {insights.map((insight, index) => (
-              <InsightPanel
-                key={`${insight.title}-${index}`}
-                title={insight.title}
-                text={insight.text}
-                tone={insight.tone}
+        <div className="mt-3 h-[260px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis
+                stroke="#64748b"
+                tickLine={false}
+                axisLine={false}
+                fontSize={12}
+                width={56}
+                tickFormatter={(v: number) => (v >= 1000 ? `€${(v / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k` : `€${v}`)}
               />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-8 grid gap-6 xl:grid-cols-[1.35fr_0.65fr] xl:items-start">
-        <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20">
-          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
-                ANALIZA PRIHODA / CİRO ANALİZİ
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-white">
-                Trend prodaje i profita / Satış ve Kâr Trendi
-              </h2>
-              <p className="mt-2 text-sm text-slate-400">
-                Prikazuje kako se obim prodaje i profitabilnost zajedno kreću u izabranom periodu / Seçili dönemde satış hacmi ile kârlılığın birlikte nasıl hareket ettiğini gösterir.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              Prosječna narudžba / Ortalama sipariş: €{averageOrderValue.toFixed(2)}
-            </div>
-          </div>
-
-          <ResponsiveContainer width="100%" height={360}>
-            <ComposedChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="date" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
               <Tooltip
+                cursor={{ fill: "rgba(148,163,184,0.08)" }}
+                formatter={(v, name) => [eur(Number(v)), name === "sales" ? "Ciro" : "Kâr"]}
                 contentStyle={{
                   backgroundColor: "#020617",
                   border: "1px solid #334155",
-                  borderRadius: "16px",
+                  borderRadius: "12px",
                   color: "#fff",
                 }}
               />
-              <Area
-                type="monotone"
-                dataKey="sales"
-                fill="rgba(59,130,246,0.18)"
-                stroke="transparent"
-              />
-              <Line
-                type="monotone"
-                dataKey="sales"
-                stroke="#60a5fa"
-                strokeWidth={3}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                stroke="#34d399"
-                strokeWidth={3}
-                dot={false}
-              />
+              <Bar dataKey="sales" fill="#3b82f6" radius={[5, 5, 0, 0]} maxBarSize={40} />
+              <Line type="monotone" dataKey="profit" stroke="#34d399" strokeWidth={2.5} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+      </section>
 
-        <div className="rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-6 shadow-2xl shadow-black/20">
-          <div className="mb-5">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">
-              PRITISAK ZALIHE / STOK BASKISI
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-white">
-              Rizik zalihe / Stok Riski
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Ovdje su istaknuti proizvodi koji mogu izazvati gubitak prodaje prema minimalnoj zalihi / Minimum stok eşiğine göre satış kaybı yaratabilecek ürünler burada öne çıkar.
-            </p>
-          </div>
+      <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
+        <section className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <h2 className="text-sm font-semibold">Nedavne prodaje / Son Satışlar</h2>
+          {recentSales.length === 0 ? (
+            <Empty />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm tabular-nums">
+                <tbody>
+                  {recentSales.map((s) => (
+                    <tr key={s.id} className="border-t border-slate-800">
+                      <td className="py-2.5 pr-2">
+                        <div className="font-medium">{s.product_name || "-"}</div>
+                        <div className="text-xs text-slate-500">
+                          {[s.customer_name, s.city].filter(Boolean).join(" · ") || "-"}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap py-2.5 pr-2 text-right text-slate-300">
+                        {qty(Number(s.quantity || 0))} {unitByName.get(s.product_name || "") || "adet"}
+                      </td>
+                      <td className="whitespace-nowrap py-2.5 pr-2 text-right font-semibold">
+                        {eur(Number(s.total || 0))}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <span
+                          className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            s.payment_status === PAID
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : "bg-amber-500/10 text-amber-400"
+                          }`}
+                        >
+                          {s.payment_status === PAID ? "Ödendi" : "Bekliyor"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <Link href="/dashboard/sales" className="text-sm font-semibold text-blue-300 hover:text-blue-200">
+            Sve prodaje / Tüm satışlar ›
+          </Link>
+        </section>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <MiniRiskCard
-              title="Kritični proizvodi / Kritik Ürün"
-              value={String(criticalStockCount)}
-              helper="Na minimalnom nivou zalihe / Minimum stok seviyesinde"
-              tone="amber"
-            />
-            <MiniRiskCard
-              title="Bez zalihe / Stoksuz"
-              value={String(outOfStockCount)}
-              helper="Potrebna hitna intervencija / Acil müdahale gerekir"
-              tone="red"
-            />
-            <MiniRiskCard
-              title="Niska zaliha / Düşük Stok"
-              value={String(lowStockCount)}
-              helper="Zona bliskog rizika / Yakın risk alanı"
-              tone="blue"
-            />
-            <MiniRiskCard
-              title="Zdravlje zalihe / Stok Sağlığı"
-              value={`%${stockHealthRate}`}
-              helper="Opšte stanje proizvoda / Genel ürün sağlığı"
-              tone={
-                stockHealthRate >= 75
-                  ? "green"
-                  : stockHealthRate >= 50
-                  ? "amber"
-                  : "red"
-              }
-            />
-          </div>
-
-          <div className="mt-5 max-h-[260px] overflow-y-auto space-y-3 pr-1">
-            {stockAlerts.length === 0 ? (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm font-semibold text-emerald-300">
-                Nivo zalihe je zdrav / Stoklar normal
-              </div>
-            ) : (
-              stockAlerts.map((item, index) => (
-                <div
-                  key={`${item.name}-${index}`}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">{item.name}</p>
-                    <p className={`mt-1 text-sm ${getStockClass(item.level)}`}>
-                      {getStockLabel(item.level)} • Min {item.minimumStock}
-                    </p>
+        <section className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <h2 className="text-sm font-semibold">Najbolji proizvodi / En Çok Satanlar</h2>
+          {topProducts.length === 0 ? (
+            <Empty />
+          ) : (
+            <ol className="grid gap-3">
+              {topProducts.map((p, i) => (
+                <li key={p.name} className="grid grid-cols-[20px_1fr_auto] items-center gap-x-2 text-sm">
+                  <span className="text-slate-500">{i + 1}</span>
+                  <span className="truncate">{p.name}</span>
+                  <span className="font-semibold tabular-nums">{eur(p.total)}</span>
+                  <span />
+                  <div className="col-span-2 h-1.5 rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-blue-500"
+                      style={{ width: `${topProducts[0].total > 0 ? (p.total / topProducts[0].total) * 100 : 0}%` }}
+                    />
                   </div>
-                  <p className={`ml-4 text-xl font-black ${getStockClass(item.level)}`}>
-                    {item.stock}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <ValueStrip
-              label="Trošak inventara / Envanter Maliyeti"
-              value={`€${inventoryCostValue.toFixed(2)}`}
-            />
-            <ValueStrip
-              label="Vrijednost prodaje / Satış Değeri"
-              value={`€${inventorySaleValue.toFixed(2)}`}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-8 grid gap-6 xl:grid-cols-3">
-        <PanelCard
-          title="Sažetak profitabilnosti / Kârlılık Özeti"
-          subtitle="Mevcut stok i struktura cijena prema prikazu profitabilnosti proizvoda / Mevcut stok ve fiyat yapısına göre ürün kârlılığı görünümü."
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <MiniRiskCard
-              title="Potencijalni profit / Potansiyel Kâr"
-              value={`€${totalPotentialProfit.toFixed(2)}`}
-              helper="Očekivani profit iz postojeće zalihe / Stoktaki ürünlerden beklenen kâr"
-              tone={totalPotentialProfit >= 0 ? "green" : "red"}
-            />
-            <MiniRiskCard
-              title="Prosječna marža / Ortalama Marj"
-              value={`%${averageMarginPercent.toFixed(1)}`}
-              helper="Prosječna marža aktivnih proizvoda / Aktif ürünlerin ortalama marjı"
-              tone={averageMarginPercent >= 25 ? "green" : averageMarginPercent >= 10 ? "amber" : "red"}
-            />
-            <MiniRiskCard
-              title="Profitabilni proizvodi / Kârlı Ürün"
-              value={String(profitableProductCount)}
-              helper="Proizvodi sa pozitivnim jediničnim profitom / Birim kârı pozitif ürünler"
-              tone="green"
-            />
-            <MiniRiskCard
-              title="Proizvodi u gubitku / Zarardaki Ürün"
-              value={String(losingProductCount)}
-              helper="Proizvodi sa negativnim jediničnim profitom / Birim kârı negatif ürünler"
-              tone={losingProductCount === 0 ? "green" : "red"}
-            />
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Najprofitabilniji proizvodi / En Kârlı Ürünler"
-          subtitle="Najjači proizvodi prema profitnom potencijalu zalihe / Stok kâr potansiyeline göre en güçlü ürünler."
-        >
-          <div className="space-y-3">
-            {topProfitableProducts.length === 0 ? (
-              <EmptyState />
-            ) : (
-              topProfitableProducts.map((item, index) => (
-                <RankRow
-                  key={item.name}
-                  rank={index + 1}
-                  title={item.name}
-                  subtitle={`Marža %${item.marginPercent.toFixed(1)} • Zaliha ${item.stock} / Marj %${item.marginPercent.toFixed(1)} • Stok ${item.stock}`}
-                  value={`€${item.stockProfit.toFixed(2)}`}
-                  valueClassName={item.stockProfit >= 0 ? "text-emerald-300" : "text-red-300"}
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Najslabija marža / En Zayıf Marj"
-          subtitle="Proizvodi sa najnižim procentom marže / Marj yüzdesi en düşük ürünler."
-        >
-          <div className="space-y-3">
-            {worstMarginProducts.length === 0 ? (
-              <EmptyState />
-            ) : (
-              worstMarginProducts.map((item, index) => (
-                <RankRow
-                  key={item.name}
-                  rank={index + 1}
-                  title={item.name}
-                  subtitle={`Jedinični profit / Birim kâr: €${item.unitProfit.toFixed(2)}`}
-                  value={`%${item.marginPercent.toFixed(1)}`}
-                  valueClassName={item.marginPercent >= 0 ? "text-amber-300" : "text-red-300"}
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-5">
-        <PanelCard
-          title="Najbolji proizvodi / En İyi Ürünler"
-          subtitle="Proizvodi koji u izabranom periodu donose najviše prihoda / Seçili dönemde en fazla ciro üreten ürünler."
-        >
-          <div className="space-y-3">
-            {topProducts.length === 0 ? (
-              <EmptyState />
-            ) : (
-              topProducts.map((item, index) => (
-                <RankRow
-                  key={item.name}
-                  rank={index + 1}
-                  title={item.name}
-                  subtitle="Doprinos prihodu / Ciro katkısı"
-                  value={`€${item.total.toFixed(2)}`}
-                  valueClassName="text-emerald-300"
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Učinak po gradu / Şehir Performansı"
-          subtitle="Gradovi sa najvećim prihodom / En yüksek ciroya sahip şehirler."
-        >
-          <div className="space-y-3">
-            {cityStats.length === 0 ? (
-              <EmptyState />
-            ) : (
-              cityStats.map((item, index) => (
-                <RankRow
-                  key={item.city}
-                  rank={index + 1}
-                  title={item.city}
-                  subtitle={`${item.count} narudžba / sipariş`}
-                  value={`€${item.total.toFixed(2)}`}
-                  valueClassName="text-violet-300"
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Najbolji kupci / En İyi Müşteriler"
-          subtitle="Kupci koji ostavljaju najviše prihoda / En fazla ciro bırakan müşteriler."
-        >
-          <div className="space-y-3">
-            {customerStats.length === 0 ? (
-              <EmptyState />
-            ) : (
-              customerStats.map((item, index) => (
-                <RankRow
-                  key={item.customer}
-                  rank={index + 1}
-                  title={item.customer}
-                  subtitle={`${item.orderCount} narudžba / sipariş`}
-                  value={`€${item.total.toFixed(2)}`}
-                  valueClassName="text-cyan-300"
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Najprofitabilniji kupci / En Karlı Müşteriler"
-          subtitle="Poredano prema ukupnom profitu / Toplam kâra göre sıralama."
-        >
-          <div className="space-y-3">
-            {topCustomersByProfit.length === 0 ? (
-              <EmptyState />
-            ) : (
-              topCustomersByProfit.map((item, index) => (
-                <RankRow
-                  key={item.customer}
-                  rank={index + 1}
-                  title={item.customer}
-                  subtitle={`${item.orderCount} narudžba / sipariş`}
-                  value={`€${item.profit.toFixed(2)}`}
-                  valueClassName={item.profit >= 0 ? "text-emerald-300" : "text-red-300"}
-                />
-              ))
-            )}
-          </div>
-        </PanelCard>
-
-        <PanelCard
-          title="Nedavne prodaje / Son Satışlar"
-          subtitle="Najnoviji zapisi prodaje u izabranom periodu / Seçili dönemdeki en son satış kayıtları."
-        >
-          <div className="space-y-3">
-            {recentSales.length === 0 ? (
-              <EmptyState />
-            ) : (
-              recentSales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">
-                      {sale.product_name || "Nepoznato / Bilinmiyor"}
-                    </p>
-                    <p className="mt-1 truncate text-sm text-slate-400">
-                      {sale.customer_name || "-"} •{" "}
-                      {sale.sale_date || sale.created_at?.slice(0, 10) || "-"}
-                    </p>
-                  </div>
-                  <p className="ml-4 text-base font-bold text-blue-300">
-                    €{Number(sale.total || 0).toFixed(2)}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </PanelCard>
-      </section>
-
-      <section className="mt-6">
-        <PanelCard
-          title="Načini plaćanja / Ödeme Yöntemleri"
-          subtitle="Nakit, kart ve havale satışlarının döneme göre dağılımı / Nakit, kart ve havale satışlarının döneme göre dağılımı."
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-widest text-slate-500">
-                  <th className="pb-3 pr-4">Yöntem / Metod</th>
-                  <th className="pb-3 pr-4 text-right">İşlem / Transakcija</th>
-                  <th className="pb-3 pr-4 text-right">Tutar / Iznos</th>
-                  <th className="pb-3 text-right">Komisyon / Komisija</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {paymentMethodStats.map((row) => (
-                  <tr key={row.key}>
-                    <td className="py-3 pr-4 font-medium text-white">{row.label}</td>
-                    <td className="py-3 pr-4 text-right text-slate-300">{row.count}</td>
-                    <td className="py-3 pr-4 text-right font-semibold text-white">
-                      €{row.total.toFixed(2)}
-                    </td>
-                    <td className={`py-3 text-right font-semibold ${row.commission > 0 ? "text-amber-400" : "text-slate-500"}`}>
-                      {row.commission > 0 ? `-€${row.commission.toFixed(2)}` : "-"}
-                    </td>
-                  </tr>
-                ))}
-                <tr className="border-t-2 border-slate-600">
-                  <td className="pt-3 pr-4 text-xs uppercase tracking-widest text-slate-400">Toplam / Ukupno</td>
-                  <td className="pt-3 pr-4 text-right font-semibold text-white">
-                    {paymentMethodStats.reduce((s, r) => s + r.count, 0)}
-                  </td>
-                  <td className="pt-3 pr-4 text-right font-semibold text-white">
-                    €{paymentMethodStats.reduce((s, r) => s + r.total, 0).toFixed(2)}
-                  </td>
-                  <td className="pt-3 text-right font-semibold text-amber-400">
-                    {paymentMethodStats.reduce((s, r) => s + r.commission, 0) > 0
-                      ? `-€${paymentMethodStats.reduce((s, r) => s + r.commission, 0).toFixed(2)}`
-                      : "-"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </PanelCard>
-      </section>
+                </li>
+              ))}
+            </ol>
+          )}
+          <Link href="/dashboard/reports" className="text-sm font-semibold text-blue-300 hover:text-blue-200">
+            Detaljni izvještaji / Detaylı raporlar ›
+          </Link>
+        </section>
+      </div>
     </main>
   );
 }
 
-function HeroStatCard({
+function Kpi({
   label,
   value,
   helper,
-  tone,
-}: {
-  label: string;
-  value: string;
-  helper: string;
-  tone: "blue" | "green" | "amber" | "red" | "slate";
-}) {
-  const styles = {
-    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
-    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-red-500/20 bg-red-500/10 text-red-200",
-    slate: "border-white/10 bg-white/5 text-slate-200",
-  };
-
-  return (
-    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
-        {label}
-      </p>
-      <p className="mt-3 text-2xl font-black">{value}</p>
-      <p className="mt-1 text-sm opacity-80">{helper}</p>
-    </div>
-  );
-}
-
-function InsightPanel({
-  title,
-  text,
-  tone,
-}: {
-  title: string;
-  text: string;
-  tone: "danger" | "warning" | "positive" | "neutral";
-}) {
-  const styles = {
-    danger: "border-red-500/20 bg-red-500/10 text-red-200",
-    warning: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    positive: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-    neutral: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
-  };
-
-  return (
-    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
-      <p className="text-sm font-bold">{title}</p>
-      <p className="mt-2 text-sm leading-6 opacity-90">{text}</p>
-    </div>
-  );
-}
-
-function MiniRiskCard({
-  title,
-  value,
-  helper,
-  tone,
-}: {
-  title: string;
-  value: string;
-  helper: string;
-  tone: "green" | "amber" | "red" | "blue";
-}) {
-  const styles = {
-    green: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-    amber: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-    red: "border-red-500/20 bg-red-500/10 text-red-200",
-    blue: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
-  };
-
-  return (
-    <div className={`rounded-2xl border p-4 ${styles[tone]}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-80">
-        {title}
-      </p>
-      <p className="mt-2 text-2xl font-black">{value}</p>
-      <p className="mt-1 text-sm opacity-80">{helper}</p>
-    </div>
-  );
-}
-
-function ValueStrip({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-2 text-lg font-bold text-white">{value}</p>
-    </div>
-  );
-}
-
-function PanelCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col rounded-[28px] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/20" style={{ height: "420px" }}>
-      <h2 className="shrink-0 text-2xl font-bold text-white">{title}</h2>
-      <p className="mt-2 mb-5 shrink-0 text-sm text-slate-400">{subtitle}</p>
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function RankRow({
-  rank,
-  title,
-  subtitle,
-  value,
+  href,
   valueClassName,
 }: {
-  rank: number;
-  title: string;
-  subtitle: string;
+  label: string;
   value: string;
+  helper: React.ReactNode;
+  href?: string;
   valueClassName?: string;
 }) {
-  return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4">
-      <div className="min-w-0">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-          #{rank}
-        </p>
-        <p className="truncate font-semibold text-white">{title}</p>
-        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-      </div>
-      <p className={`ml-4 text-base font-bold ${valueClassName || "text-white"}`}>
-        {value}
-      </p>
-    </div>
+  const body = (
+    <>
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums md:text-3xl ${valueClassName || "text-white"}`}>{value}</p>
+      <p className="text-xs text-slate-500">{helper}</p>
+    </>
+  );
+  const cls = "grid gap-1.5 rounded-2xl border border-slate-800 bg-slate-900 p-4";
+  return href ? (
+    <Link href={href} className={`${cls} transition hover:border-slate-700`}>
+      {body}
+    </Link>
+  ) : (
+    <div className={cls}>{body}</div>
   );
 }
 
-function EmptyState() {
+function TodoItem({
+  href,
+  tone,
+  title,
+  detail,
+}: {
+  href: string;
+  tone: "ok" | "warn" | "bad" | "info";
+  title: string;
+  detail: string;
+}) {
+  const dot = { ok: "bg-emerald-400", warn: "bg-amber-400", bad: "bg-red-400", info: "bg-blue-400" }[tone];
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-6 text-sm text-slate-400">
-      Nema zapisa / Kayıt yok
+    <Link
+      href={href}
+      className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3 transition hover:border-slate-700"
+    >
+      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="truncate text-xs text-slate-500">{detail}</p>
+      </div>
+      <span className="ml-auto text-slate-500">›</span>
+    </Link>
+  );
+}
+
+function Empty() {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-6 text-sm text-slate-400">
+      Bu dönemde kayıt yok / Nema zapisa
     </div>
   );
 }
