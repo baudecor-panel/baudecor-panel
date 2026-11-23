@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 import PeriodPicker from "@/components/PeriodPicker";
+import { isOperatingExpense } from "@/lib/expenses";
 import { defaultSelection, getPeriod, inRange, parseDate, PeriodSelection } from "@/lib/period";
 import {
   Line,
@@ -50,6 +51,7 @@ type AlertItem = {
 };
 
 type Expense = {
+  type?: string | null;
   amount: number;
   created_at: string;
 };
@@ -153,7 +155,7 @@ export default function ReportsPage() {
         .select("id, name, cost, price, stock, minimum_stock, is_active"),
       supabase
         .from("expenses")
-        .select("amount, created_at"),
+        .select("type, amount, created_at"),
     ]);
 
     if (salesError) {
@@ -191,7 +193,7 @@ export default function ReportsPage() {
   }, [filteredSales]);
 
   const filteredExpenses = useMemo(
-    () => expenses.filter((e) => inRange(parseDate(e.created_at), period)),
+    () => expenses.filter((e) => isOperatingExpense(e.type) && inRange(parseDate(e.created_at), period)),
     [expenses, period]
   );
 
@@ -808,7 +810,7 @@ export default function ReportsPage() {
             <HeroStatCard
               label="Troškovi / Giderler"
               value={`€${totalFilteredExpenses.toFixed(2)}`}
-              helper="Dönem gider toplamı / Ukupni troškovi"
+              helper="Mal alımı hariç / Bez nabavke robe"
               tone="red"
             />
             <HeroStatCard

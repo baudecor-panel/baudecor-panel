@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import * as XLSX from "xlsx";
+import { EXPENSE_TYPES, isOperatingExpense, PURCHASE_EXPENSE_TYPE } from "../../../lib/expenses";
 
 type Expense = {
   id: string;
@@ -17,6 +18,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const [type, setType] = useState("Zakup / Kira");
   const [amount, setAmount] = useState(0);
@@ -51,6 +53,14 @@ export default function ExpensesPage() {
     setDeletingId(null);
     if (error) { alert("Silinemedi / Greška: " + error.message); return; }
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  async function handleTypeChange(id: string, newType: string) {
+    setUpdatingId(id);
+    const { error } = await supabase.from("expenses").update({ type: newType }).eq("id", id);
+    setUpdatingId(null);
+    if (error) { alert("Güncellenemedi / Greška: " + error.message); return; }
+    setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, type: newType } : e)));
   }
 
   async function handleSave() {
@@ -92,6 +102,17 @@ export default function ExpensesPage() {
 
   const totalExpense = useMemo(() => {
     return expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  }, [expenses]);
+
+  const thisMonthPurchases = useMemo(() => {
+    const now = new Date();
+    return expenses
+      .filter((e) => !isOperatingExpense(e.type))
+      .filter((e) => {
+        const d = new Date(e.created_at);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      })
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
   }, [expenses]);
 
   const thisMonthExpense = useMemo(() => {
@@ -166,16 +187,16 @@ export default function ExpensesPage() {
                 onChange={(e) => setType(e.target.value)}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
-                <option>Zakup / Kira</option>
-                <option>Plata / Maaş</option>
-                <option>Struja / Elektrik</option>
-                <option>Internet / İnternet</option>
-                <option>Prevoz / Nakliye</option>
-                <option>Oglašavanje / Reklam</option>
-                <option>Popravka / Tamirat</option>
-                <option>Porez / Vergi</option>
-                <option>Ostalo / Diğer</option>
+                {EXPENSE_TYPES.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
               </select>
+              {type === PURCHASE_EXPENSE_TYPE && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Samo faktura za robu. Carinu i prevoz unesi posebno. / Sadece ürün alış faturası. Gümrük ve nakliyeyi ayrı gir.
+                  Bu kayıt kasadan düşülür ama net kâra girmez (ürün maliyeti satışta zaten düşülüyor).
+                </p>
+              )}
             </div>
 
             <div>
@@ -240,6 +261,11 @@ export default function ExpensesPage() {
               <p className="mt-2 text-xl font-semibold text-white">
                 €{thisMonthExpense.toFixed(2)}
               </p>
+              {thisMonthPurchases > 0 && (
+                <p className="mt-1 text-xs text-slate-500">
+                  Bunun €{thisMonthPurchases.toFixed(2)} kadarı mal alımı (net kâra girmez)
+                </p>
+              )}
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
@@ -260,7 +286,7 @@ export default function ExpensesPage() {
             Posljednji troškovi / Son Giderler
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Najnoviji unosi troškova. / En son eklenen gider kayıtları.
+            Svi troškovi. Tip možeš promijeniti u tabeli. / Tüm giderler. Türü tablodan değiştirebilirsin.
           </p>
         </div>
 
@@ -282,12 +308,25 @@ export default function ExpensesPage() {
               </thead>
 
               <tbody>
-                {expenses.slice(0, 50).map((expense) => (
+                {expenses.map((expense) => (
                   <tr
                     key={expense.id}
                     className="border-t border-slate-800 transition hover:bg-slate-800/30"
                   >
-                    <td className="py-3">{expense.type}</td>
+                    <td className="py-3">
+                      <select
+                        value={expense.type}
+                        disabled={updatingId === expense.id}
+                        onChange={(e) => handleTypeChange(expense.id, e.target.value)}
+                        className={`rounded-xl border bg-slate-950 px-2 py-1.5 text-sm outline-none transition focus:border-blue-500 disabled:opacity-50 ${
+                          isOperatingExpense(expense.type) ? "border-slate-700 text-white" : "border-amber-500/40 text-amber-300"
+                        }`}
+                      >
+                        {(EXPENSE_TYPES.includes(expense.type) ? EXPENSE_TYPES : [expense.type, ...EXPENSE_TYPES]).map((t) => (
+                          <option key={t}>{t}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-3 text-center text-red-300 font-medium">
                       €{Number(expense.amount).toFixed(2)}
                     </td>
@@ -309,7 +348,7 @@ export default function ExpensesPage() {
 
                 {expenses.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-slate-400">
+                    <td colSpan={5} className="py-8 text-center text-slate-400">
                       Nema zapisa / Kayıt yok
                     </td>
                   </tr>

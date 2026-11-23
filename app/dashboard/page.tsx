@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PeriodPicker from "@/components/PeriodPicker";
+import { isOperatingExpense } from "@/lib/expenses";
 import {
   buildBuckets,
   defaultSelection,
@@ -50,6 +51,7 @@ type Product = {
 };
 
 type Expense = {
+  type?: string | null;
   amount: number;
   created_at: string;
 };
@@ -94,7 +96,7 @@ export default function DashboardPage() {
           "id, order_id, sale_date, created_at, total, quantity, profit, product_name, customer_name, city, delivery_status, payment_status, assigned_courier"
         ),
       supabase.from("products").select("id, name, stock, minimum_stock, is_active, unit"),
-      supabase.from("expenses").select("amount, created_at"),
+      supabase.from("expenses").select("type, amount, created_at"),
       supabase
         .from("kasa_entries")
         .select("id, amount, type, created_at")
@@ -146,9 +148,13 @@ export default function DashboardPage() {
 
   const periodExpenses = useMemo(() => {
     const rows = expenses.filter((e) => inRange(parseDate(e.created_at), period));
+    const operating = rows.filter((e) => isOperatingExpense(e.type));
     return {
-      total: rows.reduce((sum, e) => sum + Number(e.amount || 0), 0),
-      count: rows.length,
+      total: operating.reduce((sum, e) => sum + Number(e.amount || 0), 0),
+      count: operating.length,
+      purchases: rows
+        .filter((e) => !isOperatingExpense(e.type))
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0),
     };
   }, [expenses, period]);
 
@@ -316,7 +322,10 @@ export default function DashboardPage() {
           label="Troškovi / Giderler"
           value={eur(periodExpenses.total)}
           valueClassName={periodExpenses.total > 0 ? "text-red-300" : undefined}
-          helper={periodExpenses.count === 0 ? "Bu dönemde gider yok" : `${periodExpenses.count} gider kaydı`}
+          helper={
+            (periodExpenses.count === 0 ? "Bu dönemde gider yok" : `${periodExpenses.count} gider kaydı`) +
+            (periodExpenses.purchases > 0 ? ` · ayrıca mal alımı ${eur(periodExpenses.purchases)}` : "")
+          }
           href="/dashboard/expenses"
         />
         <Kpi
@@ -329,7 +338,7 @@ export default function DashboardPage() {
           label="Kasa / Kasa"
           value={kasaBalance === null ? "—" : eur(kasaBalance)}
           valueClassName={kasaBalance !== null && kasaBalance < 0 ? "text-red-300" : undefined}
-          helper={kasaBalance === null ? "Açılış bakiyesi girilmedi" : "Güncel bakiye"}
+          helper={kasaBalance === null ? "Açılış bakiyesi girilmedi" : "Nakit + banka · güncel"}
           href="/dashboard/kasa"
         />
         <Kpi
